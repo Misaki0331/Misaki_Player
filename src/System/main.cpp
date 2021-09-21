@@ -17,19 +17,19 @@ void Main::Begin(){
     Serial.println("Welcome");
     wavePlayer.SetFileName("/sample.wav");
 }
-int Main::parapara=0;
+int Main::UpdateUI=0;
 int Main::TempMs=0;
 void Main::Loop(){
     int MilliSecounds=millis();
-    if(MilliSecounds%1000==0){
-       
+    if(MilliSecounds/1000!=UpdateUI){
+       UpdateUI=MilliSecounds/1000;
         M5.Lcd.setTextSize(1);
         M5.Lcd.setCursor(0, 0);
         //M5.Lcd.fillRect(0,0,200,10,BLACK);
          M5.Lcd.setTextColor(WHITE,BLACK);
          int MaxLPS=-1;
          switch(getCpuFrequencyMhz()){
-             case 240: MaxLPS=842000; break;
+             case 240: MaxLPS=851000; break;
              case 160: MaxLPS=581800; break;
              case 80: MaxLPS=294200; break;
              case 40: MaxLPS=140700; break;
@@ -38,10 +38,10 @@ void Main::Loop(){
              default: MaxLPS=842000; break;
 
          }
-         int CPULoad =(int)(((log(MaxLPS)-log(MainLPS))/log(MaxLPS))*10000);
+         int CPULoad =(int)(((sqrt(MaxLPS)-sqrt(MainLPS))/sqrt(MaxLPS))*10000);
         if(CPULoad<0)CPULoad=0;
         if(CPULoad>99999)CPULoad=99999;
-        M5.Lcd.printf("CPU:%3d.%02d%%(%8d)",CPULoad/100,CPULoad%100,MainLPS);
+        M5.Lcd.printf("CPU:%3d.%02d%%",CPULoad/100,CPULoad%100);
     }
     M5.update(); 
     if(wavePlayer.GetIsPlaying()){
@@ -56,20 +56,24 @@ void Main::Loop(){
             if(M5.BtnA.wasReleased()){
                 M5.Lcd.setCursor(0, 30);
                 M5.Lcd.setTextColor(WHITE,BLACK);
+                wavePlayer.SetFileName("/oruga.wav");
                 M5.Lcd.printf("Play:%d                 ",wavePlayer.Play());
             }
             if(M5.BtnB.wasReleased()){
                 M5.Lcd.setCursor(0, 30);
                 M5.Lcd.setTextColor(WHITE,BLACK);
-                wavePlayer.Stop();
-                M5.Lcd.printf("Stop:%d             ",wavePlayer.GetSeek());
+                //wavePlayer.Stop();
+                //M5.Lcd.printf("Stop:%d             ",wavePlayer.GetSeek());
+                wavePlayer.SetVolume(wavePlayer.GetVolume()-1);
+                M5.Lcd.printf("Volume:%3d",wavePlayer.GetVolume());
             }
             if(M5.BtnC.wasReleased()){
                 M5.Lcd.setCursor(0, 30);
                 M5.Lcd.setTextColor(WHITE,BLACK);
-                wavePlayer.SetFileName("/oruga.wav");
-                M5.Lcd.printf("File Setted             ");
-            
+                //wavePlayer.SetFileName("/oruga.wav");
+                //M5.Lcd.printf("File Setted             ");
+                wavePlayer.SetVolume(wavePlayer.GetVolume()+1);
+                M5.Lcd.printf("Volume:%3d",wavePlayer.GetVolume());
             
             
         }

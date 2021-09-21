@@ -17,7 +17,7 @@ namespace Core{
         static class DrawTaskUI drawUI;
         static class Sound::WavePlayer wavePlayer;
         static int TempMs;
-        static int parapara;
+        static int UpdateUI;
     };
     
     struct SystemData

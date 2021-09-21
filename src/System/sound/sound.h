@@ -33,15 +33,14 @@ namespace Core{
             static File wav;
             static size_t fill_data(int type, float dB);
             static void Filter_Process(size_t r_size);
-            public:
-            static void Begin();
-            static void Loop();
             static String Filename;
             static bool IsPlaying;
             static int StopCount;
             static bool IsLooping;
             static int Volume;
             public:
+            static void Begin();
+            static void Loop();
             static int Play();
             static int Play(String str);
             static int Pause();
