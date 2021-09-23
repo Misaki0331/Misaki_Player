@@ -1,5 +1,6 @@
 #include "main.h"
 #include "ui/ui.h"
+#include "config.h"
 using namespace Core;
 Main::Main(){
 
@@ -16,12 +17,30 @@ void Main::Begin(){
     xTaskCreatePinnedToCore(SoundThread, "SoundThread", 8192, NULL, 1, NULL, 1);
     Serial.println("Welcome");
     wavePlayer.SetFileName("/sample.wav");
+    appSelecter.Update();
 }
 int Main::UpdateUI=0;
 int Main::TempMs=0;
+void Main::Draw(){
+    drawUI.Battery(systemConfig.BatteryPosX,systemConfig.BatteryPosY,
+                BatteryPercent,systemConfig.EnableALLUpdate);
+}
 void Main::Loop(){
+    //主な処理
+    M5.update(); 
+    unsigned int Buttons=0;
+    if(M5.BtnA.wasPressed())Buttons |= (1<<0);
+    if(M5.BtnB.wasPressed())Buttons |= (1<<1);
+    if(M5.BtnC.wasPressed())Buttons |= (1<<2);
+    if(M5.BtnA.isPressed()) Buttons |= (1<<3);
+    if(M5.BtnB.isPressed()) Buttons |= (1<<4);
+    if(M5.BtnC.isPressed()) Buttons |= (1<<5);
+    appSelecter.SetButtonStatus(Buttons);
+    appSelecter.Loop();
+    appSelecter.Draw();
+
     int MilliSecounds=millis();
-    if(MilliSecounds/1000!=UpdateUI){
+    if(MilliSecounds/1000>UpdateUI){
        UpdateUI=MilliSecounds/1000;
         M5.Lcd.setTextSize(1);
         M5.Lcd.setCursor(0, 0);
@@ -43,13 +62,8 @@ void Main::Loop(){
         if(CPULoad>99999)CPULoad=99999;
         M5.Lcd.printf("CPU:%3d.%02d%%",CPULoad/100,CPULoad%100);
     }
-    M5.update(); 
-    if(wavePlayer.GetIsPlaying()){
-        
-        
-    }
-        
-            M5.Lcd.setCursor(0, 20);
+    
+           /* M5.Lcd.setCursor(0, 20);
             M5.Lcd.setTextColor(WHITE,BLACK);
             //M5.Lcd.printf("%7d.%ds",millis()/1000,millis()/100%10);
         
@@ -76,7 +90,7 @@ void Main::Loop(){
                 M5.Lcd.printf("Volume:%3d",wavePlayer.GetVolume());
             
             
-        }
+        }*/
         while(MilliSecounds==TempMs){
             MilliSecounds=millis();
             systemData.LoopCount++;
@@ -91,8 +105,7 @@ void Main::ControlThread(void* arg){
         systemData.LoopCount=0;
         if(systemData.TempBatteryPercent!=BatteryPercent){
             systemData.TempBatteryPercent=BatteryPercent;
-            drawUI.Battery(systemConfig.BatteryPosX,systemConfig.BatteryPosY,
-                BatteryPercent,systemConfig.EnableALLUpdate);
+            
         }
         vTaskDelay(1000);
     }
@@ -101,8 +114,6 @@ void Main::ControlThread(void* arg){
 int Main::MainLPS=0;
 int Main::BatteryPercent=0;
 bool Main::DisableUI=false;
-SystemData Main::systemData={0,true,0};
-SystemConfig Main::systemConfig={297,0,false};
 
 void Main::SoundThread(void* arg){
     while(1){
@@ -110,3 +121,10 @@ void Main::SoundThread(void* arg){
         wavePlayer.Loop();
     }
 }
+int SystemData::LoopCount=0;
+bool SystemData::UpdateBatteryUI=false;
+int SystemData::TempBatteryPercent=0;
+int SystemConfig::BatteryPosX=0;
+int SystemConfig::BatteryPosY=0;
+bool SystemConfig::EnableALLUpdate=0;
+App::System::Select Main::appSelecter;

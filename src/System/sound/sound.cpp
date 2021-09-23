@@ -250,4 +250,5 @@ int WavePlayer::SetVolume(int value){
   if(!(value>=0&&value<=100))return -1;
   Volume=value;
   if(IsPlaying)M5.Speaker.setVolume(Volume);
+  return 0;
 }
