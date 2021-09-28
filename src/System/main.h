@@ -11,6 +11,7 @@ namespace Core{
         static void SoundThread(void* arg);
         static int MainLPS;
         static int BatteryPercent;
+        
         static bool DisableUI;
         private:
         static void Draw();
@@ -18,6 +19,8 @@ namespace Core{
         static class Sound::WavePlayer wavePlayer;
         static int TempMs;
         static int UpdateUI;
+        static int DrawUpdate;
+        static String DrawTemp;
         static Core::App::System::Select appSelecter;
     };
     

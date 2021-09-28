@@ -1,5 +1,7 @@
 #include"sellect.h"
 #include"../Config.h"
+#include"../Fonts/FastFont.h"
+using namespace Core::Draw;
 namespace AppSelect = Core::App::System;
 namespace Config = Core;
 void AppSelect::Select::SetButtonStatus(unsigned int value){
@@ -16,16 +18,18 @@ void AppSelect::Select::Draw(){
     if(IsDrawUpdate){
     M5.Lcd.fillRect(0,0,320,240,UIBGColor);
     M5.Lcd.fillRect(0,20,320,230,MenuBGColor);
-    M5.Lcd.setTextSize(1);
-    M5.Lcd.setCursor(0, 10);
-    M5.Lcd.setTextColor(WHITE,UIBGColor);
-    M5.Lcd.print("Application Menu");
+    FastFont::printRom("Application Menu",0,10,WHITE,1,UIBGColor);;
     Config::systemConfig.EnableALLUpdate=1;
     IsDrawUpdate=false;
     }
 }
 void AppSelect::Select::Update(){
     IsDrawUpdate=true;
+}
+void AppSelect::Select::Begin(){
+    systemConfig.UIUpTime_BackColor=UIBGColor;
+    systemConfig.UIUsageCPU_BackColor=UIBGColor;
+    systemData.UpdateBatteryUI=true;
 }
 void AppSelect::Select::PressButtonA(){}
 void AppSelect::Select::PressButtonB(){}

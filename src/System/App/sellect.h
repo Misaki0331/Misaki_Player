@@ -24,6 +24,7 @@ namespace Core{
                     void HoldButtonC();
                     bool IsDrawUpdate;
                 public:
+                    void Begin();
                     void Loop();
                     void Draw();
                     void SetButtonStatus(unsigned int value);

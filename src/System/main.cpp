@@ -1,7 +1,9 @@
 #include "main.h"
 #include "ui/ui.h"
 #include "config.h"
+#include "Fonts/FastFont.h"
 using namespace Core;
+using namespace Core::Draw;
 Main::Main(){
 
 
@@ -17,13 +19,19 @@ void Main::Begin(){
     xTaskCreatePinnedToCore(SoundThread, "SoundThread", 8192, NULL, 1, NULL, 1);
     Serial.println("Welcome");
     wavePlayer.SetFileName("/sample.wav");
+    appSelecter.Begin();
     appSelecter.Update();
+    //FastFont::printRom("Test",0,0,0xF800);
+    //delay(3000);
 }
 int Main::UpdateUI=0;
 int Main::TempMs=0;
 void Main::Draw(){
+    if(systemData.UpdateBatteryUI){
+        systemData.UpdateBatteryUI=false;
     drawUI.Battery(systemConfig.BatteryPosX,systemConfig.BatteryPosY,
                 BatteryPercent,systemConfig.EnableALLUpdate);
+    }
 }
 void Main::Loop(){
     //主な処理
@@ -40,12 +48,12 @@ void Main::Loop(){
     appSelecter.Draw();
 
     int MilliSecounds=millis();
+    char text[100];
     if(MilliSecounds/1000>UpdateUI){
        UpdateUI=MilliSecounds/1000;
-        M5.Lcd.setTextSize(1);
-        M5.Lcd.setCursor(0, 0);
+        FastFont::setPos(0, 0);
         //M5.Lcd.fillRect(0,0,200,10,BLACK);
-         M5.Lcd.setTextColor(WHITE,BLACK);
+         FastFont::setColor(WHITE,BLACK);
          int MaxLPS=-1;
          switch(getCpuFrequencyMhz()){
              case 240: MaxLPS=851000; break;
@@ -60,9 +68,20 @@ void Main::Loop(){
          int CPULoad =(int)(((sqrt(MaxLPS)-sqrt(MainLPS))/sqrt(MaxLPS))*10000);
         if(CPULoad<0)CPULoad=0;
         if(CPULoad>99999)CPULoad=99999;
-        M5.Lcd.printf("CPU:%3d.%02d%%",CPULoad/100,CPULoad%100);
+        
+        sprintf(text,"CPU:%3d.%02d%%",CPULoad/100,CPULoad%100);
+        FastFont::printRom(text,0,0,systemConfig.UIUsageCPU_TextColor,1,systemConfig.UIUsageCPU_BackColor);
+        
     }
-    
+    //M5.Lcd.fillRect(72,0,320,7,RED);
+    if(MilliSecounds/16>DrawUpdate){
+        DrawUpdate=MilliSecounds/16;
+    sprintf(text,"Time:%10d",MilliSecounds);
+
+    FastFont::printFastRom(DrawTemp,text,72,0,systemConfig.UIUpTime_TextColor,1,systemConfig.UIUpTime_BackColor);
+    DrawTemp=text;
+    Draw();
+    }
            /* M5.Lcd.setCursor(0, 20);
             M5.Lcd.setTextColor(WHITE,BLACK);
             //M5.Lcd.printf("%7d.%ds",millis()/1000,millis()/100%10);
@@ -105,12 +124,13 @@ void Main::ControlThread(void* arg){
         systemData.LoopCount=0;
         if(systemData.TempBatteryPercent!=BatteryPercent){
             systemData.TempBatteryPercent=BatteryPercent;
-            
+            systemData.UpdateBatteryUI=true;
         }
         vTaskDelay(1000);
     }
 }
-
+int Main::DrawUpdate=0;
+String Main::DrawTemp="";
 int Main::MainLPS=0;
 int Main::BatteryPercent=0;
 bool Main::DisableUI=false;
