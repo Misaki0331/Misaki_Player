@@ -11,6 +11,7 @@ namespace Core{
         static void SoundThread(void* arg);
         static int MainLPS;
         static int BatteryPercent;
+        static int FreeHeapMemory;
         
         static bool DisableUI;
         private:
@@ -21,7 +22,7 @@ namespace Core{
         static int UpdateUI;
         static int DrawUpdate;
         static String DrawTemp;
-        static Core::App::System::Select appSelecter;
+        static Core::Apps::System::Select appSelecter;
     };
     
     

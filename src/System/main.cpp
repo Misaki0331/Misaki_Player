@@ -66,20 +66,25 @@ void Main::Loop(){
 
          }
          int CPULoad =(int)(((sqrt(MaxLPS)-sqrt(MainLPS))/sqrt(MaxLPS))*10000);
+         float per= (float)(RAMSIZE-FreeHeapMemory)/RAMSIZE*100.0;
+        int per2=per;
         if(CPULoad<0)CPULoad=0;
         if(CPULoad>99999)CPULoad=99999;
+        float val=FreeHeapMemory/1024.0*100.0;
+        int val2=val;
         
-        sprintf(text,"CPU:%3d.%02d%%",CPULoad/100,CPULoad%100);
+        sprintf(text,"CPU:%3d.%02d%% RAM:%3d.%02d%%(%3d.%02dKB FREE)",CPULoad/100,CPULoad%100,
+        per2/100,per2%100,val2/100,val2%100);
         FastFont::printRom(text,0,0,systemConfig.UIUsageCPU_TextColor,1,systemConfig.UIUsageCPU_BackColor);
         
     }
     //M5.Lcd.fillRect(72,0,320,7,RED);
-    if(MilliSecounds/16>DrawUpdate){
-        DrawUpdate=MilliSecounds/16;
-    sprintf(text,"Time:%10d",MilliSecounds);
+    if(MilliSecounds/1000!=DrawUpdate){
+        DrawUpdate=MilliSecounds/1000;
+    //sprintf(text,"Time:%10d",MilliSecounds);
 
-    FastFont::printFastRom(DrawTemp,text,72,0,systemConfig.UIUpTime_TextColor,1,systemConfig.UIUpTime_BackColor);
-    DrawTemp=text;
+    //FastFont::printFastRom(DrawTemp,text,108,10,systemConfig.UIUpTime_TextColor,1,systemConfig.UIUpTime_BackColor);
+    //DrawTemp=text;
     Draw();
     }
            /* M5.Lcd.setCursor(0, 20);
@@ -126,6 +131,7 @@ void Main::ControlThread(void* arg){
             systemData.TempBatteryPercent=BatteryPercent;
             systemData.UpdateBatteryUI=true;
         }
+        FreeHeapMemory= esp_get_free_heap_size();
         vTaskDelay(1000);
     }
 }
@@ -147,4 +153,5 @@ int SystemData::TempBatteryPercent=0;
 int SystemConfig::BatteryPosX=0;
 int SystemConfig::BatteryPosY=0;
 bool SystemConfig::EnableALLUpdate=0;
-App::System::Select Main::appSelecter;
+Apps::System::Select Main::appSelecter;
+int Main::FreeHeapMemory=0;

@@ -1,4 +1,5 @@
 #include<M5Stack.h>
+#define RAMSIZE 327680
 namespace Core{
     class SystemData
     {
