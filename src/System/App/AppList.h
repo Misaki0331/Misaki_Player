@@ -1,4 +1,5 @@
 #include<M5Stack.h>
+#include"Apps/StopWatch/stopwatch.h"
 namespace App{
     class List{
         public:
@@ -16,6 +17,6 @@ namespace App{
         char* GetAppName(int AppID);
         int GetAppCount();//合計アプリ数
         private:
-        int a;
+        App::StopWatch::stopwatch list01;
     };
 }

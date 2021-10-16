@@ -1,6 +1,7 @@
 #include"sellect.h"
 #include"../Config.h"
 #include"../Fonts/FastFont.h"
+#define DRAW_UPDATE 16
 using namespace Core::Draw;
 namespace AppSelect = Core::Apps::System;
 namespace Config = Core;
@@ -20,7 +21,11 @@ void AppSelect::Select::SetButtonStatus(unsigned int value){
     ButtonStatus=value;
 }
 void AppSelect::Select::Loop(){
+    for(int i=0;i<applist.GetAppCount();i++){
+        applist.BackGround(i);
+    }
     if(RunAppValue>=0)applist.Loop(RunAppValue);
+    
 }
 void AppSelect::Select::InSellectDraw(){
     
@@ -45,6 +50,10 @@ void AppSelect::Select::InSellectDraw(){
     
 }
 void AppSelect::Select::Draw(){
+    int t=millis();
+    if(drawDelay!= t/DRAW_UPDATE){
+        drawDelay=t/DRAW_UPDATE ;
+    
     if(RunAppValue>=0)IsDrawUpdate=applist.GetUpdateDraw(RunAppValue);
     if(IsDrawUpdate){
     switch(RunAppValue){
@@ -55,6 +64,7 @@ void AppSelect::Select::Draw(){
         applist.Draw(RunAppValue);
     }
     IsDrawUpdate=false;
+    }
     }
 }
 void AppSelect::Select::Update(){

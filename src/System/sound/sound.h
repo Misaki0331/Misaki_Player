@@ -28,6 +28,7 @@ namespace Core{
             static struct LPF lpf; 
             static struct FC fc[3];
             static void i2s_Init();
+            static void i2s_End();
             static float flat_sin_tbl[SINTBLMAX];
             static float decaysin_tbl[SINTBLMAX];
             static File wav;
@@ -38,6 +39,7 @@ namespace Core{
             static int StopCount;
             static bool IsLooping;
             static int Volume;
+            static bool isSpeak;
             public:
             static void Begin();
             static void Loop();

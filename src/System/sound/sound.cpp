@@ -22,7 +22,9 @@ struct FC WavePlayer::fc[]={
     { +0.333333333, +21973.33333 }, // Mid 1/3  1/3  +128       (1-1/3)*(2^15)
     { +0.333333333,   +213.33333 }, // Low 1/3  1/3  +128   
 };
+bool WavePlayer::isSpeak=false;
 void WavePlayer::i2s_Init(){
+  if(!isSpeak){
      i2s_config_t i2s_config = {
     .mode = (i2s_mode_t)(I2S_MODE_DAC_BUILT_IN | I2S_MODE_MASTER | I2S_MODE_TX),
     .sample_rate = DAC_FS,
@@ -36,6 +38,14 @@ void WavePlayer::i2s_Init(){
   };
   i2s_driver_install( I2S_NUM_0, &i2s_config, 0, NULL );
   i2s_set_pin( I2S_NUM_0, NULL );
+  isSpeak=true;
+}
+}
+void WavePlayer::i2s_End(){
+  if(isSpeak){
+  i2s_driver_uninstall(I2S_NUM_0);
+  isSpeak=false;
+  }
 }
 size_t WavePlayer::fill_data(int type, float dB){
     static int32_t ct = 0, ct2 = 0;
@@ -130,12 +140,13 @@ void WavePlayer::Begin(){
   M5.Speaker.begin();
          // 80MHzのほうがDACノイズ低減に有利。ただしBasicでSDカード再生に失敗する場合あり
   ledcWriteTone(7, SRC_FS );  // LCDバックライトのPWM周期をSRC_FSと同じにして可聴帯域外とする
-    i2s_Init();
+    
     fill_data(Init,0);
     
 }
 String WavePlayer::Filename="";
 void WavePlayer::Loop(){
+  
     size_t r_size = 0;
     for ( int i = 0; i < (SRC_FS / SPF); i++ ) {
         if(IsPlaying){
@@ -149,10 +160,12 @@ void WavePlayer::Loop(){
         if (IsPlaying)StopCount = 0;
         if (StopCount < 10) {
         StopCount++;
+        if(isSpeak){
         Filter_Process( r_size );
         
         i2s_write_bytes( I2S_NUM_0, (char *)dac_buf, r_size * OSR, portMAX_DELAY );
       }
+        }
     }
 }
 int WavePlayer::Volume=InitVolume;
@@ -161,6 +174,7 @@ int WavePlayer::StopCount=0;
 int WavePlayer::Play(){
     if(!SD.exists(Filename))return 0;
     //wav = SD.open(Filename);
+    i2s_Init();
     wav.seek(0x2C);  // Skip wav header
     M5.Speaker.mute();
     IsPlaying=true;
@@ -171,7 +185,7 @@ int WavePlayer::Play(String str){
     if(IsPlaying){
         IsPlaying=false;
     }
-    
+    i2s_Init();
     Filename=str;
     if(!wav)wav.close();
     wav = SD.open(Filename);
@@ -185,8 +199,9 @@ int WavePlayer::Pause(){
     IsPlaying=!IsPlaying;
     if(IsPlaying){
         M5.Speaker.setVolume(Volume);
-      
+        i2s_Init();
       }else{
+        i2s_End();
         M5.Speaker.mute();
     }
     return 1;
@@ -196,8 +211,9 @@ int WavePlayer::Pause(bool flg){
     IsPlaying=flg;
     if(IsPlaying){
         M5.Speaker.setVolume(Volume);
-      
+        i2s_Init();
       }else{
+        i2s_End();
         M5.Speaker.mute();
     }
     return 1;
@@ -206,6 +222,7 @@ void WavePlayer::Stop(){
     IsPlaying=false;
     wav.seek(0x2C);
     M5.Speaker.mute();
+    i2s_End();
 }
 void WavePlayer::SetFileName(String str){
     IsPlaying=false;

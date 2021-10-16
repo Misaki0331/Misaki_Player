@@ -4,6 +4,7 @@
 void App::List::Begin(int AppID){
     switch(AppID){
         case 0:
+        list01.Begin();
         break;
     }
 }
@@ -12,6 +13,7 @@ void App::List::Begin(int AppID){
 void App::List::Exit(int AppID){
     switch(AppID){
         case 0:
+        list01.Exit();
         break;
     }
 }
@@ -20,6 +22,7 @@ void App::List::Exit(int AppID){
 void App::List::ButtonHold(int AppID,int Type, bool data){
     switch(AppID){
         case 0:
+        list01.ButtonHold(Type,data);
         break;
     }
 }
@@ -27,6 +30,7 @@ void App::List::ButtonHold(int AppID,int Type, bool data){
 void App::List::ButtonPress(int AppID,int Type){
     switch(AppID){
         case 0:
+        list01.ButtonPress(Type);
         break;
     }
 }
@@ -35,6 +39,7 @@ void App::List::ButtonPress(int AppID,int Type){
 void App::List::Loop(int AppID){
     switch(AppID){
         case 0:
+        list01.Loop();
         break;
     }
 }
@@ -43,6 +48,7 @@ void App::List::Loop(int AppID){
 void App::List::Draw(int AppID){
     switch(AppID){
         case 0:
+        list01.Draw();
         break;
     }
 }
@@ -52,6 +58,7 @@ void App::List::BackGround(int AppID){
     if(GetRunBackGround(AppID)){
         switch(AppID){
         case 0:
+        list01.Background();
         break;
     }
     }
@@ -61,6 +68,7 @@ void App::List::BackGround(int AppID){
 bool App::List::GetRunBackGround(int AppID){
     switch(AppID){
         case 0:
+        list01.GetBackGround();
         break;
     }
     return 0;
@@ -71,6 +79,7 @@ bool App::List::GetRunBackGround(int AppID){
 void App::List::SetRunBackGround(int AppID, bool Run){
     switch(AppID){
         case 0:
+        list01.SetBackGround(Run);
         break;
     }
     
@@ -80,6 +89,7 @@ void App::List::SetRunBackGround(int AppID, bool Run){
 bool App::List::GetUpdateDraw(int AppID){
     switch(AppID){
         case 0:
+        return list01.GetUpDateDraw();
         break;
     }
     return 0;
@@ -88,6 +98,7 @@ bool App::List::GetUpdateDraw(int AppID){
 bool App::List::GetToActive(int AppID){
     switch(AppID){
         case 0:
+        list01.GetToActive();
         break;
     }
     return 0;
@@ -96,7 +107,7 @@ bool App::List::GetToActive(int AppID){
 char* App::List::GetAppName(int AppID){
     switch(AppID){
         case 0:
-        break;
+        return list01.GetAppName();
         default:
         return "Unknown";
     }

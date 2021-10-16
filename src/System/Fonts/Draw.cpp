@@ -7,28 +7,12 @@ void FastFont::displayASCII(int x, int y, uint8_t chara, uint8_t siz, long color
       uint8_t bin = AsciiOldFont[(chara - 16) * 5 + p];
       bool ba = 0;
       int bc = 0;
-      if (siz == 1) {
+      
         for (int q = 0; q < 8; q++)
         {
-          uint8_t a = bin;
-          if (a & (1 << q))bc++;
-          if ((a & (1 << q)) != ba) {
-            ba = a & (1 << q);
-            if (!ba) {
-              M5.Lcd.drawFastVLine(x + p , y + q - bc, bc,color);
-              bc = 0;
-            }
-
-
-          }
-          //if(bc>0)mylcd.Draw_Fast_VLine(x+p , y+ 8-bc,bc);
+          if (bin & (1 << q))M5.Lcd.fillRect(x + p * siz, y + q * siz,siz,siz,color);
         }
-      } else {
-        for (int q = 0; q < 8; q++)
-        {
-          if (bin & (1 << q))M5.Lcd.fillRect(x + p * siz, y + q * siz, x + p * siz + siz - 1, y + q * siz + siz - 1,color);
-        }
-      }
+      
     }
   }else if(siz==1){
     //char tex[256];

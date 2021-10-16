@@ -36,6 +36,7 @@ namespace Core{
                     void Draw();
                     void SetButtonStatus(unsigned int value);
                     void Update();
+                    int drawDelay;
                     
                     
 
