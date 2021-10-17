@@ -21,11 +21,16 @@ void AppSelect::Select::SetButtonStatus(unsigned int value){
     ButtonStatus=value;
 }
 void AppSelect::Select::Loop(){
+    
     for(int i=0;i<applist.GetAppCount();i++){
         applist.BackGround(i);
     }
-    if(RunAppValue>=0)applist.Loop(RunAppValue);
-    
+    if(RunAppValue>=0){
+        if(applist.GetGoToHome(RunAppValue)){
+            SellectInit();
+        }
+        applist.Loop(RunAppValue);
+    }
 }
 void AppSelect::Select::InSellectDraw(){
     

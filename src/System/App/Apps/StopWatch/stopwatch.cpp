@@ -2,11 +2,16 @@
 #include"stopwatch.h"
 #include"../../../Fonts/FastFont.h"
 #include"../../../config.h"
-void App::StopWatch::stopwatch::Begin(){
+App::StopWatch::stopwatch::stopwatch(){
     time=0;
     IsStart=0;
+    tohome=0;
+    
+}
+void App::StopWatch::stopwatch::Begin(){;
     sprintf(tempText,"             ");
     sprintf(tempT,"     ");
+    tohome=0;
 }
 void App::StopWatch::stopwatch::Exit(){}
 void App::StopWatch::stopwatch::ButtonHold(int Type,bool data){}
@@ -17,6 +22,7 @@ void App::StopWatch::stopwatch::ButtonPress(int Type){
         if(!IsStart)time=0;
         break;
     case 2:
+    tohome=1;
         break;
     case 3:
         IsStart=!IsStart;
@@ -50,3 +56,6 @@ void App::StopWatch::stopwatch::SetBackGround(bool run){return;}
 bool App::StopWatch::stopwatch::GetUpDateDraw(){return 1;}
 bool App::StopWatch::stopwatch::GetToActive(){return 0;}
 char* App::StopWatch::stopwatch::GetAppName(){return "Stop Watch";}
+bool App::StopWatch::stopwatch::GetGoToHome(){
+    return tohome;
+}

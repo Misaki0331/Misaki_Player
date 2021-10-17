@@ -1,10 +1,16 @@
 #include"AppList.h"
-#define APPCOUNT 1
+#define APPCOUNT 3
 //開始関数
 void App::List::Begin(int AppID){
     switch(AppID){
         case 0:
         list01.Begin();
+        break;
+        case 1:
+        SleepLCD.Begin();
+        break;
+        case 2:
+        fileManager.Begin();
         break;
     }
 }
@@ -14,6 +20,12 @@ void App::List::Exit(int AppID){
     switch(AppID){
         case 0:
         list01.Exit();
+        break;
+        case 1:
+        SleepLCD.Exit();
+        break;
+        case 2:
+        fileManager.Exit();
         break;
     }
 }
@@ -32,6 +44,11 @@ void App::List::ButtonPress(int AppID,int Type){
         case 0:
         list01.ButtonPress(Type);
         break;
+        case 1:
+        SleepLCD.ButtonPress(Type);
+        break;
+        case 2:
+        fileManager.ButtonPress(Type);
     }
 }
 
@@ -41,6 +58,8 @@ void App::List::Loop(int AppID){
         case 0:
         list01.Loop();
         break;
+        case 2:
+        fileManager.Loop();
     }
 }
 
@@ -50,6 +69,8 @@ void App::List::Draw(int AppID){
         case 0:
         list01.Draw();
         break;
+        case 2:
+        fileManager.Draw();
     }
 }
 
@@ -91,6 +112,8 @@ bool App::List::GetUpdateDraw(int AppID){
         case 0:
         return list01.GetUpDateDraw();
         break;
+        case 2:
+        return fileManager.GetUpDateDraw();
     }
     return 0;
 }
@@ -108,9 +131,25 @@ char* App::List::GetAppName(int AppID){
     switch(AppID){
         case 0:
         return list01.GetAppName();
+        case 1:
+        return SleepLCD.GetAppName();
+        case 2:
+        return fileManager.GetAppName();
         default:
         return "Unknown";
     }
+}
+
+bool App::List::GetGoToHome(int AppID){
+    switch(AppID){
+        case 0:
+        return list01.GetGoToHome();
+        case 1:
+        return SleepLCD.GetGoToHome();
+        case 2:
+        return fileManager.GetGoToHome();
+    }
+    return 0;
 }
 
 int App::List::GetAppCount(){

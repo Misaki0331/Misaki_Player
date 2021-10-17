@@ -1,8 +1,8 @@
 namespace App{
-    namespace StopWatch{
-        class stopwatch{
+    namespace Sleep{
+        class sleep{
             public:
-            stopwatch();
+            sleep();
             void Begin();
             void Exit();
             void ButtonHold(int Type,bool data);
@@ -18,11 +18,7 @@ namespace App{
             char* GetAppName();
             private:
             bool tohome;
-            int time;
-            bool IsStart;
-            int temp;
-            char tempText[30];
-            char tempT[10];
+            
         };
     }
 }

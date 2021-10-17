@@ -1,5 +1,7 @@
 #include<M5Stack.h>
 #include"Apps/StopWatch/stopwatch.h"
+#include"Apps/Sleep/Sleep.h"
+#include"Apps/FileManaager/FileManager.h"
 namespace App{
     class List{
         public:
@@ -14,9 +16,12 @@ namespace App{
         void SetRunBackGround(int AppID,bool Run);//バックグラウンド設定
         bool GetUpdateDraw(int AppID);//図形の更新
         bool GetToActive(int AppID);//他のアプリからこのアプリに移動するフラグ
+        bool GetGoToHome(int AppID);
         char* GetAppName(int AppID);
         int GetAppCount();//合計アプリ数
         private:
         App::StopWatch::stopwatch list01;
+        App::Sleep::sleep SleepLCD;
+        App::FileManager::FileManager fileManager;
     };
 }
