@@ -43,10 +43,13 @@ void WavePlayer::i2s_Init(){
 }
 void WavePlayer::i2s_End(){
   if(isSpeak){
+    isSpeak=false;
+    delay(20);
   i2s_driver_uninstall(I2S_NUM_0);
-  isSpeak=false;
+  
   }
 }
+int WavePlayer::Pos=0;
 size_t WavePlayer::fill_data(int type, float dB){
     static int32_t ct = 0, ct2 = 0;
 
@@ -68,6 +71,7 @@ size_t WavePlayer::fill_data(int type, float dB){
   float g  = 32767.0 * pow(10, dB / 20);        // for flat gain
   float gd = g * pow(0.5, (float)ct2);          // for decay gain
   size_t r_size = sizeof(src_buf);
+    Pos=(int)wav.position();
   if ( type == Wav ) {
     r_size = wav.readBytes(src_buf, sizeof(src_buf));
     if ( r_size != sizeof(src_buf) ) {
@@ -198,11 +202,9 @@ int WavePlayer::Pause(){
   if(!SD.exists(Filename))return 0;
     IsPlaying=!IsPlaying;
     if(IsPlaying){
-        M5.Speaker.setVolume(Volume);
         i2s_Init();
       }else{
         i2s_End();
-        M5.Speaker.mute();
     }
     return 1;
 }
@@ -231,6 +233,7 @@ void WavePlayer::SetFileName(String str){
     wav = SD.open(Filename);
     wav.seek(0x2C);  // Skip wav header
     M5.Speaker.mute();
+    Pos=0;
 }
 String WavePlayer::GetFileName(){
     return Filename;
@@ -247,7 +250,7 @@ int WavePlayer::SetSeek(int ms){
 }
 int WavePlayer::GetSeek(){
     if(!wav.available())return -2;
-    return ((wav.position()-0x2C)/((int)SRC_FS/1000)/4);
+    return ((Pos-0x2C)/((int)SRC_FS/1000)/4);
 }
 int WavePlayer::GetLength(){
     if(!wav.available())return -2;

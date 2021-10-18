@@ -67,7 +67,7 @@ void Main::Loop(){
          }
          int CPULoad =(int)(((sqrt(MaxLPS)-sqrt(MainLPS))/sqrt(MaxLPS))*10000);
          float per= (float)(RAMSIZE-FreeHeapMemory)/RAMSIZE*100.0;
-        int per2=per;
+        int per2=(float)per*100;
         if(CPULoad<0)CPULoad=0;
         if(CPULoad>99999)CPULoad=99999;
         float val=FreeHeapMemory/1024.0*100.0;

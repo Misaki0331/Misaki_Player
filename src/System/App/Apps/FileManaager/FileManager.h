@@ -34,9 +34,19 @@ namespace App{
             bool UpdateDraw;
             int FileCount;
             bool IsUpdate;
-
+            int mode=0;
+            enum cModeName{
+                List=0,
+                AudioPlayer=1,
+                TextViewer=2,
+                BinViewer=3
+            };
             void GetFileList();
             void FileEnter();
+            void ModeChange(int val);
+            int WavUpdate;
+            int DisplayWaveBarPos;
+            String DisplayWavePosString;
         };
     }
 }
