@@ -127,7 +127,7 @@ bool App::List::GetToActive(int AppID){
     return 0;
 }
 
-char* App::List::GetAppName(int AppID){
+String App::List::GetAppName(int AppID){
     switch(AppID){
         case 0:
         return list01.GetAppName();

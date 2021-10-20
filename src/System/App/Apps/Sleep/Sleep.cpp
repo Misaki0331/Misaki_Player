@@ -26,7 +26,7 @@ bool App::Sleep::sleep::GetBackGround(){return 0;}
 void App::Sleep::sleep::SetBackGround(bool run){return;}
 bool App::Sleep::sleep::GetUpDateDraw(){return 1;}
 bool App::Sleep::sleep::GetToActive(){return 0;}
-char* App::Sleep::sleep::GetAppName(){return "LCD Sleep";}
+String App::Sleep::sleep::GetAppName(){return "LCD Sleep";}
 bool App::Sleep::sleep::GetGoToHome(){
     return tohome;
 }

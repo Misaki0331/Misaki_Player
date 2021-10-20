@@ -2,15 +2,19 @@
 #include "ui/ui.h"
 #include "config.h"
 #include "Fonts/FastFont.h"
+#include "System/Debug/Logger.h"
 using namespace Core;
 using namespace Core::Draw;
+using namespace Core::Debug;
 Main::Main(){
 
 
 }
 void Main::Begin(){
     M5.begin();                       //M5Stackを初期化
+    
     M5.Power.begin();                 //M5Stackのバッテリ初期化
+    M5.Power.setPowerVin(true);    //USBが抜かれても動作し続けるように
     setCpuFrequencyMhz(240);
     M5.Lcd.clear(BLACK);              //表示リセット
     wavePlayer.Begin();
@@ -18,11 +22,9 @@ void Main::Begin(){
     xTaskCreatePinnedToCore(ControlThread, "ControlThread", 1024, NULL, 3, NULL, 1);
     xTaskCreatePinnedToCore(SoundThread, "SoundThread", 8192, NULL, 1, NULL, 1);
     Serial.println("Welcome");
-    wavePlayer.SetFileName("/sample.wav");
     appSelecter.Begin();
     appSelecter.Update();
-    //FastFont::printRom("Test",0,0,0xF800);
-    //delay(3000);
+    Logger::Log("System Initialized");
 }
 int Main::UpdateUI=0;
 int Main::TempMs=0;
@@ -78,53 +80,21 @@ void Main::Loop(){
         FastFont::printRom(text,0,0,systemConfig.UIUsageCPU_TextColor,1,systemConfig.UIUsageCPU_BackColor);
         
     }
-    //M5.Lcd.fillRect(72,0,320,7,RED);
     if(MilliSecounds/1000!=DrawUpdate){
         DrawUpdate=MilliSecounds/1000;
-    //sprintf(text,"Time:%10d",MilliSecounds);
-
-    //FastFont::printFastRom(DrawTemp,text,108,10,systemConfig.UIUpTime_TextColor,1,systemConfig.UIUpTime_BackColor);
-    //DrawTemp=text;
-    Draw();
+        Draw();
     }
-           /* M5.Lcd.setCursor(0, 20);
-            M5.Lcd.setTextColor(WHITE,BLACK);
-            //M5.Lcd.printf("%7d.%ds",millis()/1000,millis()/100%10);
-        
-            if(M5.BtnA.wasReleased()){
-                M5.Lcd.setCursor(0, 30);
-                M5.Lcd.setTextColor(WHITE,BLACK);
-                wavePlayer.SetFileName("/oruga.wav");
-                M5.Lcd.printf("Play:%d                 ",wavePlayer.Play());
-            }
-            if(M5.BtnB.wasReleased()){
-                M5.Lcd.setCursor(0, 30);
-                M5.Lcd.setTextColor(WHITE,BLACK);
-                //wavePlayer.Stop();
-                //M5.Lcd.printf("Stop:%d             ",wavePlayer.GetSeek());
-                wavePlayer.SetVolume(wavePlayer.GetVolume()-1);
-                M5.Lcd.printf("Volume:%3d",wavePlayer.GetVolume());
-            }
-            if(M5.BtnC.wasReleased()){
-                M5.Lcd.setCursor(0, 30);
-                M5.Lcd.setTextColor(WHITE,BLACK);
-                //wavePlayer.SetFileName("/oruga.wav");
-                //M5.Lcd.printf("File Setted             ");
-                wavePlayer.SetVolume(wavePlayer.GetVolume()+1);
-                M5.Lcd.printf("Volume:%3d",wavePlayer.GetVolume());
-            
-            
-        }*/
-        while(MilliSecounds==TempMs){
-            MilliSecounds=millis();
-            systemData.LoopCount++;
-        }
-        TempMs=MilliSecounds;
+    //1000Hz固定       
+    while(MilliSecounds==TempMs){
+        MilliSecounds=millis();
+        systemData.LoopCount++;
+    }
+    TempMs=MilliSecounds;
 }
 void Main::ControlThread(void* arg){
     drawUI.Battery(297,0,BatteryPercent,true);
     while(1){
-        BatteryPercent = M5.Power.getBatteryLevel();
+        BatteryPercent = M5.Power.getBatteryLevel()+M5.Power.isCharging()*200+M5.Power.isChargeFull()*400;
         MainLPS=systemData.LoopCount;
         systemData.LoopCount=0;
         if(systemData.TempBatteryPercent!=BatteryPercent){

@@ -55,7 +55,7 @@ bool App::StopWatch::stopwatch::GetBackGround(){return 0;}
 void App::StopWatch::stopwatch::SetBackGround(bool run){return;}
 bool App::StopWatch::stopwatch::GetUpDateDraw(){return 1;}
 bool App::StopWatch::stopwatch::GetToActive(){return 0;}
-char* App::StopWatch::stopwatch::GetAppName(){return "Stop Watch";}
+String App::StopWatch::stopwatch::GetAppName(){return "Stop Watch";}
 bool App::StopWatch::stopwatch::GetGoToHome(){
     return tohome;
 }

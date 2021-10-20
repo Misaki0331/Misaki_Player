@@ -17,7 +17,7 @@ namespace App{
         bool GetUpdateDraw(int AppID);//図形の更新
         bool GetToActive(int AppID);//他のアプリからこのアプリに移動するフラグ
         bool GetGoToHome(int AppID);
-        char* GetAppName(int AppID);
+        String GetAppName(int AppID);
         int GetAppCount();//合計アプリ数
         private:
         App::StopWatch::stopwatch list01;

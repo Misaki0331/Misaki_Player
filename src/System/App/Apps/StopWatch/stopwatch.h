@@ -15,7 +15,7 @@ namespace App{
             bool GetUpDateDraw();
             bool GetToActive();
             bool GetGoToHome();
-            char* GetAppName();
+            String GetAppName();
             private:
             bool tohome;
             int time;
