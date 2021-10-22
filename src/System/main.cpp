@@ -75,8 +75,8 @@ void Main::Loop(){
         float val=FreeHeapMemory/1024.0*100.0;
         int val2=val;
         
-        sprintf(text,"CPU:%3d.%02d%% RAM:%3d.%02d%%(%3d.%02dKB FREE)",CPULoad/100,CPULoad%100,
-        per2/100,per2%100,val2/100,val2%100);
+        sprintf(text,"CPU:%3d.%02d%%(%4d) RAM:%6dB",CPULoad/100,CPULoad%100,
+        SystemAPI::LPS,FreeHeapMemory);
         FastFont::printRom(text,0,0,systemConfig.UIUsageCPU_TextColor,1,systemConfig.UIUsageCPU_BackColor);
         
     }
@@ -89,6 +89,7 @@ void Main::Loop(){
         MilliSecounds=millis();
         systemData.LoopCount++;
     }
+    SystemData::LPS+=1;
     TempMs=MilliSecounds;
 }
 void Main::ControlThread(void* arg){
@@ -96,12 +97,17 @@ void Main::ControlThread(void* arg){
     while(1){
         BatteryPercent = M5.Power.getBatteryLevel()+M5.Power.isCharging()*200+M5.Power.isChargeFull()*400;
         MainLPS=systemData.LoopCount;
+        SystemAPI::FLPS=systemData.LoopCount;
+        SystemAPI::LPS=SystemData::LPS;
+        SystemData::LPS=0;
         systemData.LoopCount=0;
         if(systemData.TempBatteryPercent!=BatteryPercent){
             systemData.TempBatteryPercent=BatteryPercent;
             systemData.UpdateBatteryUI=true;
         }
+        SystemAPI::BatteryLeft=BatteryPercent%200;
         FreeHeapMemory= esp_get_free_heap_size();
+        SystemAPI::FreeRAM=FreeHeapMemory;
         vTaskDelay(1000);
     }
 }

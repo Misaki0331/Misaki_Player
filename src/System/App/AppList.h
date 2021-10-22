@@ -2,6 +2,8 @@
 #include"Apps/StopWatch/stopwatch.h"
 #include"Apps/Sleep/Sleep.h"
 #include"Apps/FileManaager/FileManager.h"
+#include"Apps/Wi-Fi/connect.h"
+#define APPCOUNT 4
 namespace App{
     class List{
         public:
@@ -23,5 +25,6 @@ namespace App{
         App::StopWatch::stopwatch list01;
         App::Sleep::sleep SleepLCD;
         App::FileManager::FileManager fileManager;
+        App::Wi_Fi::Connect wifiConnect;
     };
 }

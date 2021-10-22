@@ -224,8 +224,6 @@ void FileManager::Draw(){
                 break;
             break;
         }
-        
-        
     }
     if(IsUpdate){
         IsUpdate=false;

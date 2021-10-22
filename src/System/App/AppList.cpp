@@ -1,5 +1,5 @@
 #include"AppList.h"
-#define APPCOUNT 3
+
 //開始関数
 void App::List::Begin(int AppID){
     switch(AppID){
@@ -11,6 +11,9 @@ void App::List::Begin(int AppID){
         break;
         case 2:
         fileManager.Begin();
+        break;
+        case 3:
+        wifiConnect.Begin();
         break;
     }
 }
@@ -26,6 +29,9 @@ void App::List::Exit(int AppID){
         break;
         case 2:
         fileManager.Exit();
+        break;
+        case 3:
+        wifiConnect.Exit();
         break;
     }
 }
@@ -49,6 +55,9 @@ void App::List::ButtonPress(int AppID,int Type){
         break;
         case 2:
         fileManager.ButtonPress(Type);
+        break;
+        case 3:
+        wifiConnect.ButtonPress(Type);
     }
 }
 
@@ -60,6 +69,9 @@ void App::List::Loop(int AppID){
         break;
         case 2:
         fileManager.Loop();
+        break;
+        case 3:
+        wifiConnect.Loop();
     }
 }
 
@@ -71,6 +83,10 @@ void App::List::Draw(int AppID){
         break;
         case 2:
         fileManager.Draw();
+        break;
+        case 3:
+        wifiConnect.Draw();
+        break;
     }
 }
 
@@ -114,6 +130,8 @@ bool App::List::GetUpdateDraw(int AppID){
         break;
         case 2:
         return fileManager.GetUpDateDraw();
+        case 3:
+        return wifiConnect.GetUpDateDraw();
     }
     return 0;
 }
@@ -135,6 +153,8 @@ String App::List::GetAppName(int AppID){
         return SleepLCD.GetAppName();
         case 2:
         return fileManager.GetAppName();
+        case 3:
+        return wifiConnect.GetAppName();
         default:
         return "Unknown";
     }
@@ -148,6 +168,8 @@ bool App::List::GetGoToHome(int AppID){
         return SleepLCD.GetGoToHome();
         case 2:
         return fileManager.GetGoToHome();
+        case 3:
+        return wifiConnect.GetGoToHome();
     }
     return 0;
 }
