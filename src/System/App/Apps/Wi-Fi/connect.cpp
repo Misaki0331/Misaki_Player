@@ -129,32 +129,36 @@ void Connect::Draw(){
             }
             break;
             case WiFi_Test:
-            break;
-            /*
-            {
-                switch(testmode){
-                    case -1:{
-                    FastFont::printConsole("|*9Connection Failed.",0,20+scrollX);
-                    testmode=-32768;}
-                    break;
-                    case 0:{
-                    char *text2=new char[64];
-                    int t=millis()-startTimer;
-                    sprintf(text2,"Wi-Fi Connecting... |*f[%d:%02d:%03d]",t/60000,t/1000%60,t%1000);
-                    FastFont::printConsole(text2,0,20+scrollX);
-                    delete[] text2;}
-                    break;
-                    case 1:{
-                    FastFont::printConsole("|*aConnected!",0,20+scrollX);
-                    testmode++;
-                    scrollX+=8;}
-                    break;
-                    
+                if(tempmode!=testmode||testmode==1){
+                    if(tempmode!=testmode){tempmode=testmode;scroll+=8;}
+                    switch(testmode){
+                        case 0:
+                        FastFont::printConsole("Wi-Fi connecting...",0,20+scroll);
+                        testmode++;
+                        IsDraw=1;
+                        break;
+                        case 1:{
+                        char* test = new char[40];
+                        int tempt=millis()-connectingTime;
+                        sprintf(test,"Connection time:%3d.%02ds",tempt/1000,tempt%1000/10);
+                        if(tempt%10==0)FastFont::printRom(test,0,20+scroll,WHITE,1,BLACK);
+                        delete[] test;}
+                        break;
+                        case 2:{
+                        FastFont::printConsole("Connected!",0,20+scroll);
+                        testmode=65535;}
+                        break;
+                        case 1000:
+                        FastFont::printConsole("Wi-Fi connection error!",0,20+scroll);
+                        testmode=65535;
+                        break;
+                        default:
+                        break;
+                    }
                 }
-
+            break;
+          
                 
-                break;
-            }*/
 
         }
     }
@@ -230,7 +234,9 @@ void Connect::ButtonPress(int Type){
             ModeEnter();
             break;
         case WiFi_Test:
-            //WiFi.disconnect();
+            WiFi.disconnect(true);
+            sellectMode=-1;
+            ModeEnter();
             break;
         case WiFi_SetSSID:
         case WiFi_SetPassword:
@@ -319,7 +325,13 @@ void Connect::ModeEnter(){
             sellectMode=0;
             break;
         case WiFi_Test:
+            scroll=0;
+            testmode=0;
+            tempmode=-1;
+            connectingTime=millis();
+            WiFi.begin(ssid.c_str(),password.c_str());
         /*
+            
             scrollX=0;
             testmode=0;
             WiFi.begin(ssid.c_str(), password.c_str());
@@ -362,21 +374,14 @@ bool Connect::GetGoToHome(){
 void Connect::Loop(){
     switch(mode){
         case WiFi_Test:
-        /*
-        IsDraw=1;
-            switch(testmode){
-                case 0:
-                    if(WiFi.status()==WL_CONNECTED){
-                        scrollX+=8;
-                        testmode=1;
-                    }
-                    if(WiFi.status()==WL_CONNECT_FAILED){
-
-                        scrollX+=8;
-                        testmode=-1;
-                    }
-                break;
-            }*/
+        if(testmode==1){
+            if(WiFi.status()==WL_CONNECTED){testmode++;WiFi.disconnect(true);}
+            if(millis()-connectingTime>60000){
+                testmode=1000;
+                WiFi.disconnect(true);
+            }
+            IsDraw=true;
+        }
         break;
     }
 }

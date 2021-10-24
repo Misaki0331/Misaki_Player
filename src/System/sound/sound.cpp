@@ -27,7 +27,7 @@ void WavePlayer::i2s_Init(){
   if(!isSpeak){
      i2s_config_t i2s_config = {
     .mode = (i2s_mode_t)(I2S_MODE_DAC_BUILT_IN | I2S_MODE_MASTER | I2S_MODE_TX),
-    .sample_rate = DAC_FS,
+    .sample_rate = OSR*srate,
     .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT, // 内部DACは上位8bitが再生対象
     .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT, // ステレオ。左右データ書込必要
     .communication_format = I2S_COMM_FORMAT_I2S_MSB,
@@ -55,13 +55,7 @@ size_t WavePlayer::fill_data(int type, float dB){
 
   if ( type == Init ) {
     
-    for ( int32_t i = 0; i < SINTBLMAX; i ++ ) {
-      flat_sin_tbl[i]
-        = sin(2.0 * PI * i * SIN_FRQ / SRC_FS); //Sine wave, -1~+1
-      decaysin_tbl[i]
-        = flat_sin_tbl[i]
-          * pow(0.5, (float)i / SINTBLMAX);     // x 減衰音 tbl長で振幅半減
-    }
+  
     return 0;
   }
   
@@ -70,28 +64,29 @@ size_t WavePlayer::fill_data(int type, float dB){
   float f;
   float g  = 32767.0 * pow(10, dB / 20);        // for flat gain
   float gd = g * pow(0.5, (float)ct2);          // for decay gain
-  size_t r_size = sizeof(src_buf);
+  int sz=sizeof(src_buf);
+  size_t r_size = sz;
     Pos=(int)wav.position();
   if ( type == Wav ) {
-    r_size = wav.readBytes(src_buf, sizeof(src_buf));
-    if ( r_size != sizeof(src_buf) ) {
+    r_size = wav.readBytes(src_buf, sz);
+    if ( r_size != sz ) {
         if(IsLooping){
             wav.seek(0x2C); // rewind to start point
         }else{
             wav.seek(0x2C);
             IsPlaying=false;
+            i2s_End();
         }
     
     }
   } else {
-    for (int i = 0; i < (sizeof(src_buf) >> 2); i++) {
+    
+    for (int i = 0; i < (sz >> 2); i++) {
       switch ( type ) {
-        case Decay: f = gd * decaysin_tbl[ct];  break;
-        case Sin  : f = g  * flat_sin_tbl[ct];  break;
         case Zero :
         default   : f = 0;                      break;
       }
-      if (++ct >= SINTBLMAX) {
+      if (++ct >= srate/4) {
         ct = 0;
         if (++ct2 >= DECAY_MAX) ct2 = 0;
         gd = g * pow(0.5, (float)ct2);          // update decay gain
@@ -143,41 +138,79 @@ void WavePlayer::Filter_Process(size_t r_size){
 void WavePlayer::Begin(){
   M5.Speaker.begin();
          // 80MHzのほうがDACノイズ低減に有利。ただしBasicでSDカード再生に失敗する場合あり
-  ledcWriteTone(7, SRC_FS );  // LCDバックライトのPWM周期をSRC_FSと同じにして可聴帯域外とする
+  //ledcWriteTone(7, srate );  // LCDバックライトのPWM周期をsrateと同じにして可聴帯域外とする
     
     fill_data(Init,0);
     
 }
 String WavePlayer::Filename="";
+bool WavePlayer::isEnd=0;
+int WavePlayer::debug=0;
+int WavePlayer::srate=0;
 void WavePlayer::Loop(){
-  
+  if(srate>0){
+    int sr=srate;
+    isEnd=0;
     size_t r_size = 0;
-    for ( int i = 0; i < (SRC_FS / SPF); i++ ) {
+    debug=163;
+    for ( int i = 0; i < (sr / SPF); i++ ) {
         if(IsPlaying){
+          debug=166;
             r_size = fill_data(Wav,     0); 
         }   else{
+          debug=169;
             if (StopCount < 10) {r_size = fill_data(Zero,    0); // ゼロ出力
             }else{
-              vTaskDelay(10);
+              debug=171;
             }
         }
         if (IsPlaying)StopCount = 0;
         if (StopCount < 10) {
         StopCount++;
         if(isSpeak){
+          debug=180;
         Filter_Process( r_size );
-        
+        debug=182;
         i2s_write_bytes( I2S_NUM_0, (char *)dac_buf, r_size * OSR, portMAX_DELAY );
+        debug=184;
       }
         }
     }
+  }else{
+    isEnd=1;
+    vTaskDelay(10);
+  }
 }
 int WavePlayer::Volume=InitVolume;
 bool WavePlayer::IsPlaying=false;
 int WavePlayer::StopCount=0;
+void WavePlayer::releaseMemory(){
+  srate=0;
+  
+  Serial.println("Sound Memory Released!");
+}
+void WavePlayer::obtainMemory(){
+  wav.seek(0x18);
+  releaseMemory();
+    byte* smrt=new byte[5];
+    wav.read(smrt,4);
+    int samplingrate=0;
+    for(int c=3;c>=0;c--){
+      samplingrate*=256;
+      samplingrate+=(unsigned char)smrt[c];
+      Serial.printf("%02X ",smrt[c]);
+    }
+    Serial.printf("Sampling Rate = %dHz\n",samplingrate);
+    Serial.printf("Memory:%d/%d\n",4*SPF+4*SPF+OSR+samplingrate,esp_get_free_heap_size());
+    delete[] smrt;
+    srate=samplingrate;
+}
 int WavePlayer::Play(){
     if(!SD.exists(Filename))return 0;
     //wav = SD.open(Filename);
+    wav.close();
+    wav=SD.open(Filename,FILE_READ);
+    obtainMemory();
     i2s_Init();
     wav.seek(0x2C);  // Skip wav header
     M5.Speaker.mute();
@@ -189,10 +222,12 @@ int WavePlayer::Play(String str){
     if(IsPlaying){
         IsPlaying=false;
     }
-    i2s_Init();
+    
     Filename=str;
     if(!wav)wav.close();
     wav = SD.open(Filename);
+    obtainMemory();
+i2s_Init();
     wav.seek(0x2C);  // Skip wav header
     IsPlaying=true;
     M5.Speaker.setVolume(Volume);
@@ -223,14 +258,17 @@ int WavePlayer::Pause(bool flg){
 void WavePlayer::Stop(){
     IsPlaying=false;
     wav.seek(0x2C);
+    wav.close();
     M5.Speaker.mute();
     i2s_End();
+    releaseMemory();
 }
 void WavePlayer::SetFileName(String str){
     IsPlaying=false;
     Filename=str;
     if(!wav)wav.close();
     wav = SD.open(Filename);
+    obtainMemory();
     wav.seek(0x2C);  // Skip wav header
     M5.Speaker.mute();
     Pos=0;
@@ -240,25 +278,23 @@ String WavePlayer::GetFileName(){
 }
 int WavePlayer::SetSeek(int ms){
 
-    unsigned long MaxTime=(0xFFFFFFFF-0x2C)/((int)SRC_FS/1000)/4;
+    unsigned long MaxTime=(0xFFFFFFFF-0x2C)/((int)srate/1000)/4;
     if(!wav.available())return -2;
     if(ms>MaxTime)return -1;
-    if(((wav.size()-0x2C)/((int)SRC_FS/1000)/4)<ms)return 0;
-    unsigned long SeekByte = ms*((int)SRC_FS/1000)*4;
+    if(((wav.size()-0x2C)/((int)srate/1000)/4)<ms)return 0;
+    unsigned long SeekByte = ms*((int)srate/1000)*4;
     wav.seek(0x2C+SeekByte);
     return 1;
 }
 int WavePlayer::GetSeek(){
     if(!wav.available())return -2;
-    return ((Pos-0x2C)/((int)SRC_FS/1000)/4);
+    return ((Pos-0x2C)/((int)srate/1000)/4);
 }
 int WavePlayer::GetLength(){
     if(!wav.available())return -2;
-    return (wav.size()-0x2C)/((int)SRC_FS/1000)/4;
+    return (wav.size()-0x2C)/((int)srate/1000)/4;
 }
 File WavePlayer::wav;
-float WavePlayer::flat_sin_tbl[]={0};
-float WavePlayer::decaysin_tbl[]={0};
 bool WavePlayer::IsLooping=false;
 bool WavePlayer::GetIsPlaying(){
   return IsPlaying;

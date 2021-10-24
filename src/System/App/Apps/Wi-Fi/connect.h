@@ -48,6 +48,8 @@ namespace App{
             void DrawKeyBoardUI();
             int scroll;
             int testmode=0;
+            int tempmode=-1;
+            int connectingTime=0;
         };
     }
 }

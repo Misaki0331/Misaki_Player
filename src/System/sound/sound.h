@@ -2,7 +2,7 @@
 
 #define SD_WAV  "/sample.wav" // SDCard上のWaveFile定義．44.1kHz 16bit Stereo専用
 #define SRC_FS  48000         // Source Sampling Rate [Hz]
-#define OSR     4             // Over Sampling Rate (1~8) 
+#define OSR     3             // Over Sampling Rate (1~8) 
 #define DAC_FS  (OSR *SRC_FS) // DAC Sampling Rate [Hz]
 #define SPF     480           // Sample per Frame (Buffer処理単位)
 #define DSOMAX  6              // Max. of DeltaSigma Order
@@ -29,8 +29,6 @@ namespace Core{
             static struct FC fc[3];
             static void i2s_Init();
             static void i2s_End();
-            static float flat_sin_tbl[SINTBLMAX];
-            static float decaysin_tbl[SINTBLMAX];
             static File wav;
             static size_t fill_data(int type, float dB);
             static void Filter_Process(size_t r_size);
@@ -40,6 +38,11 @@ namespace Core{
             static bool IsLooping;
             static int Volume;
             static bool isSpeak;
+            static int srate;
+            static bool isEnd;
+            static int debug;
+            static void obtainMemory();
+            static void releaseMemory();
             public:
             static void Begin();
             static void Loop();
