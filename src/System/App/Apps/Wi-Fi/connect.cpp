@@ -18,6 +18,9 @@ String Connect::GetAppName(){
     return "Wi-Fi Connection Setting";
 }
 void Connect::Begin(){
+    
+    FastFont::printRom("Loading Profiles...",0,30,WHITE,2);
+    FastFont::printRom("Please wait...",0,50,WHITE,2);
     ReadProfile();
     IsFirstDraw=1;
     IsDraw=1;
@@ -27,12 +30,14 @@ void Connect::Begin(){
     TempSetString="";
     sellectMode=0;
     toHome=0;
+    M5.lcd.fillRect(0,0,320,240,BLACK);
 }
 void Connect::SaveProfile(){
     
     SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED);
     fs::FS fs = SPIFFS;
-    File config = fs.open("/Wi-Fi_00.ini",FILE_WRITE);
+    if(!fs.exists("/config"))fs.mkdir("/config");
+    File config = fs.open("/config/Wi-Fi_00.ini",FILE_WRITE);
     if(!config)return;
     config.println(ssid);
     config.println(password);
@@ -42,8 +47,11 @@ void Connect::SaveProfile(){
 void Connect::ReadProfile(){
     SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED);
     fs::FS fs = SPIFFS;
-    File config = fs.open("/Wi-Fi_00.ini",FILE_READ);
-    if(!config)return;
+    File config = fs.open("/config/Wi-Fi_00.ini",FILE_READ);
+    if(!config){
+        SPIFFS.end();
+        return;
+    }
     ssid=config.readStringUntil('\n');
     password=config.readStringUntil('\n');
     ssid.remove(ssid.length()-1,1);
@@ -72,6 +80,9 @@ void Connect::Draw(){
                 break;
             case WiFi_SetPassword:
                 FastFont::printRom("Set Password",0,30,WHITE,1,BLACK);
+                break;
+                case WiFi_Test:
+                FastFont::printRom("Wi-Fi Connection Tester",0,20,WHITE,1,BLACK);
                 break;
         }
     }
@@ -145,11 +156,35 @@ void Connect::Draw(){
                         delete[] test;}
                         break;
                         case 2:{
-                        FastFont::printConsole("Connected!",0,20+scroll);
+                        FastFont::printConsole("|*aConnected!",0,20+scroll);
+                        scroll+=8;
+                        char* tes = new char[40];
+                        //int n= WiFi.scanNetworks();
+                        int level=0;
+                        /*for(int i=0;i<n;i++){
+                            if(WiFi.SSID(i)==ssid){
+                                level=WiFi.RSSI(i);
+                                break;
+                            }
+                        }*/
+                        level=WiFi.RSSI();
+                        Serial.println(WiFi.RSSI());
+                        if(WiFi.status()!=WL_CONNECTED)Serial.println("Connection Lost");
+                        sprintf(tes,"Wi-Fi Signal Strength : |*a%d|*fdB",level);
+                        FastFont::printConsole(tes,0,20+scroll);
+                        scroll+=8;
+                        IPAddress ip = (uint32_t) WiFi.localIP();
+                        sprintf(tes,"Local IP : |*a%u.%u.%u.%u", ip[0],ip[1],ip[2],ip[3]);
+                        FastFont::printConsole(tes,0,20+scroll);
+                        scroll+=8;
+                        ip = (uint32_t) WiFi.dnsIP();
+                        sprintf(tes,"DNS IP : |*a%u.%u.%u.%u", ip[0],ip[1],ip[2],ip[3]);
+                        FastFont::printConsole(tes,0,20+scroll);
+                        delete[]tes;
                         testmode=65535;}
                         break;
                         case 1000:
-                        FastFont::printConsole("Wi-Fi connection error!",0,20+scroll);
+                        FastFont::printConsole("|*bWi-Fi connection timeout!",0,20+scroll);
                         testmode=65535;
                         break;
                         default:
@@ -366,6 +401,7 @@ char Connect::GetSoftKeyboardChar(int value){
 
 }
 bool Connect::GetUpDateDraw(){
+    if(testmode==1&&mode==WiFi_Test)return 1;
     return IsDraw;
 }
 bool Connect::GetGoToHome(){
@@ -375,12 +411,16 @@ void Connect::Loop(){
     switch(mode){
         case WiFi_Test:
         if(testmode==1){
-            if(WiFi.status()==WL_CONNECTED){testmode++;WiFi.disconnect(true);}
-            if(millis()-connectingTime>60000){
+            if(WiFi.status()==WL_CONNECTED){testmode++;}
+            if(millis()-connectingTime>20000){
                 testmode=1000;
-                WiFi.disconnect(true);
+                
             }
             IsDraw=true;
+        }
+        if(testmode==65535){
+            WiFi.disconnect(true);
+            testmode=65536;
         }
         break;
     }
