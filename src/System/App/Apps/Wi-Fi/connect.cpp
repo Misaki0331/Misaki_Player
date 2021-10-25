@@ -5,6 +5,7 @@
 #include "FS.h"
 #include "SPIFFS.h"
 #include <WiFi.h>
+#include <HTTPClient.h>
 #define FORMAT_SPIFFS_IF_FAILED true
 using namespace App::Wi_Fi;
 using namespace Core::Draw;
@@ -35,6 +36,7 @@ void Connect::Begin(){
 void Connect::SaveProfile(){
     
     SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED);
+    
     fs::FS fs = SPIFFS;
     if(!fs.exists("/config"))fs.mkdir("/config");
     File config = fs.open("/config/Wi-Fi_00.ini",FILE_WRITE);
@@ -180,13 +182,53 @@ void Connect::Draw(){
                         ip = (uint32_t) WiFi.dnsIP();
                         sprintf(tes,"DNS IP : |*a%u.%u.%u.%u", ip[0],ip[1],ip[2],ip[3]);
                         FastFont::printConsole(tes,0,20+scroll);
+                        scroll+=8;
                         delete[]tes;
-                        testmode=65535;}
+                        testmode++;}
+                        case 3:{
+                            HTTPClient http;
+                            //HTTPS
+                            FastFont::printConsole("Testing http client...",0,20+scroll);
+                            scroll+=8;
+                            http.begin("https://api.iedred7584.com/eew/json/");
+                            
+                            // start connection and send HTTP header
+                            int httpCode = http.GET();
+                            char* ts=new char[64];
+                            sprintf(ts,"HTTP Code : %d",httpCode);
+                            FastFont::printConsole(ts,0,20+scroll);
+                            scroll+=8;
+                            if(httpCode>0){
+                               String Data = http.getString();
+                               sprintf(ts,"Data Size : %d Bytes",http.getSize());
+                               FastFont::printConsole(ts,0,20+scroll);
+                                scroll+=8;
+                               for(int i=0;i<17;i++){
+                               FastFont::printConsole("|*6"+Data.substring(i*53,i*53+53),0,20+scroll);
+                                scroll+=8;
+                               }
+                               Serial.println(Data);
+                               //for(int i=0;i<Data.length();i+=32)Serial.print(Data.substring(i,i+31).c_str());
+                                Data.clear();
+                            }else{
+                                FastFont::printConsole("|*cHTTP GET ERROR!",0,20+scroll);
+                                scroll+=8;
+                            
+                                FastFont::printConsole("Massage : |*c"+http.errorToString(httpCode),0,20+scroll);
+                                scroll+=8;
+                            }
+                            http.end();
+                            delete[] ts;
+                            
+                            testmode=65535;
+                            }
+                            break;
                         break;
                         case 1000:
-                        FastFont::printConsole("|*bWi-Fi connection timeout!",0,20+scroll);
+                        FastFont::printConsole("|*cWi-Fi connection timeout!",0,20+scroll);
                         testmode=65535;
                         break;
+                        
                         default:
                         break;
                     }
@@ -197,6 +239,53 @@ void Connect::Draw(){
 
         }
     }
+}
+Connect::DateTime Connect::UnixToDateTime(long value){
+    Connect::DateTime tm;
+    tm.year  = 1970;
+    tm.month = 1;
+    tm.day   = 1;
+    tm.hour  = 0;
+    tm.min   = 0;
+    tm.sec   = 0;
+    
+    unsigned long yearindate;
+    unsigned long seconds_year;
+    unsigned long seconds_month;
+    byte daysinmonth[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+  
+    value += 9 * 3600;
+    while( value > 0 ) {
+      if( (tm.year%4==0&&(tm.year%100!=0||tm.year%400==0)) ) {
+        yearindate = 366;
+        daysinmonth[1] = 29;
+      } else {
+        yearindate = 365;
+        daysinmonth[1] = 28;
+      }
+      seconds_year  = yearindate * 86400;
+      seconds_month = daysinmonth[tm.month - 1] * 86400;
+      if( value >= seconds_year ) {
+        tm.year++;
+        value -= seconds_year;
+      } else if( value >= seconds_month ) {
+        tm.month++;
+        value -= seconds_month;
+      } else if( value >= 86400 ) {
+        tm.day++;
+        value -= 86400;  
+      } else if( value >= 3600 ) {
+        tm.hour++;
+        value -= 3600; 
+      } else if( value >= 60 ) {
+        tm.min++;
+        value -= 60;
+      } else {
+        tm.sec = (byte)value;
+        value= 0;
+      }
+    }
+    return tm;
 }
 void Connect::DrawKeyBoardUI(){
     M5.Lcd.fillRect(0,160,320,60,BLACK);
@@ -269,7 +358,7 @@ void Connect::ButtonPress(int Type){
             ModeEnter();
             break;
         case WiFi_Test:
-            WiFi.disconnect(true);
+            //WiFi.disconnect(true);
             sellectMode=-1;
             ModeEnter();
             break;
@@ -419,7 +508,7 @@ void Connect::Loop(){
             IsDraw=true;
         }
         if(testmode==65535){
-            WiFi.disconnect(true);
+            //WiFi.disconnect(true);
             testmode=65536;
         }
         break;

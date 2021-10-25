@@ -95,6 +95,7 @@ void AppSelect::Select::SellectInit(){
     systemConfig.UIUpTime_TextColor=WHITE;
     systemConfig.UIUsageCPU_TextColor=WHITE;
     systemData.UpdateBatteryUI=true;
+    systemData.UpdateSignalUI=true;
     IsFirstDrawFlg=0;
     IsDrawUpdate=true;
     

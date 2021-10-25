@@ -50,6 +50,16 @@ namespace App{
             int testmode=0;
             int tempmode=-1;
             int connectingTime=0;
+            struct DateTime {
+                int  year;
+                byte month;
+                byte day;
+                byte hour;
+                byte min;
+                byte sec;
+            };
+            DateTime UnixToDateTime(long value);
+            
         };
     }
 }

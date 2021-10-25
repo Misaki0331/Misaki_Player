@@ -9,6 +9,7 @@ namespace Core{
         static int LPS;
         static bool UpdateBatteryUI;
         static int TempBatteryPercent;
+        static bool UpdateSignalUI;
     }static systemData;
     class SystemConfig
     {

@@ -4,6 +4,7 @@ SystemData::SystemData(){
     LoopCount=0;
     UpdateBatteryUI=true;
     TempBatteryPercent=0;
+    UpdateSignalUI=true;
 }
 SystemConfig::SystemConfig(){
     BatteryPosX=297;
@@ -29,3 +30,4 @@ int SystemAPI::BatteryLeft=0;
 int SystemAPI::WiFiLevel=0;
 bool SystemAPI::WiFiIsConnected=false;
 int SystemData::LPS=0;
+bool SystemData::UpdateSignalUI=0;

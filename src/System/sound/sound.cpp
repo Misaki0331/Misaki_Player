@@ -153,6 +153,7 @@ void WavePlayer::Loop(){
     isEnd=0;
     size_t r_size = 0;
     debug=163;
+    if(isSpeak){
     for ( int i = 0; i < (sr / SPF); i++ ) {
         if(IsPlaying){
           debug=166;
@@ -175,6 +176,9 @@ void WavePlayer::Loop(){
         debug=184;
       }
         }
+    }
+    }else{
+      vTaskDelay(10);
     }
   }else{
     isEnd=1;

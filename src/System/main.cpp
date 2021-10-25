@@ -3,6 +3,7 @@
 #include "config.h"
 #include "Fonts/FastFont.h"
 #include "System/Debug/Logger.h"
+#include"WiFi.h"
 using namespace Core;
 using namespace Core::Draw;
 using namespace Core::Debug;
@@ -33,6 +34,11 @@ void Main::Draw(){
         systemData.UpdateBatteryUI=false;
     drawUI.Battery(systemConfig.BatteryPosX,systemConfig.BatteryPosY,
                 BatteryPercent,systemConfig.EnableALLUpdate);
+                }
+    if(systemData.UpdateSignalUI){
+        systemData.UpdateSignalUI=false;
+        drawUI.RSSI(275,0,SystemAPI::WiFiLevel,SystemAPI::WiFiIsConnected,1);
+    
     }
 }
 void Main::Loop(){
@@ -94,7 +100,10 @@ void Main::Loop(){
 }
 void Main::ControlThread(void* arg){
     drawUI.Battery(297,0,BatteryPercent,true);
+    int UpdateTime;
     while(1){
+        if(UpdateTime!=millis()/1000){
+            UpdateTime=millis()/1000;
         BatteryPercent = M5.Power.getBatteryLevel()+M5.Power.isCharging()*200+M5.Power.isChargeFull()*400;
         MainLPS=systemData.LoopCount;
         SystemAPI::FLPS=systemData.LoopCount;
@@ -108,6 +117,18 @@ void Main::ControlThread(void* arg){
         SystemAPI::BatteryLeft=BatteryPercent%200;
         FreeHeapMemory= esp_get_free_heap_size();
         SystemAPI::FreeRAM=FreeHeapMemory;
+        int rssi=WiFi.RSSI();
+        if(rssi!=SystemAPI::WiFiLevel)systemData.UpdateSignalUI=1;
+        if(rssi>SystemAPI::WiFiLevel+5){
+            SystemAPI::WiFiLevel+=5;
+        }else if(rssi<SystemAPI::WiFiLevel-5){
+            SystemAPI::WiFiLevel-=5;
+        }else{
+            SystemAPI::WiFiLevel=rssi;
+        }
+        SystemAPI::WiFiIsConnected=WiFi.status()==WL_CONNECTED;
+        
+        }
         vTaskDelay(1000);
     }
 }
