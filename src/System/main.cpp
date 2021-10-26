@@ -41,16 +41,35 @@ void Main::Draw(){
     
     }
 }
+int Main::ButtonACount=0;
+int Main::ButtonBCount=0;
+int Main::ButtonCCount=0;
 void Main::Loop(){
     //主な処理
     M5.update(); 
     unsigned int Buttons=0;
-    if(M5.BtnA.wasPressed())Buttons |= (1<<0);
-    if(M5.BtnB.wasPressed())Buttons |= (1<<1);
-    if(M5.BtnC.wasPressed())Buttons |= (1<<2);
-    if(M5.BtnA.isPressed()) Buttons |= (1<<3);
-    if(M5.BtnB.isPressed()) Buttons |= (1<<4);
-    if(M5.BtnC.isPressed()) Buttons |= (1<<5);
+    
+    if(M5.BtnA.isPressed()) {
+        ButtonACount++;
+        Buttons |= (1<<3);
+    }else{
+        ButtonACount=0;
+    }
+    if(M5.BtnB.isPressed()) {
+        ButtonBCount++;
+        Buttons |= (1<<4);
+    }else{
+        ButtonBCount=0;
+    }
+    if(M5.BtnC.isPressed()) {
+        ButtonCCount++;
+        Buttons |= (1<<5);
+    }else{
+        ButtonCCount=0;
+    }
+    if(ButtonACount==10)Buttons |= (1<<0);
+    if(ButtonBCount==10)Buttons |= (1<<1);
+    if(ButtonCCount==10)Buttons |= (1<<2);
     appSelecter.SetButtonStatus(Buttons);
     appSelecter.Loop();
     appSelecter.Draw();

@@ -111,7 +111,7 @@ void FileManager::FileEnter(){
     }else if(FileLists[sellectOffset].IsDirectry){
         Path.concat(FileLists[sellectOffset].Name);
         GetFileList();
-    }else if(FileLists[sellectOffset].Name.length()<=12&&FileLists[sellectOffset].Name.length()>=5){
+    }else if(FileLists[sellectOffset].Name.length()<=64&&FileLists[sellectOffset].Name.length()>=5){
         
         String ext;
         ext=FileLists[sellectOffset].Name;
