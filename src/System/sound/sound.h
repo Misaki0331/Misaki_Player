@@ -43,6 +43,8 @@ namespace Core{
             static int debug;
             static void obtainMemory();
             static void releaseMemory();
+            static int Pos;
+            static bool IsIOError;
             public:
             static void Begin();
             static void Loop();
@@ -59,7 +61,6 @@ namespace Core{
             static bool GetIsPlaying();
             static int GetVolume();
             static int SetVolume(int value);
-            static int Pos;
         };
         struct LPF{                  ////// Biquad Filter Coef.
                 const float k, a1, a2, b1, b2; // b0 is fixed to '1', b1 & b2 MUST BE normalized

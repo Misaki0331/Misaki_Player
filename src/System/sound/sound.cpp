@@ -50,6 +50,7 @@ void WavePlayer::i2s_End(){
   }
 }
 int WavePlayer::Pos=0;
+bool WavePlayer::IsIOError=0;
 size_t WavePlayer::fill_data(int type, float dB){
     static int32_t ct = 0, ct2 = 0;
 
@@ -66,18 +67,37 @@ size_t WavePlayer::fill_data(int type, float dB){
   float gd = g * pow(0.5, (float)ct2);          // for decay gain
   int sz=sizeof(src_buf);
   size_t r_size = sz;
-    Pos=(int)wav.position();
+    
   if ( type == Wav ) {
     r_size = wav.readBytes(src_buf, sz);
+    if(wav.size()-wav.position()>sizeof(src_buf)){
     if ( r_size != sz ) {
-        if(IsLooping){
+        IsIOError=1;
+      
+      wav.close();
+      wav = SD.open(Filename,FILE_READ);
+      wav.seek(Pos);
+      while(IsPlaying&&wav.size()<=0){
+        wav.close();
+      wav = SD.open(Filename,FILE_READ);
+      wav.seek(Pos);
+      }
+    }else{
+      IsIOError=0;
+      Pos=(int)wav.position();
+    }
+    }else{
+      if ( r_size != sz ) {
+      if(IsLooping){
             wav.seek(0x2C); // rewind to start point
         }else{
             wav.seek(0x2C);
             IsPlaying=false;
             i2s_End();
         }
-    
+      }
+      Pos=(int)wav.position();
+      IsIOError=0;
     }
   } else {
     

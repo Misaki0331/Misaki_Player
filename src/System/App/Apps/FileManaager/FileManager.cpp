@@ -253,7 +253,8 @@ void FileManager::Draw(){
                 int time = WavePlayer::GetSeek();
                 int len =  WavePlayer::GetLength();
                 int Bar=(float)time*300/len;
-                
+                if(Bar<0)Bar=0;
+                if(Bar>300)Bar=300;
                 if(Bar<DisplayWaveBarPos){
                     M5.Lcd.fillRect(10+Bar,181,DisplayWaveBarPos-Bar,18,BLACK);
                 }else if(Bar>DisplayWaveBarPos){
