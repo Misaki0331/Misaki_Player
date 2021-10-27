@@ -131,7 +131,7 @@ void FileManager::FileEnter(){
             String SoundPath;
             SoundPath=Path;
             SoundPath.concat(FileLists[sellectOffset].Name);
-            WavePlayer::SetFileName(SoundPath);
+            if(WavePlayer::GetFileName()!=SoundPath||!WavePlayer::GetIsPlaying())WavePlayer::SetFileName(SoundPath);
             ModeChange(AudioPlayer);
             
         }
@@ -170,6 +170,10 @@ void FileManager::ButtonPress(int Type){
                 case 2:
                     WavePlayer::Pause(!WavePlayer::GetIsPlaying());
                     break;
+                    case 3:
+                    IsFirstDraw=false;
+                    UpdateDraw=true;
+                    mode=List;
             }
     }
 }

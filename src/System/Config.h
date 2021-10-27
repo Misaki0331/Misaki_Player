@@ -1,5 +1,6 @@
 #include<M5Stack.h>
 #define RAMSIZE 327680
+#define CHATTERING_DELAY 12
 namespace Core{
     class SystemData
     {

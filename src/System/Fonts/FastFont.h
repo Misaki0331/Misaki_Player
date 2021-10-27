@@ -18,6 +18,7 @@ namespace Core{
             static const unsigned char AsciiFontBin[];
             static const unsigned short AsciiFontPtr[];
             static const unsigned char AsciiOldFont[];
+            static const unsigned char SjisFontBin[];
             static void displayASCII(int x,int y, uint8_t chara,uint8_t siz,long color);
             static int PosX;
             static int PosY;

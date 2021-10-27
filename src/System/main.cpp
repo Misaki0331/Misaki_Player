@@ -48,28 +48,35 @@ void Main::Loop(){
     //主な処理
     M5.update(); 
     unsigned int Buttons=0;
-    
+    char* tex=new char[40];
     if(M5.BtnA.isPressed()) {
         ButtonACount++;
         Buttons |= (1<<3);
-    }else{
+    }else if(ButtonACount>0){
+        sprintf(tex,"A:%d",ButtonACount);
+        Serial.println(tex);
         ButtonACount=0;
     }
     if(M5.BtnB.isPressed()) {
         ButtonBCount++;
         Buttons |= (1<<4);
-    }else{
+    }else if(ButtonBCount>0){
+        sprintf(tex,"B:%d",ButtonBCount);
+        Serial.println(tex);
         ButtonBCount=0;
     }
     if(M5.BtnC.isPressed()) {
         ButtonCCount++;
         Buttons |= (1<<5);
-    }else{
+    }else if(ButtonCCount>0){
+        sprintf(tex,"C:%d",ButtonCCount);
+        Serial.println(tex);
         ButtonCCount=0;
     }
-    if(ButtonACount==10)Buttons |= (1<<0);
-    if(ButtonBCount==10)Buttons |= (1<<1);
-    if(ButtonCCount==10)Buttons |= (1<<2);
+    delete[] tex;
+    if(ButtonACount==CHATTERING_DELAY)Buttons |= (1<<0);
+    if(ButtonBCount==CHATTERING_DELAY)Buttons |= (1<<1);
+    if(ButtonCCount==CHATTERING_DELAY)Buttons |= (1<<2);
     appSelecter.SetButtonStatus(Buttons);
     appSelecter.Loop();
     appSelecter.Draw();
