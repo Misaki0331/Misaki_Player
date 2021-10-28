@@ -202,10 +202,10 @@ void Connect::Draw(){
                                String Data = http.getString();
                                sprintf(ts,"Data Size : %d Bytes",http.getSize());
                                FastFont::printConsole(ts,0,20+scroll);
-                                scroll+=8;
-                               for(int i=0;i<17;i++){
-                               FastFont::printConsole("|*6"+Data.substring(i*53,i*53+53),0,20+scroll);
-                                scroll+=8;
+                                scroll+=12;
+                               for(int i=0;i<11;i++){
+                               FastFont::printSjis(Data.substring(i*50,i*50+50),0,20+scroll,GREEN,1,BLACK);
+                                scroll+=12;
                                }
                                Serial.println(Data);
                                //for(int i=0;i<Data.length();i+=32)Serial.print(Data.substring(i,i+31).c_str());

@@ -1,4 +1,5 @@
 #include"FastFont.h"
+
 using namespace Core::Draw;
 void FastFont::displayASCII(int x, int y, uint8_t chara, uint8_t siz, long color) {
   if (chara < 16)return;
@@ -177,4 +178,115 @@ void FastFont::setPos(int x,int y){
 void FastFont::setColor(uint16_t color,long bg){
     TextColor=color;
     BackColor=bg;
+}
+int FastFont::GetSjisPtr(int value){
+  int ptr=value;
+  
+  if(0xA000<=value){
+    ptr-=0x0000E040-(0x0B00);
+    //ptr-=(value/256)-0xE0*3;
+    ptr-=0x0040*(value/256-0xE0);
+  }else{
+    
+    
+    ptr-=0x00008140;
+    //ptr-=(value/256)-0x81*3;
+    ptr-=0x0040*((value/256)-0x81);
+    
+  }
+  //if(value%256>=0x7F)ptr+=1;
+  if(ptr==-1)return 5;
+  if(value>0xEFFF)return 0;
+  return SjisFontPtr[ptr];
+}
+void FastFont::displaySjis(int x,int y,short ptr,uint8_t siz,long color){
+  if(siz==0)return;
+  if(siz==1){
+    int i=0;
+    for(int dy=0;dy<12;dy++){
+      for(int dx=0;dx<12;dx++){
+        if(SjisFontBin[ptr*18+i/8]&(1<<(7-(i%8))))M5.Lcd.drawPixel(x+dx,y+dy,color);
+        i++;
+      }
+    }
+  }else{
+
+  }
+
+}
+void FastFont::displayHSjis(int x,int y,short ptr,uint8_t siz,long color){
+  if(siz==0)return;
+  if(siz==1){
+    int i=0;
+    for(int dy=0;dy<12;dy++){
+      for(int dx=0;dx<6;dx++){
+        if(SjisHFontBin[ptr*9+i/8]&(1<<(7-(i%8))))M5.Lcd.drawPixel(x+dx,y+dy,color);
+        i++;
+      }
+    }
+  }
+
+}
+void FastFont::printSjis(String t,int x,int y,uint16_t color,uint8_t size,long bg)
+{
+  printSjis(t,x,y,color,size,bg,0);
+}
+void FastFont::printSjis(String t,int x,int y,uint16_t color,uint8_t size,long bg,bool IsUtf8){
+  
+
+  uint8_t* text;
+  if(IsUtf8)
+  {
+    text=UTF8tosjis(t);
+  }else{
+    text=new uint8_t[t.length()+1];
+    for(int i=0;i<t.length();i++)text[i]=t.charAt(i);
+    text[t.length()]=0;
+  }
+  int dx=0;
+  for(int i=0;i<t.length();i++)text[i]=t.charAt(i);
+ for(int i=0;i<t.length();i++)Serial.printf("%02x ",text[i]);
+  Serial.printf("\n");
+  for(int i=0;i<t.length();i++){
+    if((text[i]>=0x81&&text[i]<=0x9F)||(text[i]>=0xE0&&text[i]<=0xEF)){
+      unsigned short chr=(text[i]+256)%256;
+      i++;
+      chr*=256;
+      chr+=(text[i]+256)%256;
+      
+      if(bg>=0)M5.Lcd.fillRect(x+dx,y,12,12,bg);
+      displaySjis(x+dx,y,GetSjisPtr(chr),size,color);
+      dx+=13;
+    }else{
+      unsigned short chr=(text[i]+256)%256;
+      if(bg>=0)M5.Lcd.fillRect(x+dx,y,6,12,bg);
+      displayHSjis(x+dx,y,chr-0x20,size,color);
+      dx+=7;
+    }
+  }
+  delete[] text;
+}
+void FastFont::begin(){
+    
+    SPIFFS.begin(1);
+    fs::FS fs = SPIFFS;
+    if(!fs.exists("/bin"))fs.mkdir("/bin");
+    if(!fs.exists("/bin/utf8sjis.tbl")){
+    File config = fs.open("/bin/utf8sjis.tbl",FILE_WRITE);
+    while(!config)config = fs.open("/bin/utf8sjis.tbl",FILE_WRITE);;
+    for(int i=0;i<240878;i++)config.write(utf8sjis_File[i]);
+    config.close();
+    }
+    SPIFFS.end();
+}
+uint8_t* FastFont::UTF8tosjis(String str){
+  UTF8toSJIS u8ts;
+  uint8_t *sj_txt = new uint8_t[str.length()];
+  for(int i=0;i<str.length();i++)sj_txt[i]=0;
+  uint16_t sj_length;
+  u8ts.UTF8_to_SJIS_str_cnv("/bin/utf8sjis.tbl", str, sj_txt, &sj_length);
+
+  str.clear();
+  return sj_txt;
+   
 }

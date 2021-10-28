@@ -22,10 +22,13 @@ void Main::Begin(){
     Serial.begin(115200);
     xTaskCreatePinnedToCore(ControlThread, "ControlThread", 1024, NULL, 3, NULL, 1);
     xTaskCreatePinnedToCore(SoundThread, "SoundThread", 8192, NULL, 1, NULL, 1);
-    Serial.println("Welcome");
     appSelecter.Begin();
     appSelecter.Update();
     Logger::Log("System Initialized");
+    
+    FastFont::begin();
+    
+    Logger::Log("Font is ok.");
 }
 int Main::UpdateUI=0;
 int Main::TempMs=0;

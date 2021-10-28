@@ -1,4 +1,5 @@
 #include<M5Stack.h>
+#include"utf8/UTF8toSJIS.h"
 #define INVISIBLE_COLOR -1
 namespace Core{
     namespace Draw{
@@ -12,18 +13,30 @@ namespace Core{
             static void printRom(String t, int x, int y, uint16_t color, uint8_t siz);
             static void printRom(String t, int x, int y, uint16_t color, uint8_t siz, long bgc);
             static void printConsole(String ctext,int x,int y);
+            static void printSjis(String t,int x,int y,uint16_t color,uint8_t siz,long bg);
             static uint16_t Color16[];
             static void printFastRom(String t1,String t2,int x,int y,uint16_t color, uint8_t siz,long bgc);
+            static void printSjis(String t,int x,int y,uint16_t color,uint8_t siz,long bg,bool IsUtf8);
+            static void begin();
+            
+            static uint8_t* UTF8tosjis(String str);
             private:
             static const unsigned char AsciiFontBin[];
             static const unsigned short AsciiFontPtr[];
             static const unsigned char AsciiOldFont[];
             static const unsigned char SjisFontBin[];
+            static const unsigned short SjisFontPtr[];
+            static const unsigned char SjisHFontBin[];
+            static int GetSjisPtr(int value);
+            static void displaySjis(int x,int y, short ptr,uint8_t siz,long color);
+            static void displayHSjis(int x,int y, short ptr,uint8_t siz,long color);
             static void displayASCII(int x,int y, uint8_t chara,uint8_t siz,long color);
             static int PosX;
             static int PosY;
             static uint16_t TextColor;
             static long BackColor;
+            static const unsigned char utf8sjis_File[];
+
         };
         
     }
