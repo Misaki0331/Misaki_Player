@@ -17,6 +17,7 @@ namespace Core{
             static uint16_t Color16[];
             static void printFastRom(String t1,String t2,int x,int y,uint16_t color, uint8_t siz,long bgc);
             static void printSjis(String t,int x,int y,uint16_t color,uint8_t siz,long bg,bool IsUtf8);
+            static void printUtf8(String t,int x,int y,uint16_t color,uint8_t siz,long bg,bool AutoBR=0);
             static void begin();
             
             static uint8_t* UTF8tosjis(String str);
@@ -27,6 +28,8 @@ namespace Core{
             static const unsigned char SjisFontBin[];
             static const unsigned short SjisFontPtr[];
             static const unsigned char SjisHFontBin[];
+            static const short Utf8FontPtr[];
+            static const int Utf8FontPtr2[];
             static int GetSjisPtr(int value);
             static void displaySjis(int x,int y, short ptr,uint8_t siz,long color);
             static void displayHSjis(int x,int y, short ptr,uint8_t siz,long color);
@@ -35,7 +38,6 @@ namespace Core{
             static int PosY;
             static uint16_t TextColor;
             static long BackColor;
-            static const unsigned char utf8sjis_File[];
 
         };
         

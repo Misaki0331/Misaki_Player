@@ -268,16 +268,7 @@ void FastFont::printSjis(String t,int x,int y,uint16_t color,uint8_t size,long b
 }
 void FastFont::begin(){
     
-    SPIFFS.begin(1);
-    fs::FS fs = SPIFFS;
-    if(!fs.exists("/bin"))fs.mkdir("/bin");
-    if(!fs.exists("/bin/utf8sjis.tbl")){
-    File config = fs.open("/bin/utf8sjis.tbl",FILE_WRITE);
-    while(!config)config = fs.open("/bin/utf8sjis.tbl",FILE_WRITE);;
-    for(int i=0;i<240878;i++)config.write(utf8sjis_File[i]);
-    config.close();
-    }
-    SPIFFS.end();
+    
 }
 uint8_t* FastFont::UTF8tosjis(String str){
   UTF8toSJIS u8ts;
@@ -289,4 +280,69 @@ uint8_t* FastFont::UTF8tosjis(String str){
   str.clear();
   return sj_txt;
    
+}
+
+void FastFont::printUtf8(String t,int x,int y,uint16_t color,uint8_t size,long bg,bool AutoBR){
+  
+
+  uint8_t* text;
+  
+  text=new uint8_t[t.length()+1];
+  for(int i=0;i<t.length();i++)text[i]=t.charAt(i);
+  text[t.length()]=0;
+  
+  int dx=0;
+  for(int i=0;i<t.length();i++)text[i]=t.charAt(i);
+  
+  for(int i=0;i<t.length();){
+    int ptr=-1;
+    if(text[i]>=0x20&&text[i]<=0x7F){
+      Serial.printf("%02x\n",text[1]);
+      int chr=(text[i]+256)%256;
+      if(bg>=0)M5.Lcd.fillRect(x+dx,y,6,12,bg);
+      displayHSjis(x+dx,y,chr-0x20,size,color);
+      dx+=7;
+      i++;
+    }else if(text[i]>=0xc0&&text[i]<=0xdf){
+      int chr=(text[i]+256)%256;
+      chr*=256;
+      chr+=(text[i+1]+256)%256;
+      for(ptr=0;ptr<17;ptr++){
+        if(Utf8FontPtr2[ptr]<=chr&&Utf8FontPtr2[ptr]+15>=chr)break;
+        if(ptr==16)ptr=9999;
+      }
+      if(ptr==10000)ptr=-1;
+      if(ptr==-1){i++;continue;}
+      if(bg>=0)M5.Lcd.fillRect(x+dx,y,12,12,bg);
+      displaySjis(x+dx,y,Utf8FontPtr[Utf8FontPtr2[ptr]*16+chr%16],size,color);
+      dx+=13;
+      i+=2;
+    }else if(text[i]>=0xe0&&text[i]<=0xef){
+      int chr=(text[i]+256)%256;
+      chr*=256;
+      chr+=(text[i+1]+256)%256;
+      chr*=256;
+      chr+=(text[i+2]+256)%256;
+      
+      for(ptr=17;ptr<1383;ptr++){
+        if(Utf8FontPtr2[ptr]<=chr&&Utf8FontPtr2[ptr]+15>=chr)break;
+        if(ptr==1382)ptr=9999;
+      }
+      if(ptr==10000)ptr=-1;
+      if(ptr==-1){i++;continue;}
+      if(bg>=0)M5.Lcd.fillRect(x+dx,y,12,12,bg);
+      displaySjis(x+dx,y,Utf8FontPtr[ptr*16+chr%16],size,color);
+      i+=3;
+      dx+=13;
+    }else{
+      Serial.printf("%2x ",text[i]);
+      i++;
+    }
+    if(dx+x>308&&AutoBR){
+      dx=0;
+      y+=13;
+    }
+    
+  }
+  delete[] text;
 }

@@ -191,10 +191,9 @@ void Connect::Draw(){
                             FastFont::printConsole("Testing http client...",0,20+scroll);
                             scroll+=8;
                             http.begin("https://api.iedred7584.com/eew/json/");
-                            
+                            char* ts=new char[64];
                             // start connection and send HTTP header
                             int httpCode = http.GET();
-                            char* ts=new char[64];
                             sprintf(ts,"HTTP Code : %d",httpCode);
                             FastFont::printConsole(ts,0,20+scroll);
                             scroll+=8;
@@ -202,12 +201,10 @@ void Connect::Draw(){
                                String Data = http.getString();
                                sprintf(ts,"Data Size : %d Bytes",http.getSize());
                                FastFont::printConsole(ts,0,20+scroll);
-                                scroll+=12;
-                               for(int i=0;i<11;i++){
-                               FastFont::printSjis(Data.substring(i*50,i*50+50),0,20+scroll,GREEN,1,BLACK);
-                                scroll+=12;
-                               }
-                               Serial.println(Data);
+                                scroll+=8;
+                               
+                               FastFont::printUtf8(Data,0,20+scroll,GREEN,1,BLACK,true);
+                               
                                //for(int i=0;i<Data.length();i+=32)Serial.print(Data.substring(i,i+31).c_str());
                                 Data.clear();
                             }else{

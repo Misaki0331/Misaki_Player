@@ -42,7 +42,7 @@ void AppSelect::Select::InSellectDraw(){
             M5.Lcd.fillRect(0,0,320,240,UIBGColor);
             M5.Lcd.fillRect(0,20,320,230,MenuBGColor);
             FastFont::printRom("Misaki Player Launcher",0,10,WHITE,1,UIBGColor);
-            FastFont::printSjis("\x4D\x35\x73\x74\x61\x63\x6B\x82\xC5\x83\x65\x83\x58\x83\x67\x28\x8A\xBF\x8E\x9A\x82\xE0\x95\x5C\x8E\xA6\x29",0,100,WHITE,1,BLACK);
+            FastFont::printUtf8("テスト",0,100,WHITE,1,BLACK);
             Config::systemConfig.EnableALLUpdate=1;
             IsFirstDrawFlg=true;
         }
