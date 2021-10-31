@@ -47,6 +47,19 @@ void EEW::Loop(){
     }
 
 }
+int EEW::GetColor(unsigned int col){
+    int R=col/65536%256;
+    int G=col/256%256;
+    int B=col%256;
+    R/=8;
+    G/=4;
+    B/=8;
+    int rgb=R*64;
+    rgb+=G;
+    rgb*=32;
+    rgb+=B;
+    return rgb;
+}
 void EEW::Draw(){
     if(!IsFirstDrawed){
         IsFirstDrawed=1;
@@ -58,6 +71,8 @@ void EEW::Draw(){
         FastFont::printUtf8("規模",26,106,WHITE,1,BLACK);
         FastFont::printUtf8("深さ",160,106,WHITE,1,BLACK);
         FastFont::printRom("Ping",320-4*6,15,WHITE,1,BLACK);
+        FastFont::printUtf8("最大震度",320-13*4,126,WHITE,1,BLACK);
+
     }
     if(!IsUpdated){
         IsUpdated=1;
@@ -97,7 +112,43 @@ void EEW::Draw(){
         }else{ 
             FastFont::printUtf8("ごく浅い",194,94,WHITE,2,BLACK);
         }
-        
+        int col;
+        int textc=WHITE;
+        String str=json["MaxIntensity"]["To"];
+        int x0=6;
+        if(str=="1"){
+            col=GetColor(0x808080);
+        }else if(str=="2"){
+            col=GetColor(0x4169E1);
+        }else if(str=="3"){
+            x0=42-(6*3)/2;
+            col=GetColor(0x2E8B57);
+        }else if(str=="4"){
+            col=GetColor(0xbfbf0f);
+        }else if(str=="5-"){
+            x0=13;
+            col=GetColor(0xFF4500);
+        }else if(str=="5+"){
+            x0=13;
+            col=GetColor(0xFF4500);
+        }else if(str=="6-"){
+            x0=13;
+            x0=42-(13*3)/2;
+            col=GetColor(0xFFC0CB);
+        }else if(str=="6+"){
+            textc=RED;
+            x0=13;
+            col=GetColor(0xFFC0CB);
+        }else if(str=="7"){
+            x0=13;
+            col=GetColor(0x800080);
+        }else{
+            x0=6;
+            str="-";
+            col=GetColor(0x808080);
+        }
+        m5.Lcd.fillRect(268,140,51,51,col);
+        FastFont::printUtf8(str,268+(51-x0*3)/2,140+(42-24)/2,textc,3,col);
         delete[] text;
         }
     }

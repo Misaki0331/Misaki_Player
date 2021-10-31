@@ -20,6 +20,7 @@ namespace App{
             int LoadTime();
             private:
             static void GetNetworkFile(void *args);
+            int GetColor(unsigned int col);
             static DynamicJsonDocument json;
             static bool FinishedThread;
             static bool RunThread;
