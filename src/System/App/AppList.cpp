@@ -15,6 +15,9 @@ void App::List::Begin(int AppID){
         case 3:
         wifiConnect.Begin();
         break;
+        case 4:
+        misakieq.Begin();
+        break;
     }
 }
 
@@ -33,6 +36,8 @@ void App::List::Exit(int AppID){
         case 3:
         wifiConnect.Exit();
         break;
+        case 4:
+        misakieq.Exit();
     }
 }
 
@@ -58,6 +63,9 @@ void App::List::ButtonPress(int AppID,int Type){
         break;
         case 3:
         wifiConnect.ButtonPress(Type);
+        break;
+        case 4:
+        misakieq.PressButton(Type);
     }
 }
 
@@ -72,6 +80,9 @@ void App::List::Loop(int AppID){
         break;
         case 3:
         wifiConnect.Loop();
+        break;
+        case 4:
+        misakieq.Loop();
     }
 }
 
@@ -87,6 +98,8 @@ void App::List::Draw(int AppID){
         case 3:
         wifiConnect.Draw();
         break;
+        case 4:
+        misakieq.Draw();
     }
 }
 
@@ -132,6 +145,8 @@ bool App::List::GetUpdateDraw(int AppID){
         return fileManager.GetUpDateDraw();
         case 3:
         return wifiConnect.GetUpDateDraw();
+        case 4:
+        return misakieq.GetDrawUpdate();
     }
     return 0;
 }
@@ -155,6 +170,8 @@ String App::List::GetAppName(int AppID){
         return fileManager.GetAppName();
         case 3:
         return wifiConnect.GetAppName();
+        case 4:
+        return misakieq.GetAppName();
         default:
         return "Unknown";
     }
@@ -170,6 +187,8 @@ bool App::List::GetGoToHome(int AppID){
         return fileManager.GetGoToHome();
         case 3:
         return wifiConnect.GetGoToHome();
+        case 4:
+        return misakieq.IsHome();
     }
     return 0;
 }

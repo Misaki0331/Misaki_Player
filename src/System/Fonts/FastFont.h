@@ -1,5 +1,4 @@
 #include<M5Stack.h>
-#include"utf8/UTF8toSJIS.h"
 #define INVISIBLE_COLOR -1
 namespace Core{
     namespace Draw{
@@ -16,11 +15,9 @@ namespace Core{
             static void printSjis(String t,int x,int y,uint16_t color,uint8_t siz,long bg);
             static uint16_t Color16[];
             static void printFastRom(String t1,String t2,int x,int y,uint16_t color, uint8_t siz,long bgc);
-            static void printSjis(String t,int x,int y,uint16_t color,uint8_t siz,long bg,bool IsUtf8);
             static void printUtf8(String t,int x,int y,uint16_t color,uint8_t siz,long bg,bool AutoBR=0);
             static void begin();
             
-            static uint8_t* UTF8tosjis(String str);
             private:
             static const unsigned char AsciiFontBin[];
             static const unsigned short AsciiFontPtr[];

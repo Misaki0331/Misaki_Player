@@ -3,7 +3,8 @@
 #include"Apps/Sleep/Sleep.h"
 #include"Apps/FileManaager/FileManager.h"
 #include"Apps/Wi-Fi/connect.h"
-#define APPCOUNT 4
+#include"Apps/MisakiEQ/MisakiEQ.hpp"
+#define APPCOUNT 5
 namespace App{
     class List{
         public:
@@ -26,5 +27,6 @@ namespace App{
         App::Sleep::sleep SleepLCD;
         App::FileManager::FileManager fileManager;
         App::Wi_Fi::Connect wifiConnect;
+        App::MisakiEQ::EEW misakieq;
     };
 }

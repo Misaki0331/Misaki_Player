@@ -29,6 +29,32 @@ void Main::Begin(){
     FastFont::begin();
     
     Logger::Log("Font is ok.");
+    FirstWiFiConnect();
+    Logger::Log("Wi-Fi Initialized");
+}
+void Main::FirstWiFiConnect(){
+    String ssid="";
+    String password="";
+    if(!SPIFFS.begin(0)){
+        Logger::Log("SPIFFS Formatting...");
+        SPIFFS.begin(1);
+        Logger::Log("SPIFFS Formated");
+    }
+    fs::FS fs = SPIFFS;
+    File config = fs.open("/config/Wi-Fi_00.ini",FILE_READ);
+    if(!config){
+        SPIFFS.end();
+        return;
+    }
+    ssid=config.readStringUntil('\n');
+    password=config.readStringUntil('\n');
+    ssid.remove(ssid.length()-1,1);
+    password.remove(password.length()-1,1);
+    config.close();
+    SPIFFS.end();
+    WiFi.begin(ssid.c_str(),password.c_str());
+    ssid.clear();
+    password.clear();
 }
 int Main::UpdateUI=0;
 int Main::TempMs=0;

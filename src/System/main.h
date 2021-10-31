@@ -16,6 +16,7 @@ namespace Core{
         static bool DisableUI;
         private:
         static void Draw();
+        static void FirstWiFiConnect();
         static class DrawTaskUI drawUI;
         static class Sound::WavePlayer wavePlayer;
         static int TempMs;
