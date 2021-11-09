@@ -9,12 +9,13 @@ using namespace Core::Draw;
 using namespace Core::Debug;
 Main::Main(){
 
+    
 
 }
-void Main::Begin(){
+void Main::Begin(){                 //M5Stackのバッテリ初期化
     M5.begin();                       //M5Stackを初期化
     
-    M5.Power.begin();                 //M5Stackのバッテリ初期化
+    M5.Power.begin();
     M5.Power.setPowerVin(true);    //USBが抜かれても動作し続けるように
     setCpuFrequencyMhz(240);
     M5.Lcd.clear(BLACK);              //表示リセット
@@ -55,6 +56,7 @@ void Main::FirstWiFiConnect(){
     WiFi.begin(ssid.c_str(),password.c_str());
     ssid.clear();
     password.clear();
+    LatestConnection=millis();
 }
 int Main::UpdateUI=0;
 int Main::TempMs=0;
@@ -73,44 +75,44 @@ void Main::Draw(){
 int Main::ButtonACount=0;
 int Main::ButtonBCount=0;
 int Main::ButtonCCount=0;
+int Main::LatestConnection=0;
 void Main::Loop(){
     //主な処理
     M5.update(); 
     unsigned int Buttons=0;
-    char* tex=new char[40];
     if(M5.BtnA.isPressed()) {
         ButtonACount++;
         Buttons |= (1<<3);
     }else if(ButtonACount>0){
-        sprintf(tex,"A:%d",ButtonACount);
-        Serial.println(tex);
         ButtonACount=0;
     }
     if(M5.BtnB.isPressed()) {
         ButtonBCount++;
         Buttons |= (1<<4);
     }else if(ButtonBCount>0){
-        sprintf(tex,"B:%d",ButtonBCount);
-        Serial.println(tex);
         ButtonBCount=0;
     }
     if(M5.BtnC.isPressed()) {
         ButtonCCount++;
         Buttons |= (1<<5);
     }else if(ButtonCCount>0){
-        sprintf(tex,"C:%d",ButtonCCount);
-        Serial.println(tex);
         ButtonCCount=0;
     }
-    delete[] tex;
     if(ButtonACount==CHATTERING_DELAY)Buttons |= (1<<0);
     if(ButtonBCount==CHATTERING_DELAY)Buttons |= (1<<1);
     if(ButtonCCount==CHATTERING_DELAY)Buttons |= (1<<2);
     appSelecter.SetButtonStatus(Buttons);
     appSelecter.Loop();
     appSelecter.Draw();
-
+    
     int MilliSecounds=millis();
+    if(WiFi.status()!=WL_CONNECTED){
+        if(LatestConnection+30000<MilliSecounds){
+        FirstWiFiConnect();
+        }
+    }else{
+        LatestConnection=MilliSecounds;
+    }
     char text[100];
     if(MilliSecounds/1000>UpdateUI){
        UpdateUI=MilliSecounds/1000;

@@ -21,7 +21,6 @@ namespace Core{
             private:
             static const unsigned char AsciiFontBin[];
             static const unsigned short AsciiFontPtr[];
-            static const unsigned char AsciiOldFont[];
             static const unsigned char SjisFontBin[];
             static const unsigned short SjisFontPtr[];
             static const unsigned char SjisHFontBin[];

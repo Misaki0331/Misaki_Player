@@ -3,17 +3,7 @@
 using namespace Core::Draw;
 void FastFont::displayASCII(int x, int y, uint8_t chara, uint8_t siz, long color) {
   if (chara < 16)return;
-  if (siz > 1) {
-    for (int p = 0; p < 5; p++) {
-      uint8_t bin = AsciiOldFont[(chara - 16) * 5 + p];
-      
-        for (int q = 0; q < 8; q++)
-        {
-          if (bin & (1 << q))M5.Lcd.fillRect(x + p * siz, y + q * siz,siz,siz,color);
-        }
-      
-    }
-  }else if(siz==1){
+  if(1){//siz==1){
     //char tex[256];
     //sprintf(tex,"%c:",chara);
     int ptr=AsciiFontPtr[chara];
@@ -49,16 +39,28 @@ void FastFont::displayASCII(int x, int y, uint8_t chara, uint8_t siz, long color
         }
         if(IsH){
           if(IsM)tm+=8;
-          M5.Lcd.drawFastVLine(x+tm%8,y+tm/8+mx,len,color);
+          if(siz==1){
+            M5.Lcd.drawFastVLine(x+tm%8,y+tm/8+mx,len,color);
+          }else{
+            M5.Lcd.fillRect(x+(tm%8)*siz,y+(tm/8+mx)*siz,siz,len*siz,color);
+          }
           
         }else{
           if(IsM)tm++;
-          M5.Lcd.drawFastHLine(x+tm%8+mx,y+tm/8,len,color);
+          if(siz==1){
+            M5.Lcd.drawFastHLine(x+tm%8+mx,y+tm/8,len,color);
+          }else{
+            M5.Lcd.fillRect(x+(tm%8+mx)*siz,y+(tm/8)*siz,len*siz,siz,color);
+          }
           
         }
         ptr++;
       }else if(tm<0x40){
+        if(siz==1){
         M5.Lcd.drawPixel(x+tm%8,y+tm/8,color);
+        }else{
+          M5.Lcd.fillRect(x+(tm%8)*siz,y+(tm/8)*siz,siz,siz,color);
+        }
       }
       
       ptr++;
@@ -199,20 +201,43 @@ int FastFont::GetSjisPtr(int value){
 }
 void FastFont::displaySjis(int x,int y,short ptr,uint8_t siz,long color){
   if(siz==0)return;
+  
+  int i=0;
+  int len=0;
   if(siz==1){
-    int i=0;
     for(int dy=0;dy<12;dy++){
       for(int dx=0;dx<12;dx++){
-        if(SjisFontBin[ptr*18+i/8]&(1<<(7-(i%8))))M5.Lcd.drawPixel(x+dx,y+dy,color);
+        //if(SjisFontBin[ptr*18+i/8]&(1<<(7-(i%8))))M5.Lcd.drawPixel(x+dx,y+dy,color);
+        
+        if(SjisFontBin[ptr*18+i/8]&(1<<(7-(i%8)))){
+          len++;
+        }else{
+          M5.Lcd.drawFastHLine(x+dx-len,y+dy,len,color);
+          len=0;
+        }
         i++;
+        
+
+      }
+      if(len>0){
+        M5.Lcd.drawFastHLine(x+12-len,y+dy,len,color);
+        len=0;
       }
     }
   }else{
-    int i=0;
     for(int dy=0;dy<12;dy++){
       for(int dx=0;dx<12;dx++){
-        if(SjisFontBin[ptr*18+i/8]&(1<<(7-(i%8))))M5.Lcd.fillRect(x+dx*siz,y+dy*siz,siz,siz,color);
+        if(SjisFontBin[ptr*18+i/8]&(1<<(7-(i%8)))){
+          len++;
+        }else{
+          M5.Lcd.fillRect(x+(dx-len)*siz,y+dy*siz,siz*len,siz,color);
+          len=0;
+        }
         i++;
+      }
+      if(len>0){
+        M5.Lcd.fillRect(x+(12-len)*siz,y+dy*siz,siz*len,siz,color);
+        len=0;
       }
     }
   }
@@ -220,21 +245,39 @@ void FastFont::displaySjis(int x,int y,short ptr,uint8_t siz,long color){
 }
 void FastFont::displayHSjis(int x,int y,short ptr,uint8_t siz,long color){
   if(siz==0)return;
+  
+  int i=0;
+  int len=0;
   if(siz==1){
-    int i=0;
     for(int dy=0;dy<12;dy++){
       for(int dx=0;dx<6;dx++){
-        if(SjisHFontBin[ptr*9+i/8]&(1<<(7-(i%8))))M5.Lcd.drawPixel(x+dx,y+dy,color);
+        if(SjisHFontBin[ptr*9+i/8]&(1<<(7-(i%8)))){
+          len++;
+        }else{
+          M5.Lcd.drawFastHLine(x+dx-len,y+dy,len,color);
+          len=0;
+        }
         i++;
+        
+      }
+      if(len>0){
+        M5.Lcd.drawFastHLine(x+6-len,y+dy,len,color);
+        len=0;
       }
     }
   }else{
-    int i=0;
     for(int dy=0;dy<12;dy++){
       for(int dx=0;dx<6;dx++){
-        if(SjisHFontBin[ptr*9+i/8]&(1<<(7-(i%8))))M5.Lcd.fillRect(x+dx*siz,y+dy*siz,siz,siz,color);
+        if(SjisHFontBin[ptr*9+i/8]&(1<<(7-(i%8)))){
+          len++;
+        }else{
+          
+          M5.Lcd.fillRect(x+(dx-len)*siz,y+dy*siz,siz*len,siz,color);
+          len=0;
+        }
         i++;
       }
+      if(len>0)M5.Lcd.fillRect(x+(6-len)*siz,y+dy*siz,siz*len,siz,color);
     }
   }
 
@@ -250,8 +293,7 @@ void FastFont::printSjis(String t,int x,int y,uint16_t color,uint8_t size,long b
   
   int dx=0;
   for(int i=0;i<t.length();i++)text[i]=t.charAt(i);
- for(int i=0;i<t.length();i++)Serial.printf("%02x ",text[i]);
-  Serial.printf("\n");
+ 
   for(int i=0;i<t.length();i++){
     if((text[i]>=0x81&&text[i]<=0x9F)||(text[i]>=0xE0&&text[i]<=0xEF)){
       unsigned short chr=(text[i]+256)%256;

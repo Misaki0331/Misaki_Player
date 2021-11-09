@@ -22,6 +22,7 @@ namespace Core{
         static int TempMs;
         static int UpdateUI;
         static int DrawUpdate;
+        static int LatestConnection;
         static String DrawTemp;
         static Core::Apps::System::Select appSelecter;
         static int ButtonACount;

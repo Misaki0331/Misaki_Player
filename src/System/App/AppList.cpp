@@ -110,6 +110,9 @@ void App::List::BackGround(int AppID){
         case 0:
         list01.Background();
         break;
+        case 4:
+        misakieq.BackGround();
+        break;
     }
     }
 }
@@ -118,7 +121,10 @@ void App::List::BackGround(int AppID){
 bool App::List::GetRunBackGround(int AppID){
     switch(AppID){
         case 0:
-        list01.GetBackGround();
+        return list01.GetBackGround();
+        break;
+        case 4:
+        return misakieq.GetBackGround();
         break;
     }
     return 0;
@@ -152,9 +158,13 @@ bool App::List::GetUpdateDraw(int AppID){
 }
 
 bool App::List::GetToActive(int AppID){
+    
     switch(AppID){
         case 0:
-        list01.GetToActive();
+        return list01.GetToActive();
+        break;
+        case 4:
+        return misakieq.GetActive();
         break;
     }
     return 0;

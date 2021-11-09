@@ -26,9 +26,7 @@ void AppSelect::Select::SetButtonStatus(unsigned int value){
 }
 void AppSelect::Select::Loop(){
     
-    for(int i=0;i<applist.GetAppCount();i++){
-        applist.BackGround(i);
-    }
+    for(int i=0;i<applist.GetAppCount();i++)applist.BackGround(i);
     if(RunAppValue>=0){
         if(applist.GetGoToHome(RunAppValue)){
             Logger::Log(Logger::str(applist.GetAppName(RunAppValue)," was called Launcher"));
@@ -36,13 +34,29 @@ void AppSelect::Select::Loop(){
         }
         applist.Loop(RunAppValue);
     }
+    for(int i=0;i<applist.GetAppCount();i++){
+        if(applist.GetToActive(i)){
+            RunAppValue=i;
+            Logger::Log(Logger::str(applist.GetAppName(RunAppValue)," was called mode!"));
+            
+            systemConfig.UIUpTime_BackColor=BLACK;
+            systemConfig.UIUsageCPU_BackColor=BLACK;
+            systemConfig.UIUpTime_TextColor=WHITE;
+            systemConfig.UIUsageCPU_TextColor=WHITE;
+            systemConfig.EnableALLUpdate=1;
+            M5.Lcd.fillRect(0,0,320,240,BLACK);
+            applist.Begin(RunAppValue);
+            Logger::Log(Logger::str(applist.GetAppName(RunAppValue)," was Initialized."));
+            break;
+        }
+    }
 }
 void AppSelect::Select::InSellectDraw(){
         if(!IsFirstDrawFlg){
             M5.Lcd.fillRect(0,0,320,240,UIBGColor);
             M5.Lcd.fillRect(0,20,320,230,MenuBGColor);
             FastFont::printRom("Misaki Player Launcher",0,10,WHITE,1,UIBGColor);
-            FastFont::printUtf8("水咲ちゃん可愛いやったー！ Misaki is cute!",0,100,WHITE,1,BLACK);
+            //FastFont::printUtf8("水咲ちゃん可愛いやったー！ Misaki is cute!",0,100,WHITE,1,BLACK);
             Config::systemConfig.EnableALLUpdate=1;
             IsFirstDrawFlg=true;
         }
@@ -81,7 +95,7 @@ void AppSelect::Select::Update(){
 }
 void AppSelect::Select::Begin(){
     SellectInit();
-    
+      
 }
 void AppSelect::Select::SellectInit(){
     if(RunAppValue>=0){
