@@ -21,6 +21,7 @@ namespace App{
             bool GetBackGround();
             void BackGround();
             int LoadTime();
+            void ModeEnter();
             private:
             bool IsActive;
             bool First;
@@ -32,8 +33,10 @@ namespace App{
             static bool IsHttpError;
             static int LatestReadTime;
             static int JsonReadTime;
+            bool IsButtonUIUpdate;
             bool IsFirstBegin;
             bool IsUpdated;
+            static bool IsPingUpdate;
             bool IsFirstDrawed;
             bool toHome;
             bool IsGetChanged;
@@ -52,6 +55,7 @@ namespace App{
             static String LatestHttpError;
             static HTTPClient* http;
             enum ModeType{
+                ExitMode=-1,
                 EEWMode=0,
                 PingMode=1,
                 SettingMode=2

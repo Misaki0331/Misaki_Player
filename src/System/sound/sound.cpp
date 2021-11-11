@@ -157,9 +157,6 @@ void WavePlayer::Filter_Process(size_t r_size){
 }
 void WavePlayer::Begin(){
   M5.Speaker.begin();
-         // 80MHzのほうがDACノイズ低減に有利。ただしBasicでSDカード再生に失敗する場合あり
-  //ledcWriteTone(7, srate );  // LCDバックライトのPWM周期をsrateと同じにして可聴帯域外とする
-    
     fill_data(Init,0);
     
 }
@@ -211,7 +208,6 @@ int WavePlayer::StopCount=0;
 void WavePlayer::releaseMemory(){
   srate=0;
   
-  Serial.println("Sound Memory Released!");
 }
 void WavePlayer::obtainMemory(){
   wav.seek(0x18);
@@ -222,10 +218,7 @@ void WavePlayer::obtainMemory(){
     for(int c=3;c>=0;c--){
       samplingrate*=256;
       samplingrate+=(unsigned char)smrt[c];
-      Serial.printf("%02X ",smrt[c]);
     }
-    Serial.printf("Sampling Rate = %dHz\n",samplingrate);
-    Serial.printf("Memory:%d/%d\n",4*SPF+4*SPF+OSR+samplingrate,esp_get_free_heap_size());
     delete[] smrt;
     srate=samplingrate;
 }
@@ -288,7 +281,12 @@ void WavePlayer::Stop(){
     releaseMemory();
 }
 void WavePlayer::SetFileName(String str){
+    
+    
     IsPlaying=false;
+    if(str!=Filename){
+      Stop();
+    }
     Filename=str;
     if(!wav)wav.close();
     wav = SD.open(Filename);

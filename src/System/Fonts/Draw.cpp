@@ -82,35 +82,28 @@ void FastFont::printRom(String t, int x, int y, uint16_t color, uint8_t siz, lon
   text = new char[t.length() + 1];
   t.toCharArray(text, t.length() + 1);
   for (int j = 0; j < t.length(); j++) {
-      if(text[j]==0)break;
-    if (bgc >= 0 && bgc < 65536) {
-      M5.Lcd.fillRect(x + 6 * siz * j, y, 5 * siz , 7 * siz,bgc);
-    }
+    if(text[j]==0)break;
+    if(bgc >= 0 && bgc < 65536)M5.Lcd.fillRect(x + 6 * siz * j, y, 5 * siz , 7 * siz,bgc);
     displayASCII(x + 6 * siz * j, y, text[j], siz,color);
   }
   delete[] text;
 }
 void FastFont::printFastRom(String from,String to,int x,int y,uint16_t color, uint8_t siz,long bgc){
-    if (siz == 0)return;
+  if (siz == 0)return;
   char *text;
   char *text2;
   text = new char[to.length() + 1];
   int Ssiz=from.length();
-  if(from.length()<to.length()){
-      Ssiz=to.length();
-  }
-
+  if(from.length()<to.length())Ssiz=to.length();
   text2 = new char[Ssiz+1];
   to.toCharArray(text, to.length() + 1);
   from.toCharArray(text2,from.length()+1);
   for (int j = 0; j < to.length(); j++) {
-      if(text[j]==0)break;
-      if(text[j]!=text2[j]){
-    if (bgc >= 0 && bgc < 65536) {
-      M5.Lcd.fillRect(x + 6 * siz * j, y, 5 * siz , 7 * siz,bgc);
+    if(text[j]==0)break;
+    if(text[j]!=text2[j]){
+      if (bgc >= 0 && bgc < 65536)M5.Lcd.fillRect(x + 6 * siz * j, y, 5 * siz , 7 * siz,bgc);
+      displayASCII(x + 6 * siz * j, y, text[j], siz,color);
     }
-    displayASCII(x + 6 * siz * j, y, text[j], siz,color);
-      }
   }
   delete[] text;
   delete[] text2;
@@ -277,7 +270,10 @@ void FastFont::displayHSjis(int x,int y,short ptr,uint8_t siz,long color){
         }
         i++;
       }
-      if(len>0)M5.Lcd.fillRect(x+(6-len)*siz,y+dy*siz,siz*len,siz,color);
+      if(len>0){
+        M5.Lcd.fillRect(x+(6-len)*siz,y+dy*siz,siz*len,siz,color);
+        len=0;
+      }
     }
   }
 
@@ -334,7 +330,6 @@ void FastFont::printUtf8(String t,int x,int y,uint16_t color,uint8_t size,long b
   for(int i=0;i<t.length();){
     int ptr=-1;
     if(text[i]>=0x20&&text[i]<=0x7F){
-      Serial.printf("%02x\n",text[1]);
       int chr=(text[i]+256)%256;
       if(bg>=0)M5.Lcd.fillRect(x+dx,y,6*size,12*size,bg);
       displayHSjis(x+dx,y,chr-0x20,size,color);
