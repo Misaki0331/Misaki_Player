@@ -68,11 +68,12 @@ void EEW::Loop()
 
             if (JsonState != JsonOldState)
             {
-                IsNotCursorMode=false;
-                switch(mode){
-                    case SettingNum:
-                        cNum.Cancel();
-                        cNum.Release();
+                IsNotCursorMode = false;
+                switch (mode)
+                {
+                case SettingNum:
+                    cNum.Cancel();
+                    cNum.Release();
                     break;
                 }
                 JsonOldState = JsonState;
@@ -446,38 +447,7 @@ void EEW::Draw()
         if (!IsPingUpdate)
         {
             IsPingUpdate = 1;
-            M5.Lcd.fillRect(20, 15, 300, 200, BLACK);
-            for (int i = 0; i < 300; i += 20)
-            {
-                if (i % 60 == 0)
-                {
-                    M5.Lcd.drawFastVLine(20 + (299 - i), 15, 200, GetColor(0x808080));
-                }
-                else
-                {
-                    M5.Lcd.drawFastVLine(20 + (299 - i), 15, 200, GetColor(0x404040));
-                }
-            }
 
-            for (float i = 0; i < 50; i += 10)
-            {
-                M5.Lcd.drawFastHLine(20, 15 + (199 - i), 300, GetColor(0x404040));
-            }
-            for (float i = 50; i < 100; i += 12.5)
-            {
-                M5.Lcd.drawFastHLine(20, 15 + (199 - i), 300, GetColor(0x404040));
-            }
-            for (float i = 100; i < 150; i += 10)
-            {
-                M5.Lcd.drawFastHLine(20, 15 + (199 - i), 300, GetColor(0x404040));
-            }
-            for (float i = 150; i < 200; i += 5.55555555555555555555556)
-            {
-                M5.Lcd.drawFastHLine(20, 15 + (199 - i), 300, GetColor(0x404040));
-            }
-            M5.Lcd.drawFastHLine(20, 15 + (199 - 50), 300, GetColor(0x208020));
-            M5.Lcd.drawFastHLine(20, 15 + (199 - 100), 300, GetColor(0x808020));
-            M5.Lcd.drawFastHLine(20, 15 + (199 - 150), 300, GetColor(0x802020));
             for (int i = 0; i < 300; i++)
             {
                 int val = PingValue[i];
@@ -512,6 +482,36 @@ void EEW::Draw()
                     val /= 2;
                     M5.Lcd.drawFastVLine(20 + i, 15 + (200 - val), val, GREEN);
                 }
+                if (i % 60 == 0)
+                {
+                    M5.Lcd.drawFastVLine(20 + i, 15, 200 - val, GetColor(0x808080));
+                }
+                else if (i % 20 == 0)
+                {
+                    M5.Lcd.drawFastVLine(20 + i, 15, 200 - val, GetColor(0x404040));
+                }
+                else
+                {
+                    M5.Lcd.drawFastVLine(20 + i, 15, 200 - val, BLACK);
+                }
+                for (float pi = 0; pi < 50; pi += 10)
+                    if (pi > val)
+                        M5.Lcd.drawPixel(20 + i, 15 + (199 - pi), GetColor(0x404040));
+                for (float pi = 50; pi < 100; pi += 12.5)
+                    if (pi > val)
+                        M5.Lcd.drawPixel(20 + i, 15 + (199 - pi), GetColor(0x404040));
+                for (float pi = 100; pi < 150; pi += 10)
+                    if (pi > val)
+                        M5.Lcd.drawPixel(20 + i, 15 + (199 - pi), GetColor(0x404040));
+                for (float pi = 150; pi < 200; pi += 5.55555555555555555555556)
+                    if (pi > val)
+                        M5.Lcd.drawPixel(20 + i, 15 + (199 - pi), GetColor(0x404040));
+                if (50 > val)
+                    M5.Lcd.drawPixel(20+i, 15 + (199 - 50), GetColor(0x208020));
+                if (100 > val)
+                    M5.Lcd.drawPixel(20+i, 15 + (199 - 100), GetColor(0x808020));
+                if (150 > val)
+                    M5.Lcd.drawPixel(20+i, 15 + (199 - 150), GetColor(0x802020));
             }
         }
         break;
@@ -540,7 +540,7 @@ void EEW::Draw()
         cNum.Draw();
         break;
     }
-    if (!IsButtonUIUpdate&&mode>=0)
+    if (!IsButtonUIUpdate && mode >= 0)
     {
         IsButtonUIUpdate = true;
         M5.Lcd.fillRect(0, 224, 320, 16, BLACK);
@@ -604,7 +604,8 @@ void EEW::ModeEnter()
     if (mode == SettingMode && sellectMode == SettingMode)
     {
         IsNotCursorMode = true;
-        settingSellect=0;
+        IsButtonUIUpdate = false;
+        settingSellect = 0;
     }
 
     if (sellectMode == SettingMode)
@@ -626,7 +627,6 @@ void EEW::ModeEnter()
     IsButtonUIUpdate = false;
     IsFirstDrawed = false;
     IsUpdated = false;
-    
 }
 void EEW::Exit()
 {
@@ -745,7 +745,6 @@ void EEW::PressButton(int type)
             case 2:
                 //モード決定
                 ModeEnter();
-                IsButtonUIUpdate=0;
                 break;
             case 3:
                 if (sellectMode < 2)
@@ -765,7 +764,7 @@ void EEW::PressButton(int type)
             case 2:
                 //設定画面移動
                 SettingEnter();
-                IsButtonUIUpdate=false;
+                IsButtonUIUpdate = false;
                 break;
             case 3:
                 if (settingSellect < 1)
