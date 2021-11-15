@@ -367,6 +367,10 @@ void FastFont::printUtf8(String t,int x,int y,uint16_t color,uint8_t size,long b
       i+=3;
       dx+=13*size;
     }else{
+      if(text[i]=='\n'){
+        dx=0;
+        y+=13*size;
+      }
       i++;
     }
     if(dx+x>308&&AutoBR){

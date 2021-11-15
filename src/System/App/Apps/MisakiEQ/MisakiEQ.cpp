@@ -23,15 +23,18 @@ void EEW::Begin()
     sellectMode = EEWMode;
     IsFirstDrawed = 0;
     IsUpdated = 0;
+    settingSellect = 0;
     IsButtonUIUpdate = 0;
     FinishedThread = 0;
     RunThread = 1;
     WarnRegionDisplay = 1;
     IsPingUpdate = false;
+    IsNotCursorMode = false;
     pg = 1;
     http = new HTTPClient();
     PingValue = new short[PingData];
-    for(int i=0;i<PingData;i++)PingValue[i]=0;
+    for (int i = 0; i < PingData; i++)
+        PingValue[i] = 0;
     IsPingOpen = true;
     xTaskCreatePinnedToCore(GetNetworkFile, "MisakiEQ_EEW", 18000, NULL, 5, NULL, 1);
 
@@ -53,30 +56,47 @@ void EEW::Begin()
 }
 void EEW::Loop()
 {
-    if(mode!=EEWMode){
-         int a = json["Status"]["Code"];
-        int b = json["Serial"];
-        JsonState = a * 10000 + b;
 
-        if (JsonState != JsonOldState)
+    if (mode != EEWMode)
+    {
+        if (!IsCheck)
         {
-            JsonOldState = JsonState;
-            sellectMode=EEWMode;
-            ModeEnter();
-            IsUpdated = 0;
+            IsCheck = true;
+            int a = json["Status"]["Code"];
+            int b = json["Serial"];
+            JsonState = a * 10000 + b;
+
+            if (JsonState != JsonOldState)
+            {
+                IsNotCursorMode=false;
+                switch(mode){
+                    case SettingNum:
+                        cNum.Cancel();
+                        cNum.Release();
+                    break;
+                }
+                JsonOldState = JsonState;
+                sellectMode = EEWMode;
+                ModeEnter();
+                IsUpdated = 0;
+            }
         }
     }
     switch (mode)
     {
     case EEWMode:
-        int a = json["Status"]["Code"];
-        int b = json["Serial"];
-        JsonState = a * 10000 + b;
-
-        if (JsonState != JsonOldState)
+        if (!IsCheck)
         {
-            JsonOldState = JsonState;
-            IsUpdated = 0;
+            IsCheck = false;
+            int a = json["Status"]["Code"];
+            int b = json["Serial"];
+            JsonState = a * 10000 + b;
+
+            if (JsonState != JsonOldState)
+            {
+                JsonOldState = JsonState;
+                IsUpdated = 0;
+            }
         }
 
         if (millis() >= regionUpdate + 5000 && IsRegionUpdate)
@@ -85,6 +105,13 @@ void EEW::Loop()
             regionUpdate = millis();
         }
         break;
+    case SettingNum:
+        if (!cNum.GetIsSetting())
+        {
+            sellectMode = SettingMode;
+            cNum.Release();
+            ModeEnter();
+        }
     }
 }
 void EEW::BackGround()
@@ -408,13 +435,13 @@ void EEW::Draw()
         {
             IsFirstDrawed = 1;
             FastFont::printRom("10s", 0, 15, RED);
-            FastFont::printRom(" 1s", 0, 65-4, RED);
-            FastFont::printRom("500", 0, 115-4, YELLOW);
-            FastFont::printRom("100", 0, 165-4, GREEN);
-            
-            FastFont::printRom("  0", 0, 215-8, GREEN);
-            
-            M5.Lcd.drawRect(19,14,302,202,WHITE);
+            FastFont::printRom(" 1s", 0, 65 - 4, RED);
+            FastFont::printRom("500", 0, 115 - 4, YELLOW);
+            FastFont::printRom("100", 0, 165 - 4, GREEN);
+
+            FastFont::printRom("  0", 0, 215 - 8, GREEN);
+
+            M5.Lcd.drawRect(19, 14, 302, 202, WHITE);
         }
         if (!IsPingUpdate)
         {
@@ -422,32 +449,40 @@ void EEW::Draw()
             M5.Lcd.fillRect(20, 15, 300, 200, BLACK);
             for (int i = 0; i < 300; i += 20)
             {
-                if(i%60==0){
+                if (i % 60 == 0)
+                {
                     M5.Lcd.drawFastVLine(20 + (299 - i), 15, 200, GetColor(0x808080));
-                }else{
+                }
+                else
+                {
                     M5.Lcd.drawFastVLine(20 + (299 - i), 15, 200, GetColor(0x404040));
                 }
             }
-            
-            for(float i=0;i<50;i+=10){
-                M5.Lcd.drawFastHLine(20 , 15+(199-i), 300, GetColor(0x404040));
+
+            for (float i = 0; i < 50; i += 10)
+            {
+                M5.Lcd.drawFastHLine(20, 15 + (199 - i), 300, GetColor(0x404040));
             }
-            for(float i=50;i<100;i+=12.5){
-                M5.Lcd.drawFastHLine(20 , 15+(199-i), 300, GetColor(0x404040));
+            for (float i = 50; i < 100; i += 12.5)
+            {
+                M5.Lcd.drawFastHLine(20, 15 + (199 - i), 300, GetColor(0x404040));
             }
-            for(float i=100;i<150;i+=10){
-                M5.Lcd.drawFastHLine(20 , 15+(199-i), 300, GetColor(0x404040));
+            for (float i = 100; i < 150; i += 10)
+            {
+                M5.Lcd.drawFastHLine(20, 15 + (199 - i), 300, GetColor(0x404040));
             }
-            for(float i=150;i<200;i+=5.55555555555555555555556){
-                M5.Lcd.drawFastHLine(20 , 15+(199-i), 300, GetColor(0x404040));
+            for (float i = 150; i < 200; i += 5.55555555555555555555556)
+            {
+                M5.Lcd.drawFastHLine(20, 15 + (199 - i), 300, GetColor(0x404040));
             }
-            M5.Lcd.drawFastHLine(20 , 15+(199-50), 300, GetColor(0x208020));
-            M5.Lcd.drawFastHLine(20 , 15+(199-100), 300, GetColor(0x808020));
-            M5.Lcd.drawFastHLine(20 , 15+(199-150), 300, GetColor(0x802020));
+            M5.Lcd.drawFastHLine(20, 15 + (199 - 50), 300, GetColor(0x208020));
+            M5.Lcd.drawFastHLine(20, 15 + (199 - 100), 300, GetColor(0x808020));
+            M5.Lcd.drawFastHLine(20, 15 + (199 - 150), 300, GetColor(0x802020));
             for (int i = 0; i < 300; i++)
             {
                 int val = PingValue[i];
-                if(val>9999)val=9999;
+                if (val > 9999)
+                    val = 9999;
                 if (PingValue[i] >= 1000)
                 { // 10000まで 9000/180 50
                     val -= 1000;
@@ -480,56 +515,102 @@ void EEW::Draw()
             }
         }
         break;
+    case SettingMode:
+        if (!IsFirstDrawed)
+        {
+            IsFirstDrawed = true;
+        }
+        if (!IsSettingUIUpdate)
+        {
+            IsSettingUIUpdate = true;
+            char *t = new char[100];
+            sprintf(t, "テスト値 : [%3d]", config.value);
+            M5.lcd.fillRect(0, 20, 320, 12, settingSellect == 0 && IsNotCursorMode ? WHITE : BLACK);
+            FastFont::printUtf8(t, 0, 20, settingSellect == 0 && IsNotCursorMode ? BLACK : WHITE, 1, INVISIBLE_COLOR);
+
+            M5.lcd.fillRect(0, 32, 320, 12, settingSellect == 1 && IsNotCursorMode ? WHITE : BLACK);
+            FastFont::printUtf8("設定終了", 0, 32, settingSellect == 1 && IsNotCursorMode ? BLACK : WHITE, 1, INVISIBLE_COLOR);
+            delete[] t;
+        }
+        break;
     }
-    if (!IsButtonUIUpdate)
+    switch (mode)
+    {
+    case SettingNum:
+        cNum.Draw();
+        break;
+    }
+    if (!IsButtonUIUpdate&&mode>=0)
     {
         IsButtonUIUpdate = true;
         M5.Lcd.fillRect(0, 224, 320, 16, BLACK);
         M5.Lcd.drawFastHLine(0, 224, 320, WHITE);
-        int c = 0;
-        for (int i = sellectMode - 1; i <= sellectMode + 1; i++)
+        if (!IsNotCursorMode)
         {
-            int x = 19 + c * 94;
-            int fillx = 0;
-            String FcName = "";
-            switch (i)
+            int c = 0;
+            for (int i = sellectMode - 1; i <= sellectMode + 1; i++)
             {
-            case ExitMode:
-                x += (100 - 25) / 2;
-                fillx = 25;
-                FcName = "終了";
-                break;
-            case EEWMode:
-                x += (100 - 46) / 2;
-                fillx = 46;
-                FcName = "EEW情報";
-                break;
-            case PingMode:
-                x += (100 - 77) / 2;
-                fillx = 77;
-                FcName = "応答速度情報";
-                break;
-            case SettingMode:
-                x += (100 - 25) / 2;
-                fillx = 25;
-                FcName = "設定";
-                break;
+                int x = 19 + c * 94;
+                int fillx = 0;
+                String FcName = "";
+                switch (i)
+                {
+                case ExitMode:
+                    x += (100 - 25) / 2;
+                    fillx = 25;
+                    FcName = "終了";
+                    break;
+                case EEWMode:
+                    x += (100 - 46) / 2;
+                    fillx = 46;
+                    FcName = "EEW情報";
+                    break;
+                case PingMode:
+                    x += (100 - 77) / 2;
+                    fillx = 77;
+                    FcName = "応答速度情報";
+                    break;
+                case SettingMode:
+                    x += (100 - 25) / 2;
+                    fillx = 25;
+                    FcName = "設定";
+                    break;
+                }
+                if (i == mode)
+                {
+                    M5.Lcd.fillRect(x - 1, 225, fillx + 2, 14, WHITE);
+                    FastFont::printUtf8(FcName, x, 226, BLACK, 1, INVISIBLE_COLOR);
+                }
+                else
+                {
+                    FastFont::printUtf8(FcName, x, 226, WHITE, 1, INVISIBLE_COLOR);
+                }
+                c++;
             }
-            if (i == mode)
-            {
-                M5.Lcd.fillRect(x - 1, 225, fillx + 2, 14, WHITE);
-                FastFont::printUtf8(FcName, x, 226, BLACK, 1, INVISIBLE_COLOR);
-            }
-            else
-            {
-                FastFont::printUtf8(FcName, x, 226, WHITE, 1, INVISIBLE_COLOR);
-            }
-            c++;
+        }
+        else
+        {
+
+            FastFont::printUtf8("↑", 19 + 94 * 0 + (100 - 12) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
+
+            FastFont::printUtf8("決定", 19 + 94 * 1 + (100 - 25) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
+
+            FastFont::printUtf8("↓", 19 + 94 * 2 + (100 - 12) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
         }
     }
 }
 void EEW::ModeEnter()
 {
+    if (mode == SettingMode && sellectMode == SettingMode)
+    {
+        IsNotCursorMode = true;
+        settingSellect=0;
+    }
+
+    if (sellectMode == SettingMode)
+    {
+        IsSettingUIUpdate = false;
+    }
     if (mode == sellectMode)
         return;
 
@@ -540,11 +621,12 @@ void EEW::ModeEnter()
         return;
     }
     M5.Lcd.fillRect(0, 14, 320, 226, BLACK);
-    
-    IsPingUpdate=false;
+
+    IsPingUpdate = false;
     IsButtonUIUpdate = false;
     IsFirstDrawed = false;
     IsUpdated = false;
+    
 }
 void EEW::Exit()
 {
@@ -611,6 +693,7 @@ void EEW::GetNetworkFile(void *args)
         }
         LatestReadTime = t;
         IsPingUpdate = 0;
+        IsCheck = 0;
         while (millis() - start < 1000)
             vTaskDelay(1);
     }
@@ -624,7 +707,19 @@ int EEW::LoadTime()
 }
 bool EEW::GetDrawUpdate()
 {
-    return !IsUpdated || !IsFirstDrawed || !WarnRegionDisplay || !IsButtonUIUpdate || !IsPingUpdate;
+    if (mode >= 0)
+    {
+        return !IsUpdated || !IsFirstDrawed || !WarnRegionDisplay || !IsButtonUIUpdate || !IsPingUpdate;
+    }
+    else
+    {
+        switch (mode)
+        {
+        case SettingNum:
+            return cNum.GetIsUpdate();
+            break;
+        }
+    }
 }
 String EEW::GetAppName()
 {
@@ -636,26 +731,78 @@ bool EEW::IsHome()
 }
 void EEW::PressButton(int type)
 {
-    switch (type)
+    if (mode >= 0)
     {
-    case 1:
-        if (sellectMode > -1)
-            sellectMode--;
-        IsButtonUIUpdate = 0;
-        break;
-    case 2:
-        //モード決定
+        if (!IsNotCursorMode)
+        {
+            switch (type)
+            {
+            case 1:
+                if (sellectMode > -1)
+                    sellectMode--;
+                IsButtonUIUpdate = 0;
+                break;
+            case 2:
+                //モード決定
+                ModeEnter();
+                IsButtonUIUpdate=0;
+                break;
+            case 3:
+                if (sellectMode < 2)
+                    sellectMode++;
+                IsButtonUIUpdate = 0;
+                break;
+            }
+        }
+        else
+        {
+            switch (type)
+            {
+            case 1:
+                if (settingSellect > 0)
+                    settingSellect--;
+                break;
+            case 2:
+                //設定画面移動
+                SettingEnter();
+                IsButtonUIUpdate=false;
+                break;
+            case 3:
+                if (settingSellect < 1)
+                    settingSellect++;
+                break;
+            }
+            IsSettingUIUpdate = false;
+        }
+    }
+    else
+    {
+        switch (mode)
+        {
+        case SettingNum:
+            cNum.Button(type);
+            break;
+        }
+    }
+}
+void EEW::SettingEnter()
+{
+    switch (settingSellect)
+    {
+    case 0:
+        cNum.Begin(&config.value, 3);
+        sellectMode = SettingNum;
+        cNum.SetTitle("デバッグ用入力欄", "表示レイアウトチェック中。\n改行もテストしてみる。");
         ModeEnter();
         break;
-    case 3:
-        if (sellectMode < 2)
-            sellectMode++;
-        IsButtonUIUpdate = 0;
+    case 1:
+        IsNotCursorMode = false;
         break;
     }
 }
 DynamicJsonDocument EEW::json(15000);
 bool EEW::IsPingUpdate = false;
+bool EEW::IsCheck = false;
 bool EEW::FinishedThread = false;
 bool EEW::RunThread = false;
 bool EEW::IsHttpError = false;
