@@ -36,7 +36,7 @@ void EEW::Begin()
     for (int i = 0; i < PingData; i++)
         PingValue[i] = 0;
     IsPingOpen = true;
-    xTaskCreatePinnedToCore(GetNetworkFile, "MisakiEQ_EEW", 18000, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(GetNetworkFile, "MisakiEQ_EEW", 16800, NULL, 5, NULL, 1);
 
     if (SPIFFS.begin(0))
     {
@@ -111,6 +111,14 @@ void EEW::Loop()
         {
             sellectMode = SettingMode;
             cNum.Release();
+            ModeEnter();
+        }
+        break;
+    case SettingList:
+        if (!cList.GetIsSetting())
+        {
+            sellectMode = SettingMode;
+            cList.Release();
             ModeEnter();
         }
     }
@@ -527,9 +535,13 @@ void EEW::Draw()
             sprintf(t, "テスト値 : [%3d]", config.value);
             M5.lcd.fillRect(0, 20, 320, 12, settingSellect == 0 && IsNotCursorMode ? WHITE : BLACK);
             FastFont::printUtf8(t, 0, 20, settingSellect == 0 && IsNotCursorMode ? BLACK : WHITE, 1, INVISIBLE_COLOR);
-
+            sprintf(t, "リスト値 : \"%s\"", config.str.c_str());
             M5.lcd.fillRect(0, 32, 320, 12, settingSellect == 1 && IsNotCursorMode ? WHITE : BLACK);
-            FastFont::printUtf8("設定終了", 0, 32, settingSellect == 1 && IsNotCursorMode ? BLACK : WHITE, 1, INVISIBLE_COLOR);
+            FastFont::printUtf8(t, 0, 32, settingSellect == 1 && IsNotCursorMode ? BLACK : WHITE, 1, INVISIBLE_COLOR);
+            
+            M5.lcd.fillRect(0, 44, 320, 12, settingSellect == 2 && IsNotCursorMode ? WHITE : BLACK);
+            FastFont::printUtf8("設定終了", 0, 44, settingSellect == 2 && IsNotCursorMode ? BLACK : WHITE, 1, INVISIBLE_COLOR);
+            
             delete[] t;
         }
         break;
@@ -538,6 +550,9 @@ void EEW::Draw()
     {
     case SettingNum:
         cNum.Draw();
+        break;
+        case SettingList:
+        cList.Draw();
         break;
     }
     if (!IsButtonUIUpdate && mode >= 0)
@@ -718,6 +733,8 @@ bool EEW::GetDrawUpdate()
         case SettingNum:
             return cNum.GetIsUpdate();
             break;
+            case SettingList:
+            return cList.GetIsUpdate();
         }
     }
 }
@@ -767,7 +784,7 @@ void EEW::PressButton(int type)
                 IsButtonUIUpdate = false;
                 break;
             case 3:
-                if (settingSellect < 1)
+                if (settingSellect < 2)
                     settingSellect++;
                 break;
             }
@@ -780,6 +797,9 @@ void EEW::PressButton(int type)
         {
         case SettingNum:
             cNum.Button(type);
+            break;
+        case SettingList:
+            cList.Button(type);
             break;
         }
     }
@@ -795,6 +815,12 @@ void EEW::SettingEnter()
         ModeEnter();
         break;
     case 1:
+        cList.Begin(&config.str,PrefList,48);
+        sellectMode = SettingList;
+        cList.SetTitle("デバッグ用リスト欄", "そう、デバッグの為なのさ！");
+        ModeEnter();
+        break;
+    case 2:
         IsNotCursorMode = false;
         break;
     }
@@ -811,3 +837,53 @@ String EEW::LatestHttpError = "";
 HTTPClient *EEW::http;
 short *EEW::PingValue;
 bool EEW::IsPingOpen = false;
+const String EEW::PrefList[]={
+    "指定なし(無効)",
+    "北海道",
+    "青森",
+    "岩手",
+    "宮城",
+    "秋田",
+    "山形",
+    "福島",
+    "茨城",
+    "栃木",
+    "群馬",
+    "埼玉",
+    "千葉",
+    "東京",
+    "神奈川",
+    "新潟",
+    "富山",
+    "石川",
+    "福井",
+    "山梨",
+    "長野",
+    "岐阜",
+    "静岡",
+    "愛知",
+    "三重",
+    "滋賀",
+    "京都",
+    "大阪",
+    "兵庫",
+    "奈良",
+    "和歌山",
+    "鳥取",
+    "島根",
+    "岡山",
+    "広島",
+    "山口",
+    "徳島",
+    "香川",
+    "愛媛",
+    "高知",
+    "福岡",
+    "佐賀",
+    "長崎",
+    "熊本",
+    "大分",
+    "宮崎",
+    "鹿児島",
+    "沖縄"
+};

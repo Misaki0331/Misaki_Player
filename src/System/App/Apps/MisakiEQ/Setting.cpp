@@ -61,12 +61,36 @@ void Path::Cancel(){
     IsSetting=false;
 }
 
-void List::Begin(String* name,String* args){
+void List::Begin(String* name,const String* args,int argcount){
+    IsSetting=true;
+    scroll=-1;
+    sellect=-1;
+    IsUpdate=true;
+    IsFirstDraw=false;
     ptr=name;
     listArgs=args;
+    totalArgs=argcount;
 }
 void List::Button(int type){
     //ここにボタン処理
+    switch(type){
+        case 1:
+        if(sellect>-1)sellect--;
+        if(sellect-1<scroll+1&&-1<scroll)scroll=sellect-1;
+        break;
+        case 2:
+            if(sellect==-1){
+                IsSetting=false;
+            }else{
+                *ptr=listArgs[sellect];
+                IsSetting=false;
+            }
+        break;
+        case 3:
+        if(sellect<totalArgs-1)sellect++;
+        if(sellect>scroll+11&&totalArgs>scroll+13)scroll=sellect-11;
+        break;
+    }
     IsUpdate=1;
 }
 void List::Draw(){
@@ -74,12 +98,47 @@ void List::Draw(){
         IsFirstDraw=true;
         FastFont::printUtf8(title,0,15,YELLOW,2,INVISIBLE_COLOR);
         FastFont::printUtf8(subTitle,0,48,0x7BEF,1,INVISIBLE_COLOR);
+        
+        M5.Lcd.drawRect(300,61,20,157,0x7BEF);
         //ここに画面初期化処理
     }
+    for(int i=0;i<13;i++){
+            if(scroll+i==-1){
+                if(sellect==scroll+i){
+                    M5.Lcd.fillRect(0,61+12*i,300,12,CYAN);
+                    FastFont::printUtf8("キャンセル",0,61+12*i,BLACK,1,INVISIBLE_COLOR);
+                }else{
+                    M5.Lcd.fillRect(0,61+12*i,300,12,BLACK);
+                    FastFont::printUtf8("キャンセル",0,61+12*i,CYAN,1,INVISIBLE_COLOR);
+                }
+            }else if(scroll+i>=0&&scroll+i<totalArgs){
+                if(sellect==scroll+i){
+                    M5.Lcd.fillRect(0,61+12*i,300,12,WHITE);
+                    FastFont::printUtf8(listArgs[scroll+i],0,61+12*i,BLACK,1,INVISIBLE_COLOR);
+                }else{
+                    M5.Lcd.fillRect(0,61+12*i,300,12,BLACK);
+                    FastFont::printUtf8(listArgs[scroll+i],0,61+12*i,WHITE,1,INVISIBLE_COLOR);
+                }
+            }else{
+                
+                    M5.Lcd.fillRect(0,61+12*i,300,12,BLACK);
+            }
+        
+    }
+    M5.Lcd.fillRect(301,62,18,155,BLACK);
+    double cell=155.0/(totalArgs+1);
+    double start=(scroll+1)*cell;
+    double end=(scroll+14)*cell;
+    if(end>155)end=155;
+    end=end-start;
+    M5.Lcd.fillRect(301,62+start,18,end,WHITE);
+
+
     //ここに描画処理
 }
 void List::Release(){
     ptr=nullptr;
+    listArgs=nullptr;
     title.clear();
     subTitle.clear();
 }
@@ -143,10 +202,10 @@ void Num::Draw(){
         IsFirstDraw=true;
         FastFont::printUtf8(title,0,15,YELLOW,2,INVISIBLE_COLOR);
         FastFont::printUtf8(subTitle,0,48,0x7BEF,1,INVISIBLE_COLOR);
+        //ここに画面初期化処理
         for(int i=0;i<totalDegit&&i<10;i++){
             M5.lcd.drawRect(160-17*totalDegit+34*i,96,5*6+4,46,0x7BEF);
         }
-        //ここに画面初期化処理
         
     }
     

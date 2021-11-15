@@ -34,7 +34,7 @@ namespace App{
                     title=t;
                     subTitle=t2;
                 }
-                void Begin(String* name,String* args);
+                void Begin(String* name,const String* args, int argcount);
                 void Draw();
                 void Button(int type);
                 void Release();
@@ -48,7 +48,11 @@ namespace App{
                 String subTitle;
                 bool IsFirstDraw;
                 String* ptr;
-                String* listArgs;
+                const String* listArgs;
+                int totalArgs;
+
+                int scroll;
+                int sellect;
 
             };
             class Num{
@@ -143,9 +147,12 @@ namespace App{
             bool IsSettingUIUpdate;
             void SettingEnter();
             MisakiEQ::Setting::Num cNum;
+            MisakiEQ::Setting::List cList;
             struct Configs{
                 int value;
+                String str;
             } config;
+            static const String PrefList[];
         };
         
         
