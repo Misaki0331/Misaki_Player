@@ -37,6 +37,7 @@ void EEW::Begin()
     IsPingUpdate = false;
     IsNotCursorMode = false;
     LCDTimer = millis();
+    IsnotLCDLight=false;
     Reboottimer = 0;
     pg = 1;
     http = new HTTPClient();
@@ -67,7 +68,7 @@ void EEW::Loop()
     if (config.LCDoffTimer != 0 && !IsnotLCDLight)
     {
         int t = millis() - LCDTimer;
-        if (LCDTimer > config.LCDoffTimer * 1000)
+        if (t > config.LCDoffTimer * 1000)
         {
             IsnotLCDLight = true;
             M5.Lcd.setBrightness(0);
@@ -87,6 +88,7 @@ void EEW::Loop()
         int t = millis() - Reboottimer;
         if (t > config.RebootTimer * 1000)
         {
+            M5.Lcd.setBrightness(0);
             M5.Power.reset();
         }
     }
@@ -934,6 +936,7 @@ bool EEW::GetDrawUpdate()
             break;
         }
     }
+    return 0;
 }
 String EEW::GetAppName()
 {
