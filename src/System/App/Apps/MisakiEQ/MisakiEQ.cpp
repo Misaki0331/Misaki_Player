@@ -37,7 +37,7 @@ void EEW::Begin()
         PingValue[i] = 0;
     IsPingOpen = true;
     xTaskCreatePinnedToCore(GetNetworkFile, "MisakiEQ_EEW", 16800, NULL, 5, NULL, 1);
-
+    ReadConfig();
     if (SPIFFS.begin(0))
     {
 
@@ -119,6 +119,15 @@ void EEW::Loop()
         {
             sellectMode = SettingMode;
             cList.Release();
+            ModeEnter();
+        }
+        break;
+        case SettingPath:
+        
+        if (!cPath.GetIsSetting())
+        {
+            sellectMode = SettingMode;
+            cPath.Release();
             ModeEnter();
         }
     }
@@ -515,11 +524,11 @@ void EEW::Draw()
                     if (pi > val)
                         M5.Lcd.drawPixel(20 + i, 15 + (199 - pi), GetColor(0x404040));
                 if (50 > val)
-                    M5.Lcd.drawPixel(20+i, 15 + (199 - 50), GetColor(0x208020));
+                    M5.Lcd.drawPixel(20 + i, 15 + (199 - 50), GetColor(0x208020));
                 if (100 > val)
-                    M5.Lcd.drawPixel(20+i, 15 + (199 - 100), GetColor(0x808020));
+                    M5.Lcd.drawPixel(20 + i, 15 + (199 - 100), GetColor(0x808020));
                 if (150 > val)
-                    M5.Lcd.drawPixel(20+i, 15 + (199 - 150), GetColor(0x802020));
+                    M5.Lcd.drawPixel(20 + i, 15 + (199 - 150), GetColor(0x802020));
             }
         }
         break;
@@ -532,16 +541,54 @@ void EEW::Draw()
         {
             IsSettingUIUpdate = true;
             char *t = new char[100];
-            sprintf(t, "テスト値 : [%3d]", config.value);
-            M5.lcd.fillRect(0, 20, 320, 12, settingSellect == 0 && IsNotCursorMode ? WHITE : BLACK);
-            FastFont::printUtf8(t, 0, 20, settingSellect == 0 && IsNotCursorMode ? BLACK : WHITE, 1, INVISIBLE_COLOR);
-            sprintf(t, "リスト値 : \"%s\"", config.str.c_str());
-            M5.lcd.fillRect(0, 32, 320, 12, settingSellect == 1 && IsNotCursorMode ? WHITE : BLACK);
-            FastFont::printUtf8(t, 0, 32, settingSellect == 1 && IsNotCursorMode ? BLACK : WHITE, 1, INVISIBLE_COLOR);
+            for(int i=0;i<=ExitSetting;i++){
+                switch(i){
+                    case ForecastSoundPath:
+                        sprintf(t, "予報鳴動時のサウンド : %s", config.ForecastSoundPath.c_str());
+                    break;
+                    case ForecastSoundPerSerial:
+                        if(config.ForecastSoundPerSerial){
+                            sprintf(t, "↑発表時毎回再生 : 有効");
+                        }else{
+                            sprintf(t, "↑発表時毎回再生 : 無効");
+                        }
+                    break;
+                    case WarnSoundPath:
+                        sprintf(t, "警報鳴動時のサウンド : %s", config.WarnSoundPath.c_str());
+                        break;
+                    break;
+                    case WarnSoundPerSerial:
+                        if(config.WarnSoundPerSerial){
+                            sprintf(t, "↑発表時毎回再生 : 有効");
+                        }else{
+                            sprintf(t, "↑発表時毎回再生 : 無効");
+                        }
+                    break;
+                    case OnlyListEvent:
+                        sprintf(t, "鳴動地域の設定(警報のみ) : %s", config.OnlyListEvent.c_str());
+                    break;
+                    case LCDoffTimer:
+                        if(config.LCDoffTimer==0){
+                            sprintf(t, "LCD自動OFF : 無効");
+                        }else{
+                            sprintf(t, "LCD自動OFF : %5d秒後", config.LCDoffTimer);
+                        }
+                    break;
+                    case RebootTimer:
+                        if(config.RebootTimer==0){
+                            sprintf(t, "端末自動再起動 : 無効");
+                        }else{
+                            sprintf(t, "端末自動再起動 : %5d秒後", config.RebootTimer);
+                        }
+                    break;
+                    case ExitSetting:
+                        sprintf(t, "設定を保存して終了");
+                    break;
+                }
+                M5.lcd.fillRect(0, 20+12*i, 320, 12, settingSellect == i && IsNotCursorMode ? WHITE : BLACK);
+                FastFont::printUtf8(t, 0, 20+12*i, settingSellect == i && IsNotCursorMode ? BLACK : WHITE, 1, INVISIBLE_COLOR);
             
-            M5.lcd.fillRect(0, 44, 320, 12, settingSellect == 2 && IsNotCursorMode ? WHITE : BLACK);
-            FastFont::printUtf8("設定終了", 0, 44, settingSellect == 2 && IsNotCursorMode ? BLACK : WHITE, 1, INVISIBLE_COLOR);
-            
+            }
             delete[] t;
         }
         break;
@@ -551,8 +598,11 @@ void EEW::Draw()
     case SettingNum:
         cNum.Draw();
         break;
-        case SettingList:
+    case SettingList:
         cList.Draw();
+        break;
+    case SettingPath:
+        cPath.Draw();
         break;
     }
     if (!IsButtonUIUpdate && mode >= 0)
@@ -733,8 +783,12 @@ bool EEW::GetDrawUpdate()
         case SettingNum:
             return cNum.GetIsUpdate();
             break;
-            case SettingList:
+        case SettingList:
             return cList.GetIsUpdate();
+            break;
+        case SettingPath:
+            return cPath.GetIsUpdate();
+            break;
         }
     }
 }
@@ -784,7 +838,7 @@ void EEW::PressButton(int type)
                 IsButtonUIUpdate = false;
                 break;
             case 3:
-                if (settingSellect < 2)
+                if (settingSellect < ExitSetting)
                     settingSellect++;
                 break;
             }
@@ -801,6 +855,9 @@ void EEW::PressButton(int type)
         case SettingList:
             cList.Button(type);
             break;
+        case SettingPath:
+            cPath.Button(type);
+            break;
         }
     }
 }
@@ -808,22 +865,108 @@ void EEW::SettingEnter()
 {
     switch (settingSellect)
     {
-    case 0:
-        cNum.Begin(&config.value, 3);
-        sellectMode = SettingNum;
-        cNum.SetTitle("デバッグ用入力欄", "表示レイアウトチェック中。\n改行もテストしてみる。");
+    case ForecastSoundPath:
+        cPath.Begin(&config.ForecastSoundPath, ".wav");
+        sellectMode = SettingPath;
+        cPath.SetTitle("予報時のサウンドを選択", "全ての緊急地震速報(予報)に適用されます。");
         ModeEnter();
         break;
-    case 1:
-        cList.Begin(&config.str,PrefList,48);
+    case ForecastSoundPerSerial:
+        config.ForecastSoundPerSerial=!config.ForecastSoundPerSerial;
+        IsUpdated=false;
+        break;
+    case WarnSoundPath:
+        cPath.Begin(&config.WarnSoundPath, ".wav");
+        sellectMode = SettingPath;
+        cPath.SetTitle("警報時のサウンドを選択", "警報が発表された際にファイルを再生します。");
+        ModeEnter();
+        break;
+    case WarnSoundPerSerial:
+        config.WarnSoundPerSerial=!config.WarnSoundPerSerial;
+        IsUpdated=false;
+        break;
+    case OnlyListEvent:
+        cList.Begin(&config.OnlyListEvent, PrefList, 48);
         sellectMode = SettingList;
-        cList.SetTitle("デバッグ用リスト欄", "そう、デバッグの為なのさ！");
+        cList.SetTitle("地域設定", "選択した場合、地域のみ警報の鳴動が有効になります");
         ModeEnter();
         break;
-    case 2:
+    case LCDoffTimer:
+        cNum.Begin(&config.LCDoffTimer, 5);
+        sellectMode = SettingNum;
+        cNum.SetTitle("LCD自動消灯する時間(秒)", "鳴動後に液晶ディスプレイをオフにする時間を設定し\nます。(設定値=0で無効)");
+        ModeEnter();
+        break;
+    case RebootTimer:
+        cNum.Begin(&config.RebootTimer, 5);
+        sellectMode = SettingNum;
+        cNum.SetTitle("端末再起動する時間(秒)", "鳴動後に自動で再起動をスケジュールします。\nスピーカーのノイズが酷い場合にどうぞ\n(設定値=0で無効)");
+        ModeEnter();
+        break;
+    case ExitSetting:
+        SaveConfig();
         IsNotCursorMode = false;
         break;
+        
     }
+}
+void EEW::SaveConfig(){
+    SPIFFS.begin(true);
+    
+    fs::FS fs = SPIFFS;
+    if(!fs.exists("/config"))fs.mkdir("/config");
+    File configFile = fs.open("/config/MisakiEQ.cfg",FILE_WRITE);
+    if(!configFile)return;
+    configFile.println(config.ForecastSoundPath);
+    configFile.println(config.ForecastSoundPerSerial?"true":"false");
+    configFile.println(config.WarnSoundPath);
+    configFile.println(config.WarnSoundPerSerial?"true":"false");
+    configFile.println(config.OnlyListEvent);
+    configFile.println(config.LCDoffTimer);
+    configFile.println(config.RebootTimer);
+    configFile.close();
+    SPIFFS.end();
+}
+void EEW::ReadConfig(){
+    SPIFFS.begin(true);
+    fs::FS fs = SPIFFS;
+    File configFile = fs.open("/config/MisakiEQ.cfg",FILE_READ);
+    if(!configFile){
+        config.OnlyListEvent="全都道府県";
+        SPIFFS.end();
+        return;
+    }
+    for(int i=0;i<ExitSetting;i++){
+        String tmp=configFile.readStringUntil('\n');
+        tmp.remove(tmp.length()-1,1);
+        switch(i){
+            case ForecastSoundPath:
+                config.ForecastSoundPath=tmp;
+                break;
+            case ForecastSoundPerSerial:
+                tmp=="true"?config.ForecastSoundPerSerial=1:config.ForecastSoundPerSerial=0;
+                break;
+            case WarnSoundPath:
+                config.WarnSoundPath=tmp;
+                break;
+            case WarnSoundPerSerial:
+                tmp=="true"?config.WarnSoundPerSerial=1:config.WarnSoundPerSerial=0;
+                break;
+            case OnlyListEvent:
+                config.OnlyListEvent=tmp;
+                break;
+            case LCDoffTimer:
+                config.LCDoffTimer=tmp.toInt();
+                break;
+            case RebootTimer:
+                config.RebootTimer=tmp.toInt();
+                break;
+        }
+    }
+    
+    configFile.close();
+    SPIFFS.end();
+
 }
 DynamicJsonDocument EEW::json(15000);
 bool EEW::IsPingUpdate = false;
@@ -837,8 +980,8 @@ String EEW::LatestHttpError = "";
 HTTPClient *EEW::http;
 short *EEW::PingValue;
 bool EEW::IsPingOpen = false;
-const String EEW::PrefList[]={
-    "指定なし(無効)",
+const String EEW::PrefList[] = {
+    "全都道府県",
     "北海道",
     "青森",
     "岩手",
@@ -885,5 +1028,4 @@ const String EEW::PrefList[]={
     "大分",
     "宮崎",
     "鹿児島",
-    "沖縄"
-};
+    "沖縄"};

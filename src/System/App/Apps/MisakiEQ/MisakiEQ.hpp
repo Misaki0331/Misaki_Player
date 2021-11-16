@@ -12,7 +12,7 @@ namespace App{
                     title=t;
                     subTitle=t2;
                 }
-                void Begin(String* path);
+                void Begin(String* path,String ext);
                 void Draw();
                 void Button(int type);
                 void Cancel();
@@ -25,8 +25,24 @@ namespace App{
                 String title;
                 String subTitle;
                 bool IsFirstDraw;
+                bool IsPathUpdate;
                 String* ptr;
-
+                String fileExt;
+                int sellectFile;
+                String openPath;
+                void GetFileList();
+                typedef struct filedata{
+                String Name="";
+                int Size=-1;
+                bool IsDirectry=false;
+                bool IsCommandCancel=false;
+                bool IsCommandEmpty=false;
+                bool IsCommnadBack=false;
+                }FileData;
+                FileData* FileLists;
+                int FileCount;
+                int scroll;
+                int sellect;
             };
             class List{
                 public:
@@ -146,12 +162,33 @@ namespace App{
             bool IsNotCursorMode;
             bool IsSettingUIUpdate;
             void SettingEnter();
+
             MisakiEQ::Setting::Num cNum;
             MisakiEQ::Setting::List cList;
+            MisakiEQ::Setting::Path cPath;
             struct Configs{
-                int value;
-                String str;
+                String ForecastSoundPath;
+                bool ForecastSoundPerSerial;
+                String WarnSoundPath;
+                bool WarnSoundPerSerial;
+                String OnlyListEvent;
+                int LCDoffTimer;
+                int RebootTimer;
             } config;
+            
+            enum SettingVar{
+                ForecastSoundPath,
+                ForecastSoundPerSerial,
+                WarnSoundPath,
+                WarnSoundPerSerial,
+                OnlyListEvent,
+                LCDoffTimer,
+                RebootTimer,
+                ExitSetting
+            };
+            void ReadConfig();
+            void SaveConfig();
+
             static const String PrefList[];
         };
         
