@@ -185,7 +185,8 @@ namespace App{
                 OnlyListEvent,
                 LCDoffTimer,
                 RebootTimer,
-                ExitSetting
+                ExitSetting,
+                TestMode
             };
             void ReadConfig();
             void SaveConfig();
@@ -198,6 +199,8 @@ namespace App{
             void CallSoundWarn();
             void CallSoundReset();
             static const String PrefList[];
+            static const String TestJson;
+            static int TestTime;
         };
         
         
