@@ -141,6 +141,7 @@ namespace App{
             bool IsRegionUpdate;
             bool WarnRegionDisplay;
             static bool IsCheck;
+            bool FirstCheck;
             int pg;
             int regPos;
             int mode;
@@ -188,7 +189,14 @@ namespace App{
             };
             void ReadConfig();
             void SaveConfig();
-
+            int Reboottimer;
+            bool IsnotLCDLight;
+            int LCDTimer;
+            bool IsFirstEEWForecast;
+            bool IsFirstEEWWarn;
+            void CallSoundForecast();
+            void CallSoundWarn();
+            void CallSoundReset();
             static const String PrefList[];
         };
         

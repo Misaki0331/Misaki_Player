@@ -1,7 +1,9 @@
 #include "MisakiEQ.hpp"
 #include "../../../Fonts/FastFont.h"
+#include "../../../sound/sound.h"
 using namespace App::MisakiEQ;
 using namespace Core::Draw;
+using namespace Core::Sound;
 /*
 M5.begin();
 
@@ -19,8 +21,12 @@ void EEW::Begin()
 {
     IsActive = false;
     toHome = 0;
+    FirstCheck = false;
+    IsFirstEEWForecast = false;
+    IsFirstEEWWarn = false;
     mode = EEWMode;
     sellectMode = EEWMode;
+    JsonOldState = 0;
     IsFirstDrawed = 0;
     IsUpdated = 0;
     settingSellect = 0;
@@ -30,6 +36,8 @@ void EEW::Begin()
     WarnRegionDisplay = 1;
     IsPingUpdate = false;
     IsNotCursorMode = false;
+    LCDTimer = millis();
+    Reboottimer = 0;
     pg = 1;
     http = new HTTPClient();
     PingValue = new short[PingData];
@@ -56,7 +64,32 @@ void EEW::Begin()
 }
 void EEW::Loop()
 {
-
+    if (config.LCDoffTimer != 0 && !IsnotLCDLight)
+    {
+        int t = millis() - LCDTimer;
+        if (LCDTimer > config.LCDoffTimer * 1000)
+        {
+            IsnotLCDLight = true;
+            M5.Lcd.setBrightness(0);
+        }
+    }
+    if (IsnotLCDLight)
+    {
+        int t = millis() - LCDTimer;
+        if (t <= config.LCDoffTimer * 1000)
+        {
+            IsnotLCDLight = false;
+            M5.Lcd.setBrightness(200);
+        }
+    }
+    if (config.RebootTimer != 0 && Reboottimer != 0)
+    {
+        int t = millis() - Reboottimer;
+        if (t > config.RebootTimer * 1000)
+        {
+            M5.Power.reset();
+        }
+    }
     if (mode != EEWMode)
     {
         if (!IsCheck)
@@ -75,11 +108,63 @@ void EEW::Loop()
                     cNum.Cancel();
                     cNum.Release();
                     break;
+                case SettingPath:
+                    cPath.Cancel();
+                    cPath.Release();
+                    break;
+                case SettingList:
+                    cList.Cancel();
+                    cList.Release();
                 }
                 JsonOldState = JsonState;
                 sellectMode = EEWMode;
                 ModeEnter();
                 IsUpdated = 0;
+
+                LCDTimer = millis();
+                if (!FirstCheck)
+                {
+                    FirstCheck = true;
+                }
+                else
+                {
+                    if (json["Warn"])
+                    {
+                        if (config.OnlyListEvent == "全都道府県")
+                        {
+                            Reboottimer = millis();
+                            CallSoundWarn();
+                        }
+                        else
+                        {
+                            for (int i = 0;; i++)
+                            {
+                                String name = json["WarnForecast"]["LocalAreas"][i];
+                                if (config.OnlyListEvent == name)
+                                {
+                                    Reboottimer = millis();
+                                    CallSoundWarn();
+                                    break;
+                                }
+                                if (name == "null")
+                                    break;
+                            }
+                        }
+                    }
+                    else
+                    {
+
+                        if (config.ForecastSoundPath != "")
+                        {
+                            Reboottimer = millis();
+                            CallSoundForecast();
+                        }
+                    }
+                    if (a % 10 == 1 || a % 10 == 9)
+                    {
+                        CallSoundReset();
+                    }
+                }
             }
         }
     }
@@ -97,6 +182,51 @@ void EEW::Loop()
             {
                 JsonOldState = JsonState;
                 IsUpdated = 0;
+                LCDTimer = millis();
+                if (!FirstCheck)
+                {
+                    FirstCheck = true;
+                }
+                else
+                {
+
+                    if (json["Warn"])
+                    {
+                        if (config.OnlyListEvent == "全都道府県")
+                        {
+                            Reboottimer = millis();
+                            CallSoundWarn();
+                        }
+                        else
+                        {
+                            for (int i = 0;; i++)
+                            {
+                                String name = json["WarnForecast"]["LocalAreas"][i];
+                                if (config.OnlyListEvent == name)
+                                {
+                                    Reboottimer = millis();
+                                    CallSoundWarn();
+                                    break;
+                                }
+                                if (name == "null")
+                                    break;
+                            }
+                        }
+                    }
+                    else
+                    {
+
+                        if (config.ForecastSoundPath != "")
+                        {
+                            Reboottimer = millis();
+                            CallSoundForecast();
+                        }
+                    }
+                    if (a % 10 == 1 || a % 10 == 9)
+                    {
+                        CallSoundReset();
+                    }
+                }
             }
         }
 
@@ -122,8 +252,8 @@ void EEW::Loop()
             ModeEnter();
         }
         break;
-        case SettingPath:
-        
+    case SettingPath:
+
         if (!cPath.GetIsSetting())
         {
             sellectMode = SettingMode;
@@ -541,53 +671,66 @@ void EEW::Draw()
         {
             IsSettingUIUpdate = true;
             char *t = new char[100];
-            for(int i=0;i<=ExitSetting;i++){
-                switch(i){
-                    case ForecastSoundPath:
-                        sprintf(t, "予報鳴動時のサウンド : %s", config.ForecastSoundPath.c_str());
+            for (int i = 0; i <= ExitSetting; i++)
+            {
+                switch (i)
+                {
+                case ForecastSoundPath:
+                    sprintf(t, "予報鳴動時のサウンド : %s", config.ForecastSoundPath.c_str());
                     break;
-                    case ForecastSoundPerSerial:
-                        if(config.ForecastSoundPerSerial){
-                            sprintf(t, "↑発表時毎回再生 : 有効");
-                        }else{
-                            sprintf(t, "↑発表時毎回再生 : 無効");
-                        }
+                case ForecastSoundPerSerial:
+                    if (config.ForecastSoundPerSerial)
+                    {
+                        sprintf(t, "↑発表時毎回再生 : 有効");
+                    }
+                    else
+                    {
+                        sprintf(t, "↑発表時毎回再生 : 無効");
+                    }
                     break;
-                    case WarnSoundPath:
-                        sprintf(t, "警報鳴動時のサウンド : %s", config.WarnSoundPath.c_str());
-                        break;
+                case WarnSoundPath:
+                    sprintf(t, "警報鳴動時のサウンド : %s", config.WarnSoundPath.c_str());
                     break;
-                    case WarnSoundPerSerial:
-                        if(config.WarnSoundPerSerial){
-                            sprintf(t, "↑発表時毎回再生 : 有効");
-                        }else{
-                            sprintf(t, "↑発表時毎回再生 : 無効");
-                        }
                     break;
-                    case OnlyListEvent:
-                        sprintf(t, "鳴動地域の設定(警報のみ) : %s", config.OnlyListEvent.c_str());
+                case WarnSoundPerSerial:
+                    if (config.WarnSoundPerSerial)
+                    {
+                        sprintf(t, "↑発表時毎回再生 : 有効");
+                    }
+                    else
+                    {
+                        sprintf(t, "↑発表時毎回再生 : 無効");
+                    }
                     break;
-                    case LCDoffTimer:
-                        if(config.LCDoffTimer==0){
-                            sprintf(t, "LCD自動OFF : 無効");
-                        }else{
-                            sprintf(t, "LCD自動OFF : %5d秒後", config.LCDoffTimer);
-                        }
+                case OnlyListEvent:
+                    sprintf(t, "鳴動地域の設定(警報のみ) : %s", config.OnlyListEvent.c_str());
                     break;
-                    case RebootTimer:
-                        if(config.RebootTimer==0){
-                            sprintf(t, "端末自動再起動 : 無効");
-                        }else{
-                            sprintf(t, "端末自動再起動 : %5d秒後", config.RebootTimer);
-                        }
+                case LCDoffTimer:
+                    if (config.LCDoffTimer == 0)
+                    {
+                        sprintf(t, "LCD自動OFF : 無効");
+                    }
+                    else
+                    {
+                        sprintf(t, "LCD自動OFF : %5d秒後", config.LCDoffTimer);
+                    }
                     break;
-                    case ExitSetting:
-                        sprintf(t, "設定を保存して終了");
+                case RebootTimer:
+                    if (config.RebootTimer == 0)
+                    {
+                        sprintf(t, "端末自動再起動 : 無効");
+                    }
+                    else
+                    {
+                        sprintf(t, "端末自動再起動 : %5d秒後", config.RebootTimer);
+                    }
+                    break;
+                case ExitSetting:
+                    sprintf(t, "設定を保存して終了");
                     break;
                 }
-                M5.lcd.fillRect(0, 20+12*i, 320, 12, settingSellect == i && IsNotCursorMode ? WHITE : BLACK);
-                FastFont::printUtf8(t, 0, 20+12*i, settingSellect == i && IsNotCursorMode ? BLACK : WHITE, 1, INVISIBLE_COLOR);
-            
+                M5.lcd.fillRect(0, 20 + 12 * i, 320, 12, settingSellect == i && IsNotCursorMode ? WHITE : BLACK);
+                FastFont::printUtf8(t, 0, 20 + 12 * i, settingSellect == i && IsNotCursorMode ? BLACK : WHITE, 1, INVISIBLE_COLOR);
             }
             delete[] t;
         }
@@ -802,64 +945,68 @@ bool EEW::IsHome()
 }
 void EEW::PressButton(int type)
 {
-    if (mode >= 0)
+    if (!IsnotLCDLight)
     {
-        if (!IsNotCursorMode)
+        if (mode >= 0)
         {
-            switch (type)
+            if (!IsNotCursorMode)
             {
-            case 1:
-                if (sellectMode > -1)
-                    sellectMode--;
-                IsButtonUIUpdate = 0;
-                break;
-            case 2:
-                //モード決定
-                ModeEnter();
-                break;
-            case 3:
-                if (sellectMode < 2)
-                    sellectMode++;
-                IsButtonUIUpdate = 0;
-                break;
+                switch (type)
+                {
+                case 1:
+                    if (sellectMode > -1)
+                        sellectMode--;
+                    IsButtonUIUpdate = 0;
+                    break;
+                case 2:
+                    //モード決定
+                    ModeEnter();
+                    break;
+                case 3:
+                    if (sellectMode < 2)
+                        sellectMode++;
+                    IsButtonUIUpdate = 0;
+                    break;
+                }
+            }
+            else
+            {
+                switch (type)
+                {
+                case 1:
+                    if (settingSellect > 0)
+                        settingSellect--;
+                    break;
+                case 2:
+                    //設定画面移動
+                    SettingEnter();
+                    IsButtonUIUpdate = false;
+                    break;
+                case 3:
+                    if (settingSellect < ExitSetting)
+                        settingSellect++;
+                    break;
+                }
+                IsSettingUIUpdate = false;
             }
         }
         else
         {
-            switch (type)
+            switch (mode)
             {
-            case 1:
-                if (settingSellect > 0)
-                    settingSellect--;
+            case SettingNum:
+                cNum.Button(type);
                 break;
-            case 2:
-                //設定画面移動
-                SettingEnter();
-                IsButtonUIUpdate = false;
+            case SettingList:
+                cList.Button(type);
                 break;
-            case 3:
-                if (settingSellect < ExitSetting)
-                    settingSellect++;
+            case SettingPath:
+                cPath.Button(type);
                 break;
             }
-            IsSettingUIUpdate = false;
         }
     }
-    else
-    {
-        switch (mode)
-        {
-        case SettingNum:
-            cNum.Button(type);
-            break;
-        case SettingList:
-            cList.Button(type);
-            break;
-        case SettingPath:
-            cPath.Button(type);
-            break;
-        }
-    }
+    LCDTimer = millis();
 }
 void EEW::SettingEnter()
 {
@@ -872,8 +1019,8 @@ void EEW::SettingEnter()
         ModeEnter();
         break;
     case ForecastSoundPerSerial:
-        config.ForecastSoundPerSerial=!config.ForecastSoundPerSerial;
-        IsUpdated=false;
+        config.ForecastSoundPerSerial = !config.ForecastSoundPerSerial;
+        IsUpdated = false;
         break;
     case WarnSoundPath:
         cPath.Begin(&config.WarnSoundPath, ".wav");
@@ -882,8 +1029,8 @@ void EEW::SettingEnter()
         ModeEnter();
         break;
     case WarnSoundPerSerial:
-        config.WarnSoundPerSerial=!config.WarnSoundPerSerial;
-        IsUpdated=false;
+        config.WarnSoundPerSerial = !config.WarnSoundPerSerial;
+        IsUpdated = false;
         break;
     case OnlyListEvent:
         cList.Begin(&config.OnlyListEvent, PrefList, 48);
@@ -907,66 +1054,116 @@ void EEW::SettingEnter()
         SaveConfig();
         IsNotCursorMode = false;
         break;
-        
     }
 }
-void EEW::SaveConfig(){
+void EEW::SaveConfig()
+{
     SPIFFS.begin(true);
-    
+
     fs::FS fs = SPIFFS;
-    if(!fs.exists("/config"))fs.mkdir("/config");
-    File configFile = fs.open("/config/MisakiEQ.cfg",FILE_WRITE);
-    if(!configFile)return;
+    if (!fs.exists("/config"))
+        fs.mkdir("/config");
+    File configFile = fs.open("/config/MisakiEQ.cfg", FILE_WRITE);
+    if (!configFile)
+        return;
     configFile.println(config.ForecastSoundPath);
-    configFile.println(config.ForecastSoundPerSerial?"true":"false");
+    configFile.println(config.ForecastSoundPerSerial ? "true" : "false");
     configFile.println(config.WarnSoundPath);
-    configFile.println(config.WarnSoundPerSerial?"true":"false");
+    configFile.println(config.WarnSoundPerSerial ? "true" : "false");
     configFile.println(config.OnlyListEvent);
     configFile.println(config.LCDoffTimer);
     configFile.println(config.RebootTimer);
     configFile.close();
     SPIFFS.end();
 }
-void EEW::ReadConfig(){
+void EEW::ReadConfig()
+{
     SPIFFS.begin(true);
     fs::FS fs = SPIFFS;
-    File configFile = fs.open("/config/MisakiEQ.cfg",FILE_READ);
-    if(!configFile){
-        config.OnlyListEvent="全都道府県";
+    File configFile = fs.open("/config/MisakiEQ.cfg", FILE_READ);
+    if (!configFile)
+    {
+        config.OnlyListEvent = "全都道府県";
         SPIFFS.end();
         return;
     }
-    for(int i=0;i<ExitSetting;i++){
-        String tmp=configFile.readStringUntil('\n');
-        tmp.remove(tmp.length()-1,1);
-        switch(i){
-            case ForecastSoundPath:
-                config.ForecastSoundPath=tmp;
-                break;
-            case ForecastSoundPerSerial:
-                tmp=="true"?config.ForecastSoundPerSerial=1:config.ForecastSoundPerSerial=0;
-                break;
-            case WarnSoundPath:
-                config.WarnSoundPath=tmp;
-                break;
-            case WarnSoundPerSerial:
-                tmp=="true"?config.WarnSoundPerSerial=1:config.WarnSoundPerSerial=0;
-                break;
-            case OnlyListEvent:
-                config.OnlyListEvent=tmp;
-                break;
-            case LCDoffTimer:
-                config.LCDoffTimer=tmp.toInt();
-                break;
-            case RebootTimer:
-                config.RebootTimer=tmp.toInt();
-                break;
+    for (int i = 0; i < ExitSetting; i++)
+    {
+        String tmp = configFile.readStringUntil('\n');
+        tmp.remove(tmp.length() - 1, 1);
+        switch (i)
+        {
+        case ForecastSoundPath:
+            config.ForecastSoundPath = tmp;
+            break;
+        case ForecastSoundPerSerial:
+            tmp == "true" ? config.ForecastSoundPerSerial = 1 : config.ForecastSoundPerSerial = 0;
+            break;
+        case WarnSoundPath:
+            config.WarnSoundPath = tmp;
+            break;
+        case WarnSoundPerSerial:
+            tmp == "true" ? config.WarnSoundPerSerial = 1 : config.WarnSoundPerSerial = 0;
+            break;
+        case OnlyListEvent:
+            config.OnlyListEvent = tmp;
+            break;
+        case LCDoffTimer:
+            config.LCDoffTimer = tmp.toInt();
+            break;
+        case RebootTimer:
+            config.RebootTimer = tmp.toInt();
+            break;
         }
     }
-    
+
     configFile.close();
     SPIFFS.end();
-
+}
+void EEW::CallSoundForecast()
+{
+    if (config.ForecastSoundPath != "")
+    {
+        if (config.ForecastSoundPerSerial)
+        {
+            WavePlayer::Stop();
+            WavePlayer::Play(config.ForecastSoundPath);
+        }
+        else
+        {
+            if (!IsFirstEEWForecast)
+            {
+                IsFirstEEWForecast = true;
+                WavePlayer::Stop();
+                WavePlayer::Play(config.ForecastSoundPath);
+            }
+        }
+    }
+}
+void EEW::CallSoundWarn()
+{
+    if (config.WarnSoundPath != "")
+    {
+        if (config.WarnSoundPerSerial)
+        {
+            WavePlayer::Stop();
+            WavePlayer::Play(config.WarnSoundPath);
+        }
+        else
+        {
+            if (!IsFirstEEWWarn)
+            {
+                IsFirstEEWWarn = true;
+                WavePlayer::Stop();
+                WavePlayer::Play(config.WarnSoundPath);
+            }
+        }
+    }
+}
+void EEW::CallSoundReset()
+{
+    IsFirstEEWWarn = false;
+    IsFirstEEWForecast = false;
 }
 DynamicJsonDocument EEW::json(15000);
 bool EEW::IsPingUpdate = false;

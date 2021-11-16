@@ -272,7 +272,7 @@ void Path::Draw()
     M5.Lcd.fillRect(301, 67, 18, 154, BLACK);
     double cell = 154.0 / (FileCount);
     double start = (scroll) * cell;
-    double end = (scroll + 12) * cell;
+    double end = (scroll + 13) * cell;
     if (end > 154)
         end = 154;
     end = end - start;
