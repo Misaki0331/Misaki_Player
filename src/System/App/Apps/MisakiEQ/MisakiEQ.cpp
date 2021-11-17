@@ -90,6 +90,7 @@ void EEW::Loop()
         if (t > config.RebootTimer * 1000)
         {
             M5.Lcd.setBrightness(0);
+            M5.Power.deepSleep(5000000);
             M5.Power.reset();
         }
     }
@@ -349,7 +350,7 @@ void EEW::Draw()
                         FastFont::printUtf8(" 予 報 ", 0, 15, WHITE, 2, BLUE);
                     }
                 }
-                else if (json["Status"]["Code"] == "10")
+                else if (json["Status"]["Code"] == "10"||json["Status"]["Code"] == "11")
                 {
                     M5.lcd.fillRect(0, 15, 94, 24, GREEN);
                     FastFont::printUtf8(" 取 消 ", 0, 15, WHITE, 2, GREEN);
@@ -585,14 +586,15 @@ void EEW::Draw()
         if (!IsFirstDrawed)
         {
             IsFirstDrawed = 1;
-            FastFont::printRom("10s", 0, 15, RED);
-            FastFont::printRom(" 1s", 0, 65 - 4, RED);
-            FastFont::printRom("500", 0, 115 - 4, YELLOW);
-            FastFont::printRom("100", 0, 165 - 4, GREEN);
+            FastFont::printRom("10s", 0, 24, RED);
+            FastFont::printRom(" 1s", 0, 74 - 4, RED);
+            FastFont::printRom("500", 0, 124 - 4, YELLOW);
+            FastFont::printRom("100", 0, 174 - 4, GREEN);
 
-            FastFont::printRom("  0", 0, 215 - 8, GREEN);
+            FastFont::printRom("  0", 0, 224 - 8, GREEN);
 
-            M5.Lcd.drawRect(19, 14, 302, 202, WHITE);
+            M5.Lcd.drawRect(19, 23, 302, 202, WHITE);
+            FastFont::printRom("Ping:",320-6*11+1,14,WHITE);
         }
         if (!IsPingUpdate)
         {
@@ -609,7 +611,7 @@ void EEW::Draw()
                     val /= 180;
                     val += 150;
 
-                    M5.Lcd.drawFastVLine(20 + i, 15 + (200 - val), val, RED);
+                    M5.Lcd.drawFastVLine(20 + i, 24 + (200 - val), val, RED);
                 }
                 else if (PingValue[i] >= 500)
                 { // 1000まで 500/10 50
@@ -617,7 +619,7 @@ void EEW::Draw()
                     val /= 10;
                     val += 100;
 
-                    M5.Lcd.drawFastVLine(20 + i, 15 + (200 - val), val, RED);
+                    M5.Lcd.drawFastVLine(20 + i, 24 + (200 - val), val, RED);
                 }
                 else if (PingValue[i] >= 100)
                 { // 500まで  400/8 50
@@ -625,44 +627,60 @@ void EEW::Draw()
                     val /= 8;
                     val += 50;
 
-                    M5.Lcd.drawFastVLine(20 + i, 15 + (200 - val), val, YELLOW);
+                    M5.Lcd.drawFastVLine(20 + i, 24 + (200 - val), val, YELLOW);
                 }
                 else
                 { // 100まで /2 +50
                     val /= 2;
-                    M5.Lcd.drawFastVLine(20 + i, 15 + (200 - val), val, GREEN);
+                    M5.Lcd.drawFastVLine(20 + i, 24 + (200 - val), val, GREEN);
                 }
                 if (i % 60 == 0)
                 {
-                    M5.Lcd.drawFastVLine(20 + i, 15, 200 - val, GetColor(0x808080));
+                    M5.Lcd.drawFastVLine(20 + i, 24, 200 - val, GetColor(0x808080));
                 }
                 else if (i % 20 == 0)
                 {
-                    M5.Lcd.drawFastVLine(20 + i, 15, 200 - val, GetColor(0x404040));
+                    M5.Lcd.drawFastVLine(20 + i, 24, 200 - val, GetColor(0x404040));
                 }
                 else
                 {
-                    M5.Lcd.drawFastVLine(20 + i, 15, 200 - val, BLACK);
+                    M5.Lcd.drawFastVLine(20 + i, 24, 200 - val, BLACK);
                 }
                 for (float pi = 0; pi < 50; pi += 10)
                     if (pi > val)
-                        M5.Lcd.drawPixel(20 + i, 15 + (199 - pi), GetColor(0x404040));
+                        M5.Lcd.drawPixel(20 + i, 24 + (199 - pi), GetColor(0x404040));
                 for (float pi = 50; pi < 100; pi += 12.5)
                     if (pi > val)
-                        M5.Lcd.drawPixel(20 + i, 15 + (199 - pi), GetColor(0x404040));
+                        M5.Lcd.drawPixel(20 + i, 24 + (199 - pi), GetColor(0x404040));
                 for (float pi = 100; pi < 150; pi += 10)
                     if (pi > val)
-                        M5.Lcd.drawPixel(20 + i, 15 + (199 - pi), GetColor(0x404040));
+                        M5.Lcd.drawPixel(20 + i, 24 + (199 - pi), GetColor(0x404040));
                 for (float pi = 150; pi < 200; pi += 5.55555555555555555555556)
                     if (pi > val)
-                        M5.Lcd.drawPixel(20 + i, 15 + (199 - pi), GetColor(0x404040));
+                        M5.Lcd.drawPixel(20 + i, 24 + (199 - pi), GetColor(0x404040));
                 if (50 > val)
-                    M5.Lcd.drawPixel(20 + i, 15 + (199 - 50), GetColor(0x208020));
+                    M5.Lcd.drawPixel(20 + i, 24 + (199 - 50), GetColor(0x208020));
                 if (100 > val)
-                    M5.Lcd.drawPixel(20 + i, 15 + (199 - 100), GetColor(0x808020));
+                    M5.Lcd.drawPixel(20 + i, 24 + (199 - 100), GetColor(0x808020));
                 if (150 > val)
-                    M5.Lcd.drawPixel(20 + i, 15 + (199 - 150), GetColor(0x802020));
+                    M5.Lcd.drawPixel(20 + i, 24 + (199 - 150), GetColor(0x802020));
             }
+            char* text=new char[20];
+            short col;
+            sprintf(text,"%4dms",PingValue[PingData-1]);
+            if(PingValue[PingData-1]>=10000){
+                col=RED;
+                sprintf(text,"----ms",PingValue[PingData-1]);
+            }else
+            if(PingValue[PingData-1]>=500){
+                col=RED;
+            }else if(PingValue[PingData-1]>=100){
+                col=YELLOW;
+            }else{
+                col=GREEN;
+            }
+            FastFont::printRom(text,320-6*6+1,14,col,1,BLACK);
+            delete[] text;
         }
         break;
     case SettingMode:
@@ -908,7 +926,7 @@ void EEW::GetNetworkFile(void *args)
                 if(TestTime!=0){
                     if(millis()>TestTime&&millis()<TestTime+30000){
                         deserializeJson(json, TestJson);
-                    }else if(millis()>TestTime>30000){
+                    }else if(millis()>TestTime+30000){
                         TestTime=0;
                         deserializeJson(json, http[0].getString());
                     }else{
