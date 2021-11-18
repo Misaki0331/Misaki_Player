@@ -1,106 +1,17 @@
-#include<ArduinoJson.h>
-#include<M5Stack.h>
-#include<HTTPClient.h>
-#include<WiFi.h>
+#include <ArduinoJson.h>
+#include <M5Stack.h>
+#include <HTTPClient.h>
+#include <WiFi.h>
+#include "Setting.h"
 #define PingData 300
-namespace App{
-    namespace MisakiEQ{
-        namespace Setting{
-            class Path{
-                public:
-                void SetTitle(String t,String t2){
-                    title=t;
-                    subTitle=t2;
-                }
-                void Begin(String* path,String ext);
-                void Draw();
-                void Button(int type);
-                void Cancel();
-                void Release();
-                bool GetIsUpdate();
-                bool GetIsSetting();
-                private:
-                bool IsSetting;
-                bool IsUpdate;
-                String title;
-                String subTitle;
-                bool IsFirstDraw;
-                bool IsPathUpdate;
-                String* ptr;
-                String fileExt;
-                int sellectFile;
-                String openPath;
-                void GetFileList();
-                typedef struct filedata{
-                String Name="";
-                int Size=-1;
-                bool IsDirectry=false;
-                bool IsCommandCancel=false;
-                bool IsCommandEmpty=false;
-                bool IsCommnadBack=false;
-                }FileData;
-                FileData* FileLists;
-                int FileCount;
-                int scroll;
-                int sellect;
-            };
-            class List{
-                public:
-                void SetTitle(String t,String t2){
-                    title=t;
-                    subTitle=t2;
-                }
-                void Begin(String* name,const String* args, int argcount);
-                void Draw();
-                void Button(int type);
-                void Release();
-                void Cancel();
-                bool GetIsUpdate();
-                bool GetIsSetting();
-                private:
-                bool IsSetting;
-                bool IsUpdate;
-                String title;
-                String subTitle;
-                bool IsFirstDraw;
-                String* ptr;
-                const String* listArgs;
-                int totalArgs;
+namespace App
+{
+    namespace MisakiEQ
+    {
 
-                int scroll;
-                int sellect;
-
-            };
-            class Num{
-                public:
-                void SetTitle(String t,String t2){
-                    title=t;
-                    subTitle=t2;
-                }
-                void Begin(int* value,uint8_t degit);
-                void Draw();
-                void Button(int type);
-                void Release();
-                void Cancel();
-                bool GetIsUpdate();
-                bool GetIsSetting();
-                private:
-                bool IsSetting;
-                bool IsUpdate;
-                String title;
-                String subTitle;
-                bool IsFirstDraw;
-                int* ptr;
-                int temp;
-                uint8_t totalDegit;
-                int sellectDegit;
-                bool IsDegitMode;
-                long powi(int x,int y);//X^Y
-
-            };
-        }
-        class EEW{
-            public:
+        class EEW
+        {
+        public:
             EEW();
             ~EEW();
             void Begin();
@@ -116,7 +27,8 @@ namespace App{
             void BackGround();
             int LoadTime();
             void ModeEnter();
-            private:
+
+        private:
             bool IsActive;
             bool First;
             static void GetNetworkFile(void *args);
@@ -147,17 +59,21 @@ namespace App{
             int mode;
             int sellectMode;
             static short *PingValue;
+            static short *PingValue12sec;
+            static short *PingValue60sec;
+            static int PingCount;
             static bool IsPingOpen;
             static String LatestHttpError;
-            static HTTPClient* http;
-            enum ModeType{
-                ExitMode=-1,
-                EEWMode=0,
-                PingMode=1,
-                SettingMode=2,
-                SettingNum=-999,
-                SettingList=-998,
-                SettingPath=-997
+            static HTTPClient *http;
+            enum ModeType
+            {
+                ExitMode = -1,
+                EEWMode = 0,
+                PingMode = 1,
+                SettingMode = 2,
+                SettingNum = -999,
+                SettingList = -998,
+                SettingPath = -997
             };
             int settingSellect;
             bool IsNotCursorMode;
@@ -167,7 +83,8 @@ namespace App{
             MisakiEQ::Setting::Num cNum;
             MisakiEQ::Setting::List cList;
             MisakiEQ::Setting::Path cPath;
-            struct Configs{
+            struct Configs
+            {
                 String ForecastSoundPath;
                 bool ForecastSoundPerSerial;
                 String WarnSoundPath;
@@ -176,8 +93,9 @@ namespace App{
                 int LCDoffTimer;
                 int RebootTimer;
             } config;
-            
-            enum SettingVar{
+
+            enum SettingVar
+            {
                 ForecastSoundPath,
                 ForecastSoundPerSerial,
                 WarnSoundPath,
@@ -188,6 +106,14 @@ namespace App{
                 ExitSetting,
                 TestMode
             };
+
+            enum PingGraphMode{
+                Ping_60secondsMode,
+                Ping_5minsMode,
+                Ping_1hoursMode,
+                Ping_5hoursMode
+            };
+            int pingGraphMode;
             void ReadConfig();
             void SaveConfig();
             int Reboottimer;
@@ -202,8 +128,7 @@ namespace App{
             static const String TestJson;
             static int TestTime;
         };
-        
-        
-        
+
     }
+
 }

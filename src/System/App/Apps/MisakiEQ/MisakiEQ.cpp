@@ -4,11 +4,7 @@
 using namespace App::MisakiEQ;
 using namespace Core::Draw;
 using namespace Core::Sound;
-/*
-M5.begin();
 
-
-    }*/
 EEW::EEW()
 {
     First = 0;
@@ -43,8 +39,13 @@ void EEW::Begin()
     pg = 1;
     http = new HTTPClient();
     PingValue = new short[PingData];
-    for (int i = 0; i < PingData; i++)
+    PingValue12sec = new short[PingData];
+    PingValue60sec = new short[PingData];
+    for (int i = 0; i < PingData; i++){
         PingValue[i] = 0;
+        PingValue12sec[i]=0;
+        PingValue60sec[i]=0;
+    }
     IsPingOpen = true;
     xTaskCreatePinnedToCore(GetNetworkFile, "MisakiEQ_EEW", 16800, NULL, 5, NULL, 1);
     ReadConfig();
@@ -595,6 +596,21 @@ void EEW::Draw()
 
             M5.Lcd.drawRect(19, 23, 302, 202, WHITE);
             FastFont::printRom("Ping:",320-6*11+1,14,WHITE);
+            FastFont::printRom("Mode:",20,14,WHITE);
+            switch(pingGraphMode){
+                case Ping_60secondsMode:
+                FastFont::printRom("60sec",50,14,GREEN,1,BLACK);
+                break;
+                case Ping_5minsMode:
+                FastFont::printRom(" 5min",50,14,YELLOW,1,BLACK);
+                break;
+                case Ping_1hoursMode:
+                FastFont::printRom("60min",50,14,RED,1,BLACK);
+                break;
+                case Ping_5hoursMode:
+                FastFont::printRom(" 5hrs",50,14,GetColor(0xFF00FF),1,BLACK);
+                break;
+            }
         }
         if (!IsPingUpdate)
         {
@@ -602,10 +618,46 @@ void EEW::Draw()
 
             for (int i = 0; i < 300; i++)
             {
-                int val = PingValue[i];
+                int val;
+                int data;
+                int graph_x_lightgray;
+                int graph_x_gray;
+                switch(pingGraphMode){
+                    case Ping_60secondsMode:
+                    if(i%5==4){
+                        val=PingValue[PingData-1-60+(i+1)/5];
+                    }else{
+                        int m1=PingValue[PingData-1-60+(i+1)/5];
+                        int m2=PingValue[PingData-1-60+(i+1)/5+1];
+                        double v=m2-m1;
+                        v/=5;
+                        v*=(i+1)%5;
+                        val=m1+v;
+                    }
+                    graph_x_gray=25;
+                    graph_x_lightgray=75;
+                    break;
+                    case Ping_5minsMode:
+                    val = PingValue[i];
+                    graph_x_gray=20;
+                    graph_x_lightgray=60;
+                    break;
+                    case Ping_1hoursMode:
+                    val = PingValue12sec[i];
+                    graph_x_gray=25;
+                    graph_x_lightgray=50;
+                    break;
+                    case Ping_5hoursMode:
+                    val = PingValue60sec[i];
+                    graph_x_gray=15;
+                    graph_x_lightgray=60;
+                    break;
+                }
+                data=val;
                 if (val > 9999)
                     val = 9999;
-                if (PingValue[i] >= 1000)
+                    if(val<0)val=0;
+                if (data >= 1000)
                 { // 10000まで 9000/180 50
                     val -= 1000;
                     val /= 180;
@@ -613,7 +665,7 @@ void EEW::Draw()
 
                     M5.Lcd.drawFastVLine(20 + i, 24 + (200 - val), val, RED);
                 }
-                else if (PingValue[i] >= 500)
+                else if (data >= 500)
                 { // 1000まで 500/10 50
                     val -= 500;
                     val /= 10;
@@ -621,7 +673,7 @@ void EEW::Draw()
 
                     M5.Lcd.drawFastVLine(20 + i, 24 + (200 - val), val, RED);
                 }
-                else if (PingValue[i] >= 100)
+                else if (data >= 100)
                 { // 500まで  400/8 50
                     val -= 100;
                     val /= 8;
@@ -634,11 +686,11 @@ void EEW::Draw()
                     val /= 2;
                     M5.Lcd.drawFastVLine(20 + i, 24 + (200 - val), val, GREEN);
                 }
-                if (i % 60 == 0)
+                if (i % graph_x_lightgray == 0)
                 {
                     M5.Lcd.drawFastVLine(20 + i, 24, 200 - val, GetColor(0x808080));
                 }
-                else if (i % 20 == 0)
+                else if (i % graph_x_gray == 0)
                 {
                     M5.Lcd.drawFastVLine(20 + i, 24, 200 - val, GetColor(0x404040));
                 }
@@ -667,14 +719,14 @@ void EEW::Draw()
             }
             char* text=new char[20];
             short col;
-            sprintf(text,"%4dms",PingValue[PingData-1]);
-            if(PingValue[PingData-1]>=10000){
+            sprintf(text,"%4dms",JsonReadTime);
+            if(JsonReadTime>=10000){
                 col=RED;
-                sprintf(text,"----ms",PingValue[PingData-1]);
+                sprintf(text,"----ms");
             }else
-            if(PingValue[PingData-1]>=500){
+            if(JsonReadTime>=500){
                 col=RED;
-            }else if(PingValue[PingData-1]>=100){
+            }else if(JsonReadTime>=100){
                 col=YELLOW;
             }else{
                 col=GREEN;
@@ -849,11 +901,22 @@ void EEW::Draw()
 }
 void EEW::ModeEnter()
 {
-    if (mode == SettingMode && sellectMode == SettingMode)
-    {
-        IsNotCursorMode = true;
-        IsButtonUIUpdate = false;
-        settingSellect = 0;
+    if(mode==sellectMode){
+        switch(mode){
+            case PingMode:
+                pingGraphMode++;
+                if(pingGraphMode>Ping_5hoursMode)pingGraphMode=Ping_60secondsMode;
+                IsFirstDrawed=false;
+                IsUpdated=false;
+                IsPingUpdate=false;
+            break;
+            case SettingMode:
+                IsNotCursorMode = true;
+                IsButtonUIUpdate = false;
+                settingSellect = 0;
+            break;
+            
+        }
     }
 
     if (sellectMode == SettingMode)
@@ -900,6 +963,8 @@ void EEW::Exit()
     }
     IsPingOpen = false;
     delete[] PingValue;
+    delete[] PingValue12sec;
+    delete[] PingValue60sec;
 }
 bool EEW::GetActive()
 {
@@ -944,11 +1009,39 @@ void EEW::GetNetworkFile(void *args)
         http[0].end();
         int t = millis();
         JsonReadTime = t - start;
+        if(WiFi.status()!=WL_CONNECTED)JsonReadTime=0;
         if (IsPingOpen)
         {
             for (int i = 1; i < PingData; i++)
                 PingValue[i - 1] = PingValue[i];
             PingValue[PingData - 1] = JsonReadTime;
+            PingCount++;
+
+            int calcCount=0;
+            int calcData=0;
+            if(PingCount%12==0){
+                for(int i=PingData-1-12;i<PingData;i++){
+                    if(PingValue[i]!=0){
+                        calcData+=PingValue[i];
+                        calcCount++;
+                    }
+                }
+                for (int i = 1; i < PingData; i++)
+                PingValue12sec[i - 1] = PingValue12sec[i];
+                PingValue12sec[PingData - 1] = calcData/calcCount;
+                
+            }
+            if(PingCount%60==0){
+                for(int i=PingData-1-60;i<PingData;i++){
+                    if(PingValue[i]!=0){
+                        calcData+=PingValue[i];
+                        calcCount++;
+                    }
+                }
+                for (int i = 1; i < PingData; i++)
+                PingValue60sec[i - 1] = PingValue60sec[i];
+                PingValue60sec[PingData - 1] = calcData/calcCount;
+            }
         }
         LatestReadTime = t;
         IsPingUpdate = 0;
@@ -1231,6 +1324,9 @@ int EEW::JsonReadTime = 0;
 String EEW::LatestHttpError = "";
 HTTPClient *EEW::http;
 short *EEW::PingValue;
+short *EEW::PingValue12sec;
+short *EEW::PingValue60sec;
+int EEW::PingCount=0;
 bool EEW::IsPingOpen = false;
 const String EEW::PrefList[] = {
     "全都道府県",
