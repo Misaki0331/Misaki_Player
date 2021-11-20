@@ -1,6 +1,7 @@
 #include "MisakiEQ.hpp"
 #include "../../../Fonts/FastFont.h"
 #include "../../../sound/sound.h"
+#include "../../../config.h"
 using namespace App::MisakiEQ;
 using namespace Core::Draw;
 using namespace Core::Sound;
@@ -15,7 +16,7 @@ EEW::~EEW()
 }
 void EEW::Begin()
 {
-    TestTime=0;
+    TestTime = 0;
     IsActive = false;
     toHome = 0;
     FirstCheck = false;
@@ -34,17 +35,19 @@ void EEW::Begin()
     IsPingUpdate = false;
     IsNotCursorMode = false;
     LCDTimer = millis();
-    IsnotLCDLight=false;
+    IsnotLCDLight = false;
     Reboottimer = 0;
+    TempIsBatterySupply=Core::SystemAPI::BatteryIsSupply;
     pg = 1;
     http = new HTTPClient();
     PingValue = new short[PingData];
     PingValue12sec = new short[PingData];
     PingValue60sec = new short[PingData];
-    for (int i = 0; i < PingData; i++){
+    for (int i = 0; i < PingData; i++)
+    {
         PingValue[i] = 0;
-        PingValue12sec[i]=0;
-        PingValue60sec[i]=0;
+        PingValue12sec[i] = 0;
+        PingValue60sec[i] = 0;
     }
     IsPingOpen = true;
     xTaskCreatePinnedToCore(GetNetworkFile, "MisakiEQ_EEW", 16800, NULL, 5, NULL, 1);
@@ -68,29 +71,42 @@ void EEW::Begin()
 }
 void EEW::Loop()
 {
-    if (config.LCDoffTimer != 0 && !IsnotLCDLight)
+    int SettingTime;
+    if(Core::SystemAPI::BatteryIsSupply){
+        SettingTime=config.LCDoffTimer;
+    }else{
+        SettingTime=config.LCDoffTimerBattery;
+    }
+    if (SettingTime != 0 && !IsnotLCDLight)
     {
         int t = millis() - LCDTimer;
-        if (t > config.LCDoffTimer * 1000)
+        
+        if (t > SettingTime * 1000)
         {
             IsnotLCDLight = true;
             M5.Lcd.setBrightness(0);
         }
     }
-    if(IsPingOpen){
-        if(PingCount%600==599){
-                PingSave();
-            }
-    }
     if (IsnotLCDLight)
     {
         int t = millis() - LCDTimer;
-        if (t <= config.LCDoffTimer * 1000)
+        if (t <= SettingTime * 1000)
         {
             IsnotLCDLight = false;
-            M5.Lcd.setBrightness(200);
+            M5.Lcd.setBrightness(100);
         }
     }
+    if(TempIsBatterySupply!=Core::SystemAPI::BatteryIsSupply){
+        TempIsBatterySupply=Core::SystemAPI::BatteryIsSupply;
+        LCDTimer=millis();
+        IsnotLCDLight = false;
+        M5.Lcd.setBrightness(100);
+    }
+    /*if(IsPingOpen){
+        if(PingCount%600==599){
+                PingSave();
+            }
+    }*/
     if (config.RebootTimer != 0 && Reboottimer != 0)
     {
         int t = millis() - Reboottimer;
@@ -343,7 +359,7 @@ void EEW::Draw()
             IsRegionUpdate = false;
             if (json["ParseStatus"] == "Success")
             {
-                if (json["Status"]["Code"] == "00"||json["Status"]["Code"] == "01")
+                if (json["Status"]["Code"] == "00" || json["Status"]["Code"] == "01")
                 {
                     if (json["Warn"])
                     {
@@ -358,7 +374,7 @@ void EEW::Draw()
                         FastFont::printUtf8(" 予 報 ", 0, 15, WHITE, 2, BLUE);
                     }
                 }
-                else if (json["Status"]["Code"] == "10"||json["Status"]["Code"] == "11")
+                else if (json["Status"]["Code"] == "10" || json["Status"]["Code"] == "11")
                 {
                     M5.lcd.fillRect(0, 15, 94, 24, GREEN);
                     FastFont::printUtf8(" 取 消 ", 0, 15, WHITE, 2, GREEN);
@@ -602,20 +618,21 @@ void EEW::Draw()
             FastFont::printRom("  0", 0, 224 - 8, GREEN);
 
             M5.Lcd.drawRect(19, 23, 302, 202, WHITE);
-            FastFont::printRom("Ping:",320-6*11+1,14,WHITE);
-            FastFont::printRom("Mode:",20,14,WHITE);
-            switch(pingGraphMode){
-                case Ping_60secondsMode:
-                FastFont::printRom("60sec",50,14,GREEN,1,BLACK);
+            FastFont::printRom("Ping:", 320 - 6 * 11 + 1, 14, WHITE);
+            FastFont::printRom("Mode:", 20, 14, WHITE);
+            switch (pingGraphMode)
+            {
+            case Ping_60secondsMode:
+                FastFont::printRom("60sec", 50, 14, GREEN, 1, BLACK);
                 break;
-                case Ping_5minsMode:
-                FastFont::printRom(" 5min",50,14,YELLOW,1,BLACK);
+            case Ping_5minsMode:
+                FastFont::printRom(" 5min", 50, 14, YELLOW, 1, BLACK);
                 break;
-                case Ping_1hoursMode:
-                FastFont::printRom("60min",50,14,RED,1,BLACK);
+            case Ping_1hoursMode:
+                FastFont::printRom("60min", 50, 14, RED, 1, BLACK);
                 break;
-                case Ping_5hoursMode:
-                FastFont::printRom("8.3hr",50,14,GetColor(0xFF00FF),1,BLACK);
+            case Ping_5hoursMode:
+                FastFont::printRom("8.3hr", 50, 14, GetColor(0xFF00FF), 1, BLACK);
                 break;
             }
         }
@@ -629,43 +646,48 @@ void EEW::Draw()
                 int data;
                 int graph_x_lightgray;
                 int graph_x_gray;
-                int graph_x_loght_offset=0;
-                switch(pingGraphMode){
-                    case Ping_60secondsMode:
-                    if(i%5==4){
-                        val=PingValue[PingData-1-60+(i+1)/5];
-                    }else{
-                        int m1=PingValue[PingData-1-60+(i+1)/5];
-                        int m2=PingValue[PingData-1-60+(i+1)/5+1];
-                        double v=m2-m1;
-                        v/=5;
-                        v*=(i+1)%5;
-                        val=m1+v;
+                int graph_x_loght_offset = 0;
+                switch (pingGraphMode)
+                {
+                case Ping_60secondsMode:
+                    if (i % 5 == 4)
+                    {
+                        val = PingValue[PingData - 1 - 60 + (i + 1) / 5];
                     }
-                    graph_x_gray=25;
-                    graph_x_lightgray=75;
+                    else
+                    {
+                        int m1 = PingValue[PingData - 1 - 60 + (i + 1) / 5];
+                        int m2 = PingValue[PingData - 1 - 60 + (i + 1) / 5 + 1];
+                        double v = m2 - m1;
+                        v /= 5;
+                        v *= (i + 1) % 5;
+                        val = m1 + v;
+                    }
+                    graph_x_gray = 25;
+                    graph_x_lightgray = 75;
                     break;
-                    case Ping_5minsMode:
+                case Ping_5minsMode:
                     val = PingValue[i];
-                    graph_x_gray=20;
-                    graph_x_lightgray=60;
+                    graph_x_gray = 20;
+                    graph_x_lightgray = 60;
                     break;
-                    case Ping_1hoursMode:
+                case Ping_1hoursMode:
                     val = PingValue12sec[i];
-                    graph_x_gray=25;
-                    graph_x_lightgray=50;
+                    graph_x_gray = 25;
+                    graph_x_lightgray = 50;
                     break;
-                    case Ping_5hoursMode:
+                case Ping_5hoursMode:
                     val = PingValue60sec[i];
-                    graph_x_gray=12;
-                    graph_x_lightgray=36;
-                    graph_x_loght_offset=12;
+                    graph_x_gray = 12;
+                    graph_x_lightgray = 36;
+                    graph_x_loght_offset = 12;
                     break;
                 }
-                data=val;
+                data = val;
                 if (val > 9999)
                     val = 9999;
-                    if(val<0)val=0;
+                if (val < 0)
+                    val = 0;
                 if (data >= 1000)
                 { // 10000まで 9000/180 50
                     val -= 1000;
@@ -726,23 +748,28 @@ void EEW::Draw()
                 if (150 > val)
                     M5.Lcd.drawPixel(20 + i, 24 + (199 - 150), GetColor(0x802020));
             }
-            char* text=new char[20];
+            char *text = new char[20];
             short col;
-            sprintf(text,"%4dms",JsonReadTime);
-            if(JsonReadTime>=10000){
-                col=RED;
-                sprintf(text,"----ms");
-            }else
-            if(JsonReadTime>=500){
-                col=RED;
-            }else if(JsonReadTime>=100){
-                col=YELLOW;
-            }else{
-                col=GREEN;
+            sprintf(text, "%4dms", JsonReadTime);
+            if (JsonReadTime >= 10000)
+            {
+                col = RED;
+                sprintf(text, "----ms");
             }
-            FastFont::printRom(text,320-6*6+1,14,col,1,BLACK);
+            else if (JsonReadTime >= 500)
+            {
+                col = RED;
+            }
+            else if (JsonReadTime >= 100)
+            {
+                col = YELLOW;
+            }
+            else
+            {
+                col = GREEN;
+            }
+            FastFont::printRom(text, 320 - 6 * 6 + 1, 14, col, 1, BLACK);
             delete[] text;
-            
         }
         break;
     case SettingMode:
@@ -754,7 +781,7 @@ void EEW::Draw()
         {
             IsSettingUIUpdate = true;
             char *t = new char[100];
-            for (int i = 0; i <= ExitSetting+1; i++)
+            for (int i = 0; i <= ExitSetting + 1; i++)
             {
                 switch (i)
                 {
@@ -791,11 +818,21 @@ void EEW::Draw()
                 case LCDoffTimer:
                     if (config.LCDoffTimer == 0)
                     {
-                        sprintf(t, "LCD自動OFF : 無効");
+                        sprintf(t, "LCD自動OFF(電源接続時) : 無効");
                     }
                     else
                     {
-                        sprintf(t, "LCD自動OFF : %5d秒後", config.LCDoffTimer);
+                        sprintf(t, "LCD自動OFF(電源接続時) : %5d秒後", config.LCDoffTimer);
+                    }
+                    break;
+                case LCDoffTimerBattery:
+                    if (config.LCDoffTimerBattery == 0)
+                    {
+                        sprintf(t, "LCD自動OFF(バッテリー駆動時) : 無効");
+                    }
+                    else
+                    {
+                        sprintf(t, "LCD自動OFF(バッテリー駆動時) : %5d秒後", config.LCDoffTimerBattery);
                     }
                     break;
                 case RebootTimer:
@@ -812,27 +849,27 @@ void EEW::Draw()
                     sprintf(t, "設定を保存して終了");
                     break;
                 case TestMode:
-                    sprintf(t, "訓練モード(60秒後に警報が鳴動します。) : %s",TestTime==0?"無効":"有効");
+                    sprintf(t, "訓練モード(60秒後に警報が鳴動します。) : %s", TestTime == 0 ? "無効" : "有効");
                     break;
                 }
-                if(i==TestMode){
-                    if(TestTime==0){
+                if (i == TestMode)
+                {
+                    if (TestTime == 0)
+                    {
                         M5.lcd.fillRect(0, 20 + 12 * i, 320, 12, settingSellect == i && IsNotCursorMode ? RED : BLACK);
                         FastFont::printUtf8(t, 0, 20 + 12 * i, settingSellect == i && IsNotCursorMode ? BLACK : RED, 1, INVISIBLE_COLOR);
-                
-
-                    }else{
+                    }
+                    else
+                    {
                         M5.lcd.fillRect(0, 20 + 12 * i, 320, 12, settingSellect == i && IsNotCursorMode ? GREEN : BLACK);
                         FastFont::printUtf8(t, 0, 20 + 12 * i, settingSellect == i && IsNotCursorMode ? BLACK : GREEN, 1, INVISIBLE_COLOR);
-                
-
                     }
-                    
-                }else{
-                M5.lcd.fillRect(0, 20 + 12 * i, 320, 12, settingSellect == i && IsNotCursorMode ? WHITE : BLACK);
-                FastFont::printUtf8(t, 0, 20 + 12 * i, settingSellect == i && IsNotCursorMode ? BLACK : WHITE, 1, INVISIBLE_COLOR);
                 }
-
+                else
+                {
+                    M5.lcd.fillRect(0, 20 + 12 * i, 320, 12, settingSellect == i && IsNotCursorMode ? WHITE : BLACK);
+                    FastFont::printUtf8(t, 0, 20 + 12 * i, settingSellect == i && IsNotCursorMode ? BLACK : WHITE, 1, INVISIBLE_COLOR);
+                }
             }
             delete[] t;
         }
@@ -911,21 +948,23 @@ void EEW::Draw()
 }
 void EEW::ModeEnter()
 {
-    if(mode==sellectMode){
-        switch(mode){
-            case PingMode:
-                pingGraphMode++;
-                if(pingGraphMode>Ping_5hoursMode)pingGraphMode=Ping_60secondsMode;
-                IsFirstDrawed=false;
-                IsUpdated=false;
-                IsPingUpdate=false;
+    if (mode == sellectMode)
+    {
+        switch (mode)
+        {
+        case PingMode:
+            pingGraphMode++;
+            if (pingGraphMode > Ping_5hoursMode)
+                pingGraphMode = Ping_60secondsMode;
+            IsFirstDrawed = false;
+            IsUpdated = false;
+            IsPingUpdate = false;
             break;
-            case SettingMode:
-                IsNotCursorMode = true;
-                IsButtonUIUpdate = false;
-                settingSellect = 0;
+        case SettingMode:
+            IsNotCursorMode = true;
+            IsButtonUIUpdate = false;
+            settingSellect = 0;
             break;
-            
         }
     }
 
@@ -999,16 +1038,24 @@ void EEW::GetNetworkFile(void *args)
             switch (httpcode)
             {
             case 200:
-                if(TestTime!=0){
-                    if(millis()>TestTime&&millis()<TestTime+30000){
+                if (TestTime != 0)
+                {
+                    if (millis() > TestTime && millis() < TestTime + 30000)
+                    {
                         deserializeJson(json, TestJson);
-                    }else if(millis()>TestTime+30000){
-                        TestTime=0;
-                        deserializeJson(json, http[0].getString());
-                    }else{
+                    }
+                    else if (millis() > TestTime + 30000)
+                    {
+                        TestTime = 0;
                         deserializeJson(json, http[0].getString());
                     }
-                }else{
+                    else
+                    {
+                        deserializeJson(json, http[0].getString());
+                    }
+                }
+                else
+                {
                     deserializeJson(json, http[0].getString());
                 }
                 break;
@@ -1020,7 +1067,8 @@ void EEW::GetNetworkFile(void *args)
         http[0].end();
         int t = millis();
         JsonReadTime = t - start;
-        if(WiFi.status()!=WL_CONNECTED)JsonReadTime=0;
+        if (WiFi.status() != WL_CONNECTED)
+            JsonReadTime = 0;
         if (IsPingOpen)
         {
             for (int i = 1; i < PingData; i++)
@@ -1028,30 +1076,35 @@ void EEW::GetNetworkFile(void *args)
             PingValue[PingData - 1] = JsonReadTime;
             PingCount++;
 
-            int calcCount=0;
-            int calcData=0;
-            if(PingCount%12==11){
-                for(int i=PingData-1-12;i<PingData;i++){
-                    if(PingValue[i]!=0){
-                        calcData+=PingValue[i];
+            int calcCount = 0;
+            int calcData = 0;
+            if (PingCount % 12 == 11)
+            {
+                for (int i = PingData - 1 - 12; i < PingData; i++)
+                {
+                    if (PingValue[i] != 0)
+                    {
+                        calcData += PingValue[i];
                         calcCount++;
                     }
                 }
                 for (int i = 1; i < PingData; i++)
-                PingValue12sec[i - 1] = PingValue12sec[i];
-                PingValue12sec[PingData - 1] = calcData/calcCount;
-                
+                    PingValue12sec[i - 1] = PingValue12sec[i];
+                PingValue12sec[PingData - 1] = calcData / calcCount;
             }
-            if(PingCount%100==99){
-                for(int i=PingData-1-100;i<PingData;i++){
-                    if(PingValue[i]!=0){
-                        calcData+=PingValue[i];
+            if (PingCount % 100 == 99)
+            {
+                for (int i = PingData - 1 - 100; i < PingData; i++)
+                {
+                    if (PingValue[i] != 0)
+                    {
+                        calcData += PingValue[i];
                         calcCount++;
                     }
                 }
                 for (int i = 1; i < PingData; i++)
-                PingValue60sec[i - 1] = PingValue60sec[i];
-                PingValue60sec[PingData - 1] = calcData/calcCount;
+                    PingValue60sec[i - 1] = PingValue60sec[i];
+                PingValue60sec[PingData - 1] = calcData / calcCount;
             }
         }
         LatestReadTime = t;
@@ -1139,7 +1192,7 @@ void EEW::PressButton(int type)
                     IsButtonUIUpdate = false;
                     break;
                 case 3:
-                    if (settingSellect < ExitSetting+1)
+                    if (settingSellect < ExitSetting + 1)
                         settingSellect++;
                     break;
                 }
@@ -1197,7 +1250,13 @@ void EEW::SettingEnter()
     case LCDoffTimer:
         cNum.Begin(&config.LCDoffTimer, 5);
         sellectMode = SettingNum;
-        cNum.SetTitle("LCD自動消灯する時間(秒)", "鳴動後に液晶ディスプレイをオフにする時間を設定し\nます。(設定値=0で無効)");
+        cNum.SetTitle("LCD自動消灯する時間(秒)", "電源接続時の動作後に液晶ディスプレイをオフにする時\n間を設定します。(設定値=0で無効)");
+        ModeEnter();
+        break;
+    case LCDoffTimerBattery:
+        cNum.Begin(&config.LCDoffTimerBattery, 5);
+        sellectMode = SettingNum;
+        cNum.SetTitle("LCD自動消灯する時間(秒)", "バッテリー駆動時の鳴動後に液晶ディスプレイをオフに\nする時間を設定します。(設定値=0で無効)");
         ModeEnter();
         break;
     case RebootTimer:
@@ -1211,7 +1270,7 @@ void EEW::SettingEnter()
         IsNotCursorMode = false;
         break;
     case TestMode:
-        TestTime=millis()+60000;
+        TestTime = millis() + 60000;
         break;
     }
 }
@@ -1222,18 +1281,24 @@ void EEW::SaveConfig()
     fs::FS fs = SPIFFS;
     if (!fs.exists("/config"))
         fs.mkdir("/config");
+    if(fs.exists("/config/MisakiEQ.cfg"))fs.remove("/config/MisakiEQ.cfg");
     File configFile = fs.open("/config/MisakiEQ.cfg", FILE_WRITE);
     if (!configFile)
         return;
-    configFile.println(config.ForecastSoundPath);
-    configFile.println(config.ForecastSoundPerSerial ? "true" : "false");
-    configFile.println(config.WarnSoundPath);
-    configFile.println(config.WarnSoundPerSerial ? "true" : "false");
-    configFile.println(config.OnlyListEvent);
-    configFile.println(config.LCDoffTimer);
-    configFile.println(config.RebootTimer);
+    configFile.printf("ForecastSoundPath=%s\n",config.ForecastSoundPath.c_str());
+    configFile.printf("ForecastSoundPerSerial=%s\n",BoolToStr(config.ForecastSoundPerSerial).c_str());
+    configFile.printf("WarnSoundPath=%s\n",config.WarnSoundPath.c_str());
+    configFile.printf("WarnSoundPerSerial=%s\n",BoolToStr(config.WarnSoundPerSerial).c_str());
+    configFile.printf("OnlyListEvent=%s\n",config.OnlyListEvent.c_str());
+    configFile.printf("LCDoffTimer=%d\n" , config.LCDoffTimer);
+    configFile.printf("LCDoffTimerBattery=%d\n" , config.LCDoffTimerBattery);
+    configFile.printf("RebootTimer=%d\n" , config.RebootTimer);
     configFile.close();
     SPIFFS.end();
+}
+String EEW::BoolToStr(bool val){
+    if(val)return "true";
+    return "false";
 }
 void EEW::ReadConfig()
 {
@@ -1246,38 +1311,82 @@ void EEW::ReadConfig()
         SPIFFS.end();
         return;
     }
-    for (int i = 0; i < ExitSetting; i++)
+    String *tmps=new String[2];
+    for (int i = 0;; i++)
     {
+        Serial.printf("i = %d\n",i);
+        if(!configFile.available())break;
+        Serial.println("Checked available");
         String tmp = configFile.readStringUntil('\n');
-        tmp.remove(tmp.length() - 1, 1);
-        switch (i)
+        Serial.printf("tmp = %s\n",tmp.c_str());
+        if(tmp.length()==0)continue;
+        if(tmp.endsWith("\n"))tmp.remove(tmp.length() - 1, 1);
+        Serial.println("tmp removed");
+        tmps[0].clear();
+        tmps[1].clear();
+        int splits = Split(tmp, '=', tmps);
+        Serial.printf("Split is %d\n",splits);
+        
+            Serial.println(tmps[0]+" : "+tmps[1]);
+        if (splits == 2)
         {
-        case ForecastSoundPath:
-            config.ForecastSoundPath = tmp;
-            break;
-        case ForecastSoundPerSerial:
-            tmp == "true" ? config.ForecastSoundPerSerial = 1 : config.ForecastSoundPerSerial = 0;
-            break;
-        case WarnSoundPath:
-            config.WarnSoundPath = tmp;
-            break;
-        case WarnSoundPerSerial:
-            tmp == "true" ? config.WarnSoundPerSerial = 1 : config.WarnSoundPerSerial = 0;
-            break;
-        case OnlyListEvent:
-            config.OnlyListEvent = tmp;
-            break;
-        case LCDoffTimer:
-            config.LCDoffTimer = tmp.toInt();
-            break;
-        case RebootTimer:
-            config.RebootTimer = tmp.toInt();
-            break;
+            
+            tmp = tmps[1];
+            switch (GetConfigName(tmps[0]))
+            {
+            case ForecastSoundPath:
+                config.ForecastSoundPath = tmp;
+                break;
+            case ForecastSoundPerSerial:
+                tmp == "true" ? config.ForecastSoundPerSerial = 1 : config.ForecastSoundPerSerial = 0;
+                break;
+            case WarnSoundPath:
+                config.WarnSoundPath = tmp;
+                break;
+            case WarnSoundPerSerial:
+                tmp == "true" ? config.WarnSoundPerSerial = 1 : config.WarnSoundPerSerial = 0;
+                break;
+            case OnlyListEvent:
+                config.OnlyListEvent = tmp;
+                break;
+            case LCDoffTimer:
+                config.LCDoffTimer = tmp.toInt();
+                break;
+            case LCDoffTimerBattery:
+                config.LCDoffTimerBattery = tmp.toInt();
+                break;
+            case RebootTimer:
+                config.RebootTimer = tmp.toInt();
+                break;
+            }
         }
     }
+    
+        delete[] tmps;
+        tmps=nullptr;
 
     configFile.close();
     SPIFFS.end();
+}
+int EEW::GetConfigName(String str)
+{
+    if (str == "ForecastSoundPath")
+        return ForecastSoundPath;
+    if (str == "ForecastSoundPerSerial")
+        return ForecastSoundPerSerial;
+    if (str == "WarnSoundPath")
+        return WarnSoundPath;
+    if (str == "WarnSoundPerSerial")
+        return WarnSoundPerSerial;
+    if (str == "OnlyListEvent")
+        return OnlyListEvent;
+    if (str == "LCDoffTimer")
+        return LCDoffTimer;
+    if (str == "LCDoffTimerBattery")
+        return LCDoffTimerBattery;
+    if (str == "RebootTimer")
+        return RebootTimer;
+    return -1;
 }
 void EEW::CallSoundForecast()
 {
@@ -1337,7 +1446,7 @@ HTTPClient *EEW::http;
 short *EEW::PingValue;
 short *EEW::PingValue12sec;
 short *EEW::PingValue60sec;
-int EEW::PingCount=0;
+int EEW::PingCount = 0;
 bool EEW::IsPingOpen = false;
 const String EEW::PrefList[] = {
     "全都道府県",
@@ -1388,9 +1497,10 @@ const String EEW::PrefList[] = {
     "宮崎",
     "鹿児島",
     "沖縄"};
-const String EEW::TestJson="{\"ParseStatus\":\"Success\",\"Title\":{\"Code\":37,\"String\":\"緊急地震速報（警報）\",\"Detail\":\"マグニチュード、最大予測震度及び主要動到達予測時刻の緊急地震速報（発表パターン3： グリッド サーチ法、EPOS自動処理手法）\"},\"Source\":{\"Code\":3,\"String\":\"気象庁本庁\"},\"Status\":{\"Code\":\"01\",\"String\":\"通常\",\"Detail\":\"通常\"},\"AnnouncedTime\":{\"String\":\"2018/06/18 07:58:49\",\"UnixTime\":1529276329,\"RFC1123\":\"Sun, 17 Jun 2018 22:58:49 UTC\"},\"OriginTime\":{\"String\":\"2018/06/18 07:58:34\",\"UnixTime\":1529276314,\"RFC1123\":\"Sun, 17 Jun 2018 22:58:34 UTC\"},\"EventID\":\"20180618075838\",\"Type\":{\"Code\":0,\"String\":\"発表\",\"Detail\":\"発表(警報)\"},\"Serial\":11,\"Hypocenter\":{\"Code\":520,\"Name\":\"大阪府北部\",\"isAssumption\":false,\"Location\":{\"Lat\":34.8,\"Long\":135.6,\"Depth\":{\"Int\":10,\"String\":\"約10km\"}},\"Magnitude\":{\"Float\":6.3,\"String\":\"M6.3\",\"LongString\":\"M6.3\"},\"Accuracy\":{\"Epicenter\":{\"Code\":6,\"String\":\"防災科研システム(5点以上)〔防災科研 Hi-net データ〕\",\"Rank2\":4,\"String2\":\"IPF法(5点)\"},\"Depth\":{\"Code\":6,\"String\":\"防災科研システム(5点以上)〔防災科研 Hi-net データ〕\"},\"Magnitude\":{\"Code\":4,\"String\":\"P相/全相混在\"},\"NumberOfMagnitudeCalculation\":5},\"isSea\":false},\"MaxIntensity\":{\"From\":\"6+\",\"To\":\"6+\",\"String\":\"6強\",\"LongString\":\"6強程度\"},\"Warn\":true,\"WarnForecast\":{\"Hypocenter\":{\"Code\":9270,\"Name\":\"大阪府\"},\"District\":[\"近畿\",\"三重\",\"福井\",\"香川\"],\"LocalAreas\":[\"大阪\",\"滋賀\",\"兵庫\",\"奈良\",\"京都\",\"三重\",\"和歌山\",\"福井\",\"香川\"],\"Regions\":[\"大阪府北部\",\"京都府南部\",\"滋賀県南部\",\"兵庫県南東部\",\"奈良県\",\"大阪府南部\",\"三重県中部\",\"和歌山県北部\",\"滋賀県北部\",\"京都府北部\",\"福井県嶺南\",\"兵庫県淡路島\",\"三重県北部\",\"兵庫県南西部\",\"香川県東部\"]},\"Option\":{\"Change\":{\"Code\":0,\"String\":\"ほとんど変化なし\",\"Reason\":{\"Code\":0,\"String\":\"不明\"}}},\"Forecast\":[{\"Intensity\":{\"Code\":520,\"Name\":\"大阪府北部\",\"From\":\"6強\",\"To\":\"6弱\",\"Description\":\"震度6弱から震度6強程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":true,\"Condition\":\"既に主要動到達と推測\"}},{\"Intensity\":{\"Code\":511,\"Name\":\"京都府南部\",\"From\":\"6弱\",\"To\":\"5強\",\"Description\":\"震度5強から震度6弱程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":true,\"Condition\":\"既に主要動到達と推測\"}},{\"Intensity\":{\"Code\":501,\"Name\":\"滋賀県南部\",\"From\":\"6弱\",\"To\":\"6弱\",\"Description\":\"震度6弱程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":true,\"Condition\":\"既に主要動到達と推測\"}},{\"Intensity\":{\"Code\":531,\"Name\":\"兵庫県南東部\",\"From\":\"6弱\",\"To\":\"6弱\",\"Description\":\"震度6弱程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":true,\"Condition\":\"既に主要動到達と推測\"}},{\"Intensity\":{\"Code\":540,\"Name\":\"奈良県\",\"From\":\"5強\",\"To\":\"5弱\",\"Description\":\"震度5弱から震度5強程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":true,\"Condition\":\"既に主要動到達と推測\"}},{\"Intensity\":{\"Code\":521,\"Name\":\"大阪府南部\",\"From\":\"5強\",\"To\":\"5強\",\"Description\":\"震度5強程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":true,\"Condition\":\"既に主要動到達と推測\"}},{\"Intensity\":{\"Code\":461,\"Name\":\"三重県中部\",\"From\":\"5弱\",\"To\":\"4\",\"Description\":\"震度4から震度5弱程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:51\"}},{\"Intensity\":{\"Code\":550,\"Name\":\"和歌山県北部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:50\"}},{\"Intensity\":{\"Code\":500,\"Name\":\"滋賀県北部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:54\"}},{\"Intensity\":{\"Code\":510,\"Name\":\"京都府北部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:54\"}},{\"Intensity\":{\"Code\":401,\"Name\":\"福井県嶺南\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:56\"}},{\"Intensity\":{\"Code\":535,\"Name\":\"兵庫県淡路島\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:56\"}},{\"Intensity\":{\"Code\":460,\"Name\":\"三重県北部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:57\"}},{\"Intensity\":{\"Code\":532,\"Name\":\"兵庫県南西部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:57\"}},{\"Intensity\":{\"Code\":462,\"Name\":\"三重県南部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":false,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:59:02\"}},{\"Intensity\":{\"Code\":432,\"Name\":\"岐阜県美濃中西部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":false,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:59:04\"}},{\"Intensity\":{\"Code\":551,\"Name\":\"和歌山県南部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":false,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:59:06\"}},{\"Intensity\":{\"Code\":451,\"Name\":\"愛知県西部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":false,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:59:08\"}},{\"Intensity\":{\"Code\":610,\"Name\":\"香川県東部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:59:09\"}},{\"Intensity\":{\"Code\":581,\"Name\":\"岡山県南部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":false,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:59:17\"}},{\"Intensity\":{\"Code\":530,\"Name\":\"兵庫県北部\",\"From\":\"4\",\"To\":\"3\",\"Description\":\"震度3から震度4程度\"},\"Warn\":false,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:59\"}},{\"Intensity\":{\"Code\":600,\"Name\":\"徳島県北部\",\"From\":\"4\",\"To\":\"3\",\"Description\":\"震度3から震度4程度\"},\"Warn\":false,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:59:06\"}}],\"OriginalText\":\"37 03 00 180618075849 C11 180618075834 ND20180618075838 NCN011 JD////////////// JN/// 520 N348 E1356 010 63 6+ RK66454 RT01/// RC0//// EBI 520 S6+6- ////// 11 511 S6-5+ ////// 11 501 S6-6- ////// 11 531 S6-6- ////// 11 540 S5+5- ////// 11 521 S5+5+ ////// 11 461 S5-04 075851 10 550 S0404 075850 10 500 S0404 075854 10 510 S0404 075854 10 401 S0404 075856 10 535 S0404 075856 10 460 S0404 075857 10 532 S0404 075857 10 462 S0404 075902 00 432 S0404 075904 00 551 S0404 075906 00 451 S0404 075908 00 610 S0404 075909 10 581 S0404 075917 00 530 S0403 075859 00 600 S0403 075906 00 9999=\"}";
-int EEW::TestTime=0;
-void EEW::PingSave(){
+const String EEW::TestJson = "{\"ParseStatus\":\"Success\",\"Title\":{\"Code\":37,\"String\":\"緊急地震速報（警報）\",\"Detail\":\"マグニチュード、最大予測震度及び主要動到達予測時刻の緊急地震速報（発表パターン3： グリッド サーチ法、EPOS自動処理手法）\"},\"Source\":{\"Code\":3,\"String\":\"気象庁本庁\"},\"Status\":{\"Code\":\"01\",\"String\":\"通常\",\"Detail\":\"通常\"},\"AnnouncedTime\":{\"String\":\"2018/06/18 07:58:49\",\"UnixTime\":1529276329,\"RFC1123\":\"Sun, 17 Jun 2018 22:58:49 UTC\"},\"OriginTime\":{\"String\":\"2018/06/18 07:58:34\",\"UnixTime\":1529276314,\"RFC1123\":\"Sun, 17 Jun 2018 22:58:34 UTC\"},\"EventID\":\"20180618075838\",\"Type\":{\"Code\":0,\"String\":\"発表\",\"Detail\":\"発表(警報)\"},\"Serial\":11,\"Hypocenter\":{\"Code\":520,\"Name\":\"大阪府北部\",\"isAssumption\":false,\"Location\":{\"Lat\":34.8,\"Long\":135.6,\"Depth\":{\"Int\":10,\"String\":\"約10km\"}},\"Magnitude\":{\"Float\":6.3,\"String\":\"M6.3\",\"LongString\":\"M6.3\"},\"Accuracy\":{\"Epicenter\":{\"Code\":6,\"String\":\"防災科研システム(5点以上)〔防災科研 Hi-net データ〕\",\"Rank2\":4,\"String2\":\"IPF法(5点)\"},\"Depth\":{\"Code\":6,\"String\":\"防災科研システム(5点以上)〔防災科研 Hi-net データ〕\"},\"Magnitude\":{\"Code\":4,\"String\":\"P相/全相混在\"},\"NumberOfMagnitudeCalculation\":5},\"isSea\":false},\"MaxIntensity\":{\"From\":\"6+\",\"To\":\"6+\",\"String\":\"6強\",\"LongString\":\"6強程度\"},\"Warn\":true,\"WarnForecast\":{\"Hypocenter\":{\"Code\":9270,\"Name\":\"大阪府\"},\"District\":[\"近畿\",\"三重\",\"福井\",\"香川\"],\"LocalAreas\":[\"大阪\",\"滋賀\",\"兵庫\",\"奈良\",\"京都\",\"三重\",\"和歌山\",\"福井\",\"香川\"],\"Regions\":[\"大阪府北部\",\"京都府南部\",\"滋賀県南部\",\"兵庫県南東部\",\"奈良県\",\"大阪府南部\",\"三重県中部\",\"和歌山県北部\",\"滋賀県北部\",\"京都府北部\",\"福井県嶺南\",\"兵庫県淡路島\",\"三重県北部\",\"兵庫県南西部\",\"香川県東部\"]},\"Option\":{\"Change\":{\"Code\":0,\"String\":\"ほとんど変化なし\",\"Reason\":{\"Code\":0,\"String\":\"不明\"}}},\"Forecast\":[{\"Intensity\":{\"Code\":520,\"Name\":\"大阪府北部\",\"From\":\"6強\",\"To\":\"6弱\",\"Description\":\"震度6弱から震度6強程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":true,\"Condition\":\"既に主要動到達と推測\"}},{\"Intensity\":{\"Code\":511,\"Name\":\"京都府南部\",\"From\":\"6弱\",\"To\":\"5強\",\"Description\":\"震度5強から震度6弱程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":true,\"Condition\":\"既に主要動到達と推測\"}},{\"Intensity\":{\"Code\":501,\"Name\":\"滋賀県南部\",\"From\":\"6弱\",\"To\":\"6弱\",\"Description\":\"震度6弱程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":true,\"Condition\":\"既に主要動到達と推測\"}},{\"Intensity\":{\"Code\":531,\"Name\":\"兵庫県南東部\",\"From\":\"6弱\",\"To\":\"6弱\",\"Description\":\"震度6弱程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":true,\"Condition\":\"既に主要動到達と推測\"}},{\"Intensity\":{\"Code\":540,\"Name\":\"奈良県\",\"From\":\"5強\",\"To\":\"5弱\",\"Description\":\"震度5弱から震度5強程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":true,\"Condition\":\"既に主要動到達と推測\"}},{\"Intensity\":{\"Code\":521,\"Name\":\"大阪府南部\",\"From\":\"5強\",\"To\":\"5強\",\"Description\":\"震度5強程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":true,\"Condition\":\"既に主要動到達と推測\"}},{\"Intensity\":{\"Code\":461,\"Name\":\"三重県中部\",\"From\":\"5弱\",\"To\":\"4\",\"Description\":\"震度4から震度5弱程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:51\"}},{\"Intensity\":{\"Code\":550,\"Name\":\"和歌山県北部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:50\"}},{\"Intensity\":{\"Code\":500,\"Name\":\"滋賀県北部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:54\"}},{\"Intensity\":{\"Code\":510,\"Name\":\"京都府北部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:54\"}},{\"Intensity\":{\"Code\":401,\"Name\":\"福井県嶺南\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:56\"}},{\"Intensity\":{\"Code\":535,\"Name\":\"兵庫県淡路島\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:56\"}},{\"Intensity\":{\"Code\":460,\"Name\":\"三重県北部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:57\"}},{\"Intensity\":{\"Code\":532,\"Name\":\"兵庫県南西部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:57\"}},{\"Intensity\":{\"Code\":462,\"Name\":\"三重県南部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":false,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:59:02\"}},{\"Intensity\":{\"Code\":432,\"Name\":\"岐阜県美濃中西部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":false,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:59:04\"}},{\"Intensity\":{\"Code\":551,\"Name\":\"和歌山県南部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":false,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:59:06\"}},{\"Intensity\":{\"Code\":451,\"Name\":\"愛知県西部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":false,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:59:08\"}},{\"Intensity\":{\"Code\":610,\"Name\":\"香川県東部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":true,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:59:09\"}},{\"Intensity\":{\"Code\":581,\"Name\":\"岡山県南部\",\"From\":\"4\",\"To\":\"4\",\"Description\":\"震度4程度\"},\"Warn\":false,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:59:17\"}},{\"Intensity\":{\"Code\":530,\"Name\":\"兵庫県北部\",\"From\":\"4\",\"To\":\"3\",\"Description\":\"震度3から震度4程度\"},\"Warn\":false,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:58:59\"}},{\"Intensity\":{\"Code\":600,\"Name\":\"徳島県北部\",\"From\":\"4\",\"To\":\"3\",\"Description\":\"震度3から震度4程度\"},\"Warn\":false,\"Arrival\":{\"Flag\":false,\"Condition\":\"未到達と推測\",\"Time\":\"07:59:06\"}}],\"OriginalText\":\"37 03 00 180618075849 C11 180618075834 ND20180618075838 NCN011 JD////////////// JN/// 520 N348 E1356 010 63 6+ RK66454 RT01/// RC0//// EBI 520 S6+6- ////// 11 511 S6-5+ ////// 11 501 S6-6- ////// 11 531 S6-6- ////// 11 540 S5+5- ////// 11 521 S5+5+ ////// 11 461 S5-04 075851 10 550 S0404 075850 10 500 S0404 075854 10 510 S0404 075854 10 401 S0404 075856 10 535 S0404 075856 10 460 S0404 075857 10 532 S0404 075857 10 462 S0404 075902 00 432 S0404 075904 00 551 S0404 075906 00 451 S0404 075908 00 610 S0404 075909 10 581 S0404 075917 00 530 S0403 075859 00 600 S0403 075906 00 9999=\"}";
+int EEW::TestTime = 0;
+void EEW::PingSave()
+{
     SPIFFS.begin(true);
 
     fs::FS fs = SPIFFS;
@@ -1399,24 +1509,44 @@ void EEW::PingSave(){
     File configFile = fs.open("/config/MEQ_PngM.ini", FILE_WRITE);
     if (!configFile)
         return;
-    for(int i=0;i<PingData;i++){
+    for (int i = 0; i < PingData; i++)
+    {
         configFile.println(PingValue60sec[i]);
     }
-    
+
     configFile.close();
     SPIFFS.end();
 }
-void EEW::PingLoad(){
+void EEW::PingLoad()
+{
     SPIFFS.begin(true);
     fs::FS fs = SPIFFS;
     File configFile = fs.open("/config/MEQ_PngM.ini", FILE_READ);
     if (!configFile)
         return;
-    String tmp = configFile.readStringUntil('\n');
-    tmp.remove(tmp.length() - 1, 1);
-    for(int i=0;i<PingData;i++){
-        PingValue60sec[i]=tmp.toInt();
+    for (int i = 0; i < PingData; i++)
+    {
+        String tmp = configFile.readStringUntil('\n');
+        tmp.remove(tmp.length() - 1, 1);
+        PingValue60sec[i] = tmp.toInt();
     }
     configFile.close();
     SPIFFS.end();
+}
+int EEW::Split(String data, char delimiter, String *dst)
+{
+    int index = 0;
+    int arraySize = (sizeof(data) / sizeof((data)[0]));
+    int datalength = data.length();
+    for (int i = 0; i < datalength; i++)
+    {
+        char tmp = data.charAt(i);
+        if (tmp == delimiter)
+        {
+            index++;
+        }
+        else
+            if(index<2)dst[index]+=tmp;
+    }
+    return (index + 1);
 }

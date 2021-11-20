@@ -32,6 +32,9 @@ namespace Core{
         static int FreeRAM; //RAMの空き容量
         static int FreeROM; //ROMの空き容量
         static int BatteryLeft; //残りバッテリー値
+        static bool BatteryIsCharging;
+        static bool BatteryIsFull;
+        static bool BatteryIsSupply;
         static int WiFiLevel; //Wi-Fi強度
         static bool WiFiIsConnected; //Wi-Fiの接続状態
     }static systemAPI;

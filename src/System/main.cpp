@@ -172,6 +172,9 @@ void Main::ControlThread(void* arg){
             systemData.UpdateBatteryUI=true;
         }
         SystemAPI::BatteryLeft=BatteryPercent%200;
+        SystemAPI::BatteryIsCharging=BatteryPercent/200%2;
+        SystemAPI::BatteryIsFull=BatteryPercent/400%2;
+        SystemAPI::BatteryIsSupply=BatteryPercent>=200;
         FreeHeapMemory= esp_get_free_heap_size();
         SystemAPI::FreeRAM=FreeHeapMemory;
         int rssi=WiFi.RSSI();

@@ -91,6 +91,7 @@ namespace App
                 bool WarnSoundPerSerial;
                 String OnlyListEvent;
                 int LCDoffTimer;
+                int LCDoffTimerBattery;
                 int RebootTimer;
             } config;
 
@@ -102,6 +103,7 @@ namespace App
                 WarnSoundPerSerial,
                 OnlyListEvent,
                 LCDoffTimer,
+                LCDoffTimerBattery,
                 RebootTimer,
                 ExitSetting,
                 TestMode
@@ -127,9 +129,12 @@ namespace App
             static const String PrefList[];
             static const String TestJson;
             static int TestTime;
-
+            int Split(String data, char delimiter, String *dst);
+            int GetConfigName(String str);
             void PingSave();
             void PingLoad();
+            bool TempIsBatterySupply;
+            String BoolToStr(bool val);
         };
 
     }
