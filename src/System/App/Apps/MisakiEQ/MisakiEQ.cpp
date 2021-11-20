@@ -895,11 +895,11 @@ void EEW::Draw()
                 case LCDoffTimerBattery:
                     if (config.LCDoffTimerBattery == 0)
                     {
-                        sprintf(t, "LCD自動OFF(バッテリー駆動時) : 無効");
+                        sprintf(t, "LCD自動OFF(電池駆動時) : 無効");
                     }
                     else
                     {
-                        sprintf(t, "LCD自動OFF(バッテリー駆動時) : %5d秒後", config.LCDoffTimerBattery);
+                        sprintf(t, "LCD自動OFF(電池駆動時) : %5d秒後", config.LCDoffTimerBattery);
                     }
                     break;
                 case RebootTimer:
