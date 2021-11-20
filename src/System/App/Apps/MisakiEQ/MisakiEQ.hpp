@@ -127,6 +127,9 @@ namespace App
             static const String PrefList[];
             static const String TestJson;
             static int TestTime;
+
+            void PingSave();
+            void PingLoad();
         };
 
     }

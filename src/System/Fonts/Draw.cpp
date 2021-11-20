@@ -356,9 +356,9 @@ void FastFont::printUtf8(String t,int x,int y,uint16_t color,uint8_t size,long b
       chr*=256;
       chr+=(text[i+2]+256)%256;
       
-      for(ptr=17;ptr<1383;ptr++){
+      for(ptr=17;ptr<1389;ptr++){
         if(Utf8FontPtr2[ptr]<=chr&&Utf8FontPtr2[ptr]+15>=chr)break;
-        if(ptr==1382)ptr=9999;
+        if(ptr==1388)ptr=9999;
       }
       if(ptr==10000)ptr=-1;
       if(ptr==-1){i++;continue;}
