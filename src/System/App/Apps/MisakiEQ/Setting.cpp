@@ -405,6 +405,8 @@ void List::Cancel()
 void Num::Begin(int *value, uint8_t degit)
 {
     temp = 0;
+    min=-2147483647;
+    max=2147483647;
     sellectDegit = 0;
     IsSetting = true;
     ptr = value;
@@ -474,6 +476,8 @@ void Num::Button(int type)
                 sellectDegit++;
         }
     }
+    if(temp>max)temp=max;
+    if(temp<min)temp=min;
     IsUpdate = 1;
 }
 void Num::Draw()
@@ -557,4 +561,12 @@ long Num::powi(int x, int y)
     for (int i = 1; i < y; i++)
         val *= x;
     return val;
+}
+void Num::SetMin(int value){
+    min=value;
+    if(min>max)max=2147483647;
+}
+void Num::SetMax(int value){
+    max=value;
+    if(max<min)min=-2147483647;
 }

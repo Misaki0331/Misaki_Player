@@ -16,7 +16,9 @@ EEW::~EEW()
 }
 void EEW::Begin()
 {
+    LCDLightUp();
     TestTime = 0;
+
     IsActive = false;
     toHome = 0;
     FirstCheck = false;
@@ -37,7 +39,7 @@ void EEW::Begin()
     LCDTimer = millis();
     IsnotLCDLight = false;
     Reboottimer = 0;
-    TempIsBatterySupply=Core::SystemAPI::BatteryIsSupply;
+    TempIsBatterySupply = Core::SystemAPI::BatteryIsSupply;
     pg = 1;
     http = new HTTPClient();
     PingValue = new short[PingData];
@@ -72,18 +74,24 @@ void EEW::Begin()
 void EEW::Loop()
 {
     int SettingTime;
-    if(Core::SystemAPI::BatteryIsSupply){
-        SettingTime=config.LCDoffTimer;
-    }else{
-        SettingTime=config.LCDoffTimerBattery;
+    if (Core::SystemAPI::BatteryIsSupply)
+    {
+        SettingTime = config.LCDoffTimer;
+    }
+    else
+    {
+        SettingTime = config.LCDoffTimerBattery;
     }
     if (SettingTime != 0 && !IsnotLCDLight)
     {
         int t = millis() - LCDTimer;
-        
+
         if (t > SettingTime * 1000)
         {
             IsnotLCDLight = true;
+            tempoffmode = mode;
+            mode = -1000;
+            ModeEnter();
             M5.Lcd.setBrightness(0);
         }
     }
@@ -93,20 +101,24 @@ void EEW::Loop()
         if (t <= SettingTime * 1000)
         {
             IsnotLCDLight = false;
-            M5.Lcd.setBrightness(100);
+            LCDLightUp();
         }
     }
-    if(TempIsBatterySupply!=Core::SystemAPI::BatteryIsSupply){
-        TempIsBatterySupply=Core::SystemAPI::BatteryIsSupply;
-        LCDTimer=millis();
+    if (TempIsBatterySupply != Core::SystemAPI::BatteryIsSupply)
+    {
+        TempIsBatterySupply = Core::SystemAPI::BatteryIsSupply;
+        LCDTimer = millis();
         IsnotLCDLight = false;
-        M5.Lcd.setBrightness(100);
+        LCDLightUp();
     }
-    /*if(IsPingOpen){
-        if(PingCount%600==599){
+    if(IsPingOpen&&!IsPingUpdate){
+        if(PingCount%600==3599){
                 PingSave();
             }
-    }*/
+        if(!(mode==EEWMode||mode==PingMode)){
+            IsPingUpdate=true;
+        }
+    }
     if (config.RebootTimer != 0 && Reboottimer != 0)
     {
         int t = millis() - Reboottimer;
@@ -145,11 +157,11 @@ void EEW::Loop()
                     cList.Release();
                 }
                 JsonOldState = JsonState;
+
+                IsUpdated = 0;
+                LCDTimer = millis();
                 sellectMode = EEWMode;
                 ModeEnter();
-                IsUpdated = 0;
-
-                LCDTimer = millis();
                 if (!FirstCheck)
                 {
                     FirstCheck = true;
@@ -270,6 +282,7 @@ void EEW::Loop()
             sellectMode = SettingMode;
             cNum.Release();
             ModeEnter();
+            LCDLightUp();
         }
         break;
     case SettingList:
@@ -289,6 +302,19 @@ void EEW::Loop()
             ModeEnter();
         }
     }
+}
+void EEW::LCDLightUp(){
+    int lev=0;
+    if (Core::SystemAPI::BatteryIsSupply)
+            {
+                lev = config.LCDLightLvSupply;
+            }
+            else
+            {
+                lev = config.LCDLightLvBattery;
+            }
+            
+            M5.Lcd.setBrightness(lev);
 }
 void EEW::BackGround()
 {
@@ -635,6 +661,8 @@ void EEW::Draw()
                 FastFont::printRom("8.3hr", 50, 14, GetColor(0xFF00FF), 1, BLACK);
                 break;
             }
+            FastFont::printRom("Rcv:", 86, 14, WHITE, 1);
+            FastFont::printRom("Avg:", 164, 14, WHITE, 1);
         }
         if (!IsPingUpdate)
         {
@@ -769,6 +797,45 @@ void EEW::Draw()
                 col = GREEN;
             }
             FastFont::printRom(text, 320 - 6 * 6 + 1, 14, col, 1, BLACK);
+            sprintf(text, "%8d", (PingCount > 99999999 ? 99999999 : PingCount));
+            FastFont::printRom(text, 110, 14, GREEN, 1, BLACK);
+            uint32_t total = 0;
+            short cnt = 0;
+            for (int i = 0; i < PingData; i++)
+            {
+                if (PingValue[i] != 0)
+                {
+                    total += PingValue[i] * 100;
+                    cnt++;
+                }
+            }
+            if (cnt != 0)
+            {
+                total /= cnt;
+            }
+            else
+            {
+                total = 0;
+            }
+            sprintf(text, "%4d.%02dms", total / 100, total % 100);
+
+            if (total >= 50000)
+            {
+                col = RED;
+            }
+            else if (total >= 10000)
+            {
+                col = YELLOW;
+            }
+            else if (total != 0)
+            {
+                col = GREEN;
+            }
+            else
+            {
+                col = GetColor(0xFF00FF);
+            }
+            FastFont::printRom(text, 188, 14, col, 1, BLACK);
             delete[] text;
         }
         break;
@@ -844,6 +911,12 @@ void EEW::Draw()
                     {
                         sprintf(t, "端末自動再起動 : %5d秒後", config.RebootTimer);
                     }
+                    break;
+                case LCDLightLvBattery:
+                    sprintf(t, "電池駆動時のLCDの明るさ : %3d", config.LCDLightLvBattery);
+                    break;
+                case LCDLightLvSupply:
+                    sprintf(t, "電源接続時のLCDの明るさ : %3d", config.LCDLightLvSupply);
                     break;
                 case ExitSetting:
                     sprintf(t, "設定を保存して終了");
@@ -1265,6 +1338,22 @@ void EEW::SettingEnter()
         cNum.SetTitle("端末再起動する時間(秒)", "鳴動後に自動で再起動をスケジュールします。\nスピーカーのノイズが酷い場合にどうぞ\n(設定値=0で無効)");
         ModeEnter();
         break;
+    case LCDLightLvSupply:
+        cNum.Begin(&config.LCDLightLvSupply, 3);
+        cNum.SetMin(1);
+        cNum.SetMax(255);
+        sellectMode = SettingNum;
+        cNum.SetTitle("電源接続時LCDの明るさ", "電源接続時のLCDの明るさを設定します。\n(10～255の範囲で設定可能です。");
+        ModeEnter();
+        break;
+    case LCDLightLvBattery:
+        cNum.Begin(&config.LCDLightLvBattery, 3);
+        cNum.SetMin(1);
+        cNum.SetMax(255);
+        sellectMode = SettingNum;
+        cNum.SetTitle("電池駆動時LCDの明るさ", "電池駆動時のLCDの明るさを設定します。\n(10～255の範囲で設定可能です。");
+        ModeEnter();
+        break;
     case ExitSetting:
         SaveConfig();
         IsNotCursorMode = false;
@@ -1281,23 +1370,28 @@ void EEW::SaveConfig()
     fs::FS fs = SPIFFS;
     if (!fs.exists("/config"))
         fs.mkdir("/config");
-    if(fs.exists("/config/MisakiEQ.cfg"))fs.remove("/config/MisakiEQ.cfg");
+    if (fs.exists("/config/MisakiEQ.cfg"))
+        fs.remove("/config/MisakiEQ.cfg");
     File configFile = fs.open("/config/MisakiEQ.cfg", FILE_WRITE);
     if (!configFile)
         return;
-    configFile.printf("ForecastSoundPath=%s\n",config.ForecastSoundPath.c_str());
-    configFile.printf("ForecastSoundPerSerial=%s\n",BoolToStr(config.ForecastSoundPerSerial).c_str());
-    configFile.printf("WarnSoundPath=%s\n",config.WarnSoundPath.c_str());
-    configFile.printf("WarnSoundPerSerial=%s\n",BoolToStr(config.WarnSoundPerSerial).c_str());
-    configFile.printf("OnlyListEvent=%s\n",config.OnlyListEvent.c_str());
-    configFile.printf("LCDoffTimer=%d\n" , config.LCDoffTimer);
-    configFile.printf("LCDoffTimerBattery=%d\n" , config.LCDoffTimerBattery);
-    configFile.printf("RebootTimer=%d\n" , config.RebootTimer);
+    configFile.printf("ForecastSoundPath=%s\n", config.ForecastSoundPath.c_str());
+    configFile.printf("ForecastSoundPerSerial=%s\n", BoolToStr(config.ForecastSoundPerSerial).c_str());
+    configFile.printf("WarnSoundPath=%s\n", config.WarnSoundPath.c_str());
+    configFile.printf("WarnSoundPerSerial=%s\n", BoolToStr(config.WarnSoundPerSerial).c_str());
+    configFile.printf("OnlyListEvent=%s\n", config.OnlyListEvent.c_str());
+    configFile.printf("LCDoffTimer=%d\n", config.LCDoffTimer);
+    configFile.printf("LCDoffTimerBattery=%d\n", config.LCDoffTimerBattery);
+    configFile.printf("RebootTimer=%d\n", config.RebootTimer);
+    configFile.printf("LCDLightLvSupply=%d\n", config.LCDLightLvSupply);
+    configFile.printf("LCDLightLvBattery=%d\n", config.LCDLightLvBattery);
     configFile.close();
     SPIFFS.end();
 }
-String EEW::BoolToStr(bool val){
-    if(val)return "true";
+String EEW::BoolToStr(bool val)
+{
+    if (val)
+        return "true";
     return "false";
 }
 void EEW::ReadConfig()
@@ -1311,26 +1405,22 @@ void EEW::ReadConfig()
         SPIFFS.end();
         return;
     }
-    String *tmps=new String[2];
+    String *tmps = new String[2];
     for (int i = 0;; i++)
     {
-        Serial.printf("i = %d\n",i);
-        if(!configFile.available())break;
-        Serial.println("Checked available");
+        if (!configFile.available())
+            break;
         String tmp = configFile.readStringUntil('\n');
-        Serial.printf("tmp = %s\n",tmp.c_str());
-        if(tmp.length()==0)continue;
-        if(tmp.endsWith("\n"))tmp.remove(tmp.length() - 1, 1);
-        Serial.println("tmp removed");
+        if (tmp.length() == 0)
+            continue;
+        if (tmp.endsWith("\n"))
+            tmp.remove(tmp.length() - 1, 1);
         tmps[0].clear();
         tmps[1].clear();
         int splits = Split(tmp, '=', tmps);
-        Serial.printf("Split is %d\n",splits);
-        
-            Serial.println(tmps[0]+" : "+tmps[1]);
         if (splits == 2)
         {
-            
+
             tmp = tmps[1];
             switch (GetConfigName(tmps[0]))
             {
@@ -1358,13 +1448,24 @@ void EEW::ReadConfig()
             case RebootTimer:
                 config.RebootTimer = tmp.toInt();
                 break;
+            case LCDLightLvSupply:
+                config.LCDLightLvSupply = tmp.toInt();
+                break;
+            case LCDLightLvBattery:
+                config.LCDLightLvBattery = tmp.toInt();
+                break;
             }
         }
     }
-    
-        delete[] tmps;
-        tmps=nullptr;
 
+    delete[] tmps;
+    tmps = nullptr;
+    if (config.OnlyListEvent = "")
+        config.OnlyListEvent = "全都道府県";
+    if (config.LCDLightLvBattery < 1)
+        config.LCDLightLvBattery = 100;
+    if (config.LCDLightLvSupply < 1)
+        config.LCDLightLvSupply = 100;
     configFile.close();
     SPIFFS.end();
 }
@@ -1386,6 +1487,10 @@ int EEW::GetConfigName(String str)
         return LCDoffTimerBattery;
     if (str == "RebootTimer")
         return RebootTimer;
+    if (str == "LCDLightLvSupply")
+        return LCDLightLvSupply;
+    if (str == "LCDLightLvBattery")
+        return LCDLightLvBattery;
     return -1;
 }
 void EEW::CallSoundForecast()
@@ -1545,8 +1650,8 @@ int EEW::Split(String data, char delimiter, String *dst)
         {
             index++;
         }
-        else
-            if(index<2)dst[index]+=tmp;
+        else if (index < 2)
+            dst[index] += tmp;
     }
     return (index + 1);
 }

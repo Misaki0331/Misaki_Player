@@ -58,6 +58,7 @@ namespace App
             int regPos;
             int mode;
             int sellectMode;
+            int tempoffmode;
             static short *PingValue;
             static short *PingValue12sec;
             static short *PingValue60sec;
@@ -93,6 +94,8 @@ namespace App
                 int LCDoffTimer;
                 int LCDoffTimerBattery;
                 int RebootTimer;
+                int LCDLightLvSupply;
+                int LCDLightLvBattery;
             } config;
 
             enum SettingVar
@@ -103,8 +106,11 @@ namespace App
                 WarnSoundPerSerial,
                 OnlyListEvent,
                 LCDoffTimer,
+                LCDLightLvSupply,
                 LCDoffTimerBattery,
+                LCDLightLvBattery,
                 RebootTimer,
+                
                 ExitSetting,
                 TestMode
             };
@@ -135,6 +141,7 @@ namespace App
             void PingLoad();
             bool TempIsBatterySupply;
             String BoolToStr(bool val);
+            void LCDLightUp();
         };
 
     }

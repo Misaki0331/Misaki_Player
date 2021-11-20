@@ -76,6 +76,8 @@ namespace App{
                     subTitle=t2;
                 }
                 void Begin(int* value,uint8_t degit);
+                void SetMin(int val);
+                void SetMax(int val);
                 void Draw();
                 void Button(int type);
                 void Release();
@@ -94,6 +96,8 @@ namespace App{
                 int sellectDegit;
                 bool IsDegitMode;
                 long powi(int x,int y);//X^Y
+                int min;
+                int max;
 
             };
         }
