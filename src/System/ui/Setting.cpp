@@ -570,3 +570,61 @@ void Num::SetMax(int value){
     max=value;
     if(max<min)min=-2147483647;
 }
+
+void TextBox::Begin(String *value, uint8_t max){
+    
+    ptr=value;
+    maxcount=max;
+    //表示初期化
+    IsSetting=true;
+    IsTextUpdate=false;
+    IsButtonUpdate=false;
+    //設定初期化
+    sellectChar=0;
+    tempStr=*ptr;
+}
+void TextBox::Release(){
+    ptr=nullptr;
+    maxcount=255;
+    tempStr.clear();
+    title.clear();
+    subTitle.clear();
+}
+void TextBox::Cancel()
+{
+    IsSetting = false;
+}
+bool TextBox::GetIsUpdate(){
+    return !IsTextUpdate||!IsButtonUpdate;
+}
+bool TextBox::GetIsSetting(){
+    return IsSetting;
+}
+
+//ToDo テキストボックスを作る。
+void TextBox::Button(int type){
+    switch(type){
+        case 1:
+
+        break;
+        case 2:
+
+        break;
+        case 3:
+
+        break;
+    }
+}
+void TextBox::Draw(){
+    if(!IsFirstDraw){
+        IsFirstDraw=true;
+        FastFont::printUtf8(title, 0, 15, YELLOW, 2, INVISIBLE_COLOR);
+        FastFont::printUtf8(subTitle, 0, 40, 0x7BEF, 1, INVISIBLE_COLOR);
+    }
+    if(!IsTextUpdate){
+        IsTextUpdate=true;
+    }
+    if(!IsButtonUpdate){
+        IsButtonUpdate=true;
+    }
+}

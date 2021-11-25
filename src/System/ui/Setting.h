@@ -109,6 +109,33 @@ namespace Core
             int min;
             int max;
         };
+        class TextBox{
+            public:
+            void SetTitle(String t, String t2)
+            {
+                title = t;
+                subTitle = t2;
+            }
+            void Begin(String *value, uint8_t max);
+            void Draw();
+            void Button(int type);
+            void Release();
+            void Cancel();
+            bool GetIsUpdate();
+            bool GetIsSetting();
+            private:
+            bool IsSetting;
+            bool IsTextUpdate;
+            bool IsButtonUpdate;
+            String title;
+            String subTitle;
+            bool IsFirstDraw;
+            String *ptr;
+            uint8_t maxcount;
+
+            String tempStr;
+            int sellectChar;
+        };
     }
 
 }

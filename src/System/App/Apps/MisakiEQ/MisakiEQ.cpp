@@ -806,6 +806,7 @@ void EEW::Draw()
                 if (PingValue[i] != 0)
                 {
                     total += PingValue[i] * 100;
+                    
                     cnt++;
                 }
             }
@@ -1098,6 +1099,7 @@ void EEW::GetNetworkFile(void *args)
     while (RunThread)
     {
         int start = millis();
+        if(WiFi.status()==WL_CONNECTED){
         http[0].begin("https://api.iedred7584.com/eew/json/");
 
         int httpcode = http[0].GET();
@@ -1138,6 +1140,7 @@ void EEW::GetNetworkFile(void *args)
             }
         }
         http[0].end();
+        }
         int t = millis();
         JsonReadTime = t - start;
         if (WiFi.status() != WL_CONNECTED)
