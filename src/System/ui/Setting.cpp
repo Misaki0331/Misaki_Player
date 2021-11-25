@@ -1,7 +1,7 @@
-#include "MisakiEQ.hpp"
-#include "../../../Fonts/FastFont.h"
+#include "Setting.h"
+#include "../Fonts/FastFont.h"
 using namespace Core::Draw;
-using namespace App::MisakiEQ::Setting;
+using namespace Core::Setting;
 
 bool Path::GetIsUpdate()
 {

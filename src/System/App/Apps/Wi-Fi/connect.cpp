@@ -33,23 +33,29 @@ void Connect::Begin(){
     toHome=0;
     M5.lcd.fillRect(0,0,320,240,BLACK);
 }
-void Connect::SaveProfile(){
-    
+void Connect::SaveProfile(uint8_t profile){
+    if(profile>99)return;
     SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED);
-    
     fs::FS fs = SPIFFS;
     if(!fs.exists("/config"))fs.mkdir("/config");
+    char *filename =new char[32];
+    sprintf(filename,"/config/Wi-Fi_%02d.ini",profile);
     File config = fs.open("/config/Wi-Fi_00.ini",FILE_WRITE);
+    delete[] filename;
     if(!config)return;
     config.println(ssid);
     config.println(password);
     config.close();
     SPIFFS.end();
 }
-void Connect::ReadProfile(){
+void Connect::ReadProfile(uint8_t profile){
+    if(profile>99)return;
     SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED);
     fs::FS fs = SPIFFS;
+    char *filename =new char[32];
+    sprintf(filename,"/config/Wi-Fi_%02d.ini",profile);
     File config = fs.open("/config/Wi-Fi_00.ini",FILE_READ);
+    delete[] filename;
     if(!config){
         SPIFFS.end();
         return;

@@ -2,8 +2,9 @@
 #include <M5Stack.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
-#include "Setting.h"
+#include "../../../ui/Setting.h"
 #define PingData 300
+using namespace Core::Setting;
 namespace App
 {
     namespace MisakiEQ
@@ -81,9 +82,9 @@ namespace App
             bool IsSettingUIUpdate;
             void SettingEnter();
 
-            MisakiEQ::Setting::Num cNum;
-            MisakiEQ::Setting::List cList;
-            MisakiEQ::Setting::Path cPath;
+            Num cNum;
+            List cList;
+            Path cPath;
             struct Configs
             {
                 String ForecastSoundPath;

@@ -23,8 +23,10 @@ namespace App{
             bool toHome;
             String ssid;
             String password;
-            void SaveProfile();
-            void ReadProfile();
+            void SaveProfile(uint8_t profile);
+            void ReadProfile(uint8_t profile);
+            void SaveProfile(){SaveProfile(0);};
+            void ReadProfile(){ReadProfile(0);};
             void ModeEnter();
             int mode=0;
             int sellectMode=0;

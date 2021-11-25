@@ -16,7 +16,6 @@ EEW::~EEW()
 }
 void EEW::Begin()
 {
-    LCDLightUp();
     TestTime = 0;
 
     IsActive = false;
@@ -54,6 +53,7 @@ void EEW::Begin()
     IsPingOpen = true;
     xTaskCreatePinnedToCore(GetNetworkFile, "MisakiEQ_EEW", 16800, NULL, 5, NULL, 1);
     ReadConfig();
+    LCDLightUp();
     PingLoad();
     if (SPIFFS.begin(0))
     {
@@ -112,7 +112,7 @@ void EEW::Loop()
         LCDLightUp();
     }
     if(IsPingOpen&&!IsPingUpdate){
-        if(PingCount%600==3599){
+        if(PingCount%1200==1199){
                 PingSave();
             }
         if(!(mode==EEWMode||mode==PingMode)){

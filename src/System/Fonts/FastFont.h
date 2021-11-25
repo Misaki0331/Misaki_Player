@@ -16,6 +16,7 @@ namespace Core{
             static uint16_t Color16[];
             static void printFastRom(String t1,String t2,int x,int y,uint16_t color, uint8_t siz,long bgc);
             static void printUtf8(String t,int x,int y,uint16_t color,uint8_t siz,long bg,bool AutoBR=0);
+            static void printSmall(String t,int x,int y,uint16_t color,uint8_t siz,long bg);
             static void begin();
             
             private:
@@ -24,8 +25,11 @@ namespace Core{
             static const unsigned char SjisFontBin[];
             static const unsigned short SjisFontPtr[];
             static const unsigned char SjisHFontBin[];
+            static const unsigned char AsciiMiniFontBin[];
+            static const unsigned char AsciiMiniFontPtr[];
             static const short Utf8FontPtr[];
             static const int Utf8FontPtr2[];
+            static void displayMiniAscii(int x,int y, uint8_t chara,uint8_t siz,long color);
             static int GetSjisPtr(int value);
             static void displaySjis(int x,int y, short ptr,uint8_t siz,long color);
             static void displayHSjis(int x,int y, short ptr,uint8_t siz,long color);
