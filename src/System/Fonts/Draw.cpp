@@ -173,7 +173,7 @@ void FastFont::printRom(String t, int x, int y, uint16_t color, uint8_t siz)
 {
   printRom(t, x, y, color, siz, -1);
 }
-void FastFont::printRom(String t, int x, int y, uint16_t color, uint8_t siz, long bgc, bool autobr = false)
+void FastFont::printRom(String t, int x, int y, uint16_t color, uint8_t siz, long bgc, bool autobr)
 {
   if (siz == 0)
     return;

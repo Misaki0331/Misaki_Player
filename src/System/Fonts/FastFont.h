@@ -26,7 +26,7 @@ namespace Core{
             static const unsigned short SjisFontPtr[];
             static const unsigned char SjisHFontBin[];
             static const unsigned char AsciiMiniFontBin[];
-            static const unsigned char AsciiMiniFontPtr[];
+            static const unsigned short AsciiMiniFontPtr[];
             static const short Utf8FontPtr[];
             static const int Utf8FontPtr2[];
             static void displayMiniAscii(int x,int y, uint8_t chara,uint8_t siz,long color);
