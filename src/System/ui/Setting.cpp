@@ -47,10 +47,10 @@ bool Num::GetIsSetting()
 void Path::Begin(String *path, String ext)
 {
     IsSetting = true;
-    IsFirstDraw=false;
-    sellect=0;
-    scroll=0;
-    IsUpdate=true;
+    IsFirstDraw = false;
+    sellect = 0;
+    scroll = 0;
+    IsUpdate = true;
     ptr = path;
     if (ext.charAt(0) != '.')
         ext = "." + ext;
@@ -62,45 +62,55 @@ void Path::Begin(String *path, String ext)
 void Path::Button(int type)
 {
     //ここにボタン処理
-    switch(type){
-        case 1:
-        if(sellect>0)sellect--;
+    switch (type)
+    {
+    case 1:
+        if (sellect > 0)
+            sellect--;
         if (sellect - 1 < scroll + 1 && 0 < scroll)
             scroll = sellect - 1;
         break;
-        case 2:
-        if(FileLists[sellect].IsDirectry){
-            if(FileLists[sellect].IsCommandCancel){
-                IsSetting=false;
+    case 2:
+        if (FileLists[sellect].IsDirectry)
+        {
+            if (FileLists[sellect].IsCommandCancel)
+            {
+                IsSetting = false;
                 break;
             }
-            if(FileLists[sellect].IsCommandEmpty){
-                *ptr="";
-                IsSetting=false;
+            if (FileLists[sellect].IsCommandEmpty)
+            {
+                *ptr = "";
+                IsSetting = false;
                 break;
             }
-            if(FileLists[sellect].IsCommnadBack){
-                openPath.remove(openPath.length()-1,1);
-                while(openPath.charAt(openPath.length()-1)!='/')openPath.remove(openPath.length()-1,1);
+            if (FileLists[sellect].IsCommnadBack)
+            {
+                openPath.remove(openPath.length() - 1, 1);
+                while (openPath.charAt(openPath.length() - 1) != '/')
+                    openPath.remove(openPath.length() - 1, 1);
                 GetFileList();
-                sellect=0;
-                scroll=0;
-                IsUpdate=true;
-                IsPathUpdate=false;
+                sellect = 0;
+                scroll = 0;
+                IsUpdate = true;
+                IsPathUpdate = false;
                 break;
             }
             openPath.concat(FileLists[sellect].Name);
             GetFileList();
-            IsPathUpdate=false;
-                sellect=0;
-                scroll=0;
-        }else{
-            *ptr=openPath+FileLists[sellect].Name;
-            IsSetting=false;
+            IsPathUpdate = false;
+            sellect = 0;
+            scroll = 0;
+        }
+        else
+        {
+            *ptr = openPath + FileLists[sellect].Name;
+            IsSetting = false;
         }
         break;
-        case 3:
-        if(sellect<FileCount-1)sellect++;
+    case 3:
+        if (sellect < FileCount - 1)
+            sellect++;
         if (sellect > scroll + 11 && FileCount > scroll + 13)
             scroll = sellect - 11;
         break;
@@ -140,7 +150,8 @@ void Path::GetFileList()
             if (filename.length() < fileExt.length())
                 continue;
             filename.toLowerCase();
-            if(filename.endsWith(fileExt))FileCount++;
+            if (filename.endsWith(fileExt))
+                FileCount++;
         }
     }
     // SDカードのルートに置いていればHomeに戻るフォルダーを入れる。
@@ -197,7 +208,8 @@ void Path::GetFileList()
                 if (filename.length() < fileExt.length())
                     continue;
                 filename.toLowerCase();
-                if(!filename.endsWith(fileExt))continue;
+                if (!filename.endsWith(fileExt))
+                    continue;
             }
 
             FileLists[count].Name = PathText;
@@ -232,7 +244,7 @@ void Path::Draw()
         FastFont::printUtf8(title, 0, 15, YELLOW, 2, INVISIBLE_COLOR);
         FastFont::printUtf8(subTitle, 0, 40, 0x7BEF, 1, INVISIBLE_COLOR);
         //ここに画面初期化処理
-        
+
         M5.Lcd.drawRect(300, 66, 20, 156, 0x7BEF);
     }
     if (!IsPathUpdate)
@@ -271,7 +283,7 @@ void Path::Draw()
     }
     M5.Lcd.fillRect(301, 67, 18, 154, BLACK);
     double cell = 154.0 / (FileCount);
-    double start = (scroll) * cell;
+    double start = (scroll)*cell;
     double end = (scroll + 13) * cell;
     if (end > 154)
         end = 154;
@@ -281,7 +293,7 @@ void Path::Draw()
 void Path::Release()
 {
     delete[] FileLists;
-    FileLists=nullptr;
+    FileLists = nullptr;
     ptr = nullptr;
     fileExt.clear();
     title.clear();
@@ -405,8 +417,8 @@ void List::Cancel()
 void Num::Begin(int *value, uint8_t degit)
 {
     temp = 0;
-    min=-2147483647;
-    max=2147483647;
+    min = -2147483647;
+    max = 2147483647;
     sellectDegit = 0;
     IsSetting = true;
     ptr = value;
@@ -476,8 +488,10 @@ void Num::Button(int type)
                 sellectDegit++;
         }
     }
-    if(temp>max)temp=max;
-    if(temp<min)temp=min;
+    if (temp > max)
+        temp = max;
+    if (temp < min)
+        temp = min;
     IsUpdate = 1;
 }
 void Num::Draw()
@@ -562,30 +576,37 @@ long Num::powi(int x, int y)
         val *= x;
     return val;
 }
-void Num::SetMin(int value){
-    min=value;
-    if(min>max)max=2147483647;
+void Num::SetMin(int value)
+{
+    min = value;
+    if (min > max)
+        max = 2147483647;
 }
-void Num::SetMax(int value){
-    max=value;
-    if(max<min)min=-2147483647;
+void Num::SetMax(int value)
+{
+    max = value;
+    if (max < min)
+        min = -2147483647;
 }
 
-void TextBox::Begin(String *value, uint8_t max){
-    
-    ptr=value;
-    maxcount=max;
+void TextBox::Begin(String *value, uint8_t max)
+{
+
+    ptr = value;
+    maxcount = max;
     //表示初期化
-    IsSetting=true;
-    IsTextUpdate=false;
-    IsButtonUpdate=false;
+    IsSetting = true;
+    IsTextUpdate = false;
+    IsButtonUpdate = false;
     //設定初期化
-    sellectChar=0;
-    tempStr=*ptr;
+    sellectChar = 0;
+    IsLargeCharMode = 0;
+    tempStr = *ptr;
 }
-void TextBox::Release(){
-    ptr=nullptr;
-    maxcount=255;
+void TextBox::Release()
+{
+    ptr = nullptr;
+    maxcount = 255;
     tempStr.clear();
     title.clear();
     subTitle.clear();
@@ -594,37 +615,173 @@ void TextBox::Cancel()
 {
     IsSetting = false;
 }
-bool TextBox::GetIsUpdate(){
-    return !IsTextUpdate||!IsButtonUpdate;
+bool TextBox::GetIsUpdate()
+{
+    return !IsTextUpdate || !IsButtonUpdate;
 }
-bool TextBox::GetIsSetting(){
+bool TextBox::GetIsSetting()
+{
     return IsSetting;
 }
 
-//ToDo テキストボックスを作る。
-void TextBox::Button(int type){
-    switch(type){
-        case 1:
-
+// ToDo テキストボックスを作る。
+void TextBox::Button(int type)
+{
+    switch (type)
+    {
+    case 1:
+        sellectChar--;
+        if (sellectChar < 0)
+            sellectChar += 73;
         break;
-        case 2:
-
+    case 2:
+        EnterCharacter(sellectChar);
         break;
-        case 3:
-
-        break;
+    case 3:
+        sellectChar++;
+        if (sellectChar > 73)
+            sellectChar -= 73;
+    }
+    IsButtonUpdate = false;
+}
+void TextBox::Draw()
+{
+    if (!IsFirstDraw)
+    {
+        IsFirstDraw = true;
+        FastFont::printUtf8(title, 0, 15, YELLOW, 2, INVISIBLE_COLOR);
+        FastFont::printUtf8(subTitle, 0, 40, 0x7BEF, 1, INVISIBLE_COLOR, true);
+    }
+    if (!IsTextUpdate)
+    {
+        IsTextUpdate = true;
+        short col;
+        char* text=new char[20];
+        if (100 * tempStr.length() / maxcount >= 75)
+            col = YELLOW;
+        if (tempStr.length() == maxcount)
+            col = RED;
+        sprintf(text, "Length %2d/%2d", tempStr.length(), maxcount);
+        FastFont::printRom(text, 320 - 6 * strlen(text), 30, col, 1, BLACK);
+        delete[] text;
+        M5.Lcd.fillRect(0, 40, 320, 16*(maxcount/26+1), BLACK);
+        FastFont::printRom(tempStr, 0, 40, YELLOW, 2, BLACK,true);
+    }
+    if (!IsButtonUpdate)
+    {
+        IsButtonUpdate = true;
+        M5.Lcd.fillRect(0, 160, 320, 60, BLACK);
+        if (GetSoftKeyboardChar((sellectChar + 73) % 73) < 16)
+        {
+            switch (GetSoftKeyboardChar((sellectChar + 73) % 73))
+            {
+            case 0:
+                FastFont::printRom("EXIT", (320 - 4 * 2 * 6) / 2, 220 - 2 * 8, WHITE, 2, BLACK);
+                break;
+            case 1:
+                FastFont::printRom("SAVE", (320 - 4 * 2 * 6) / 2, 220 - 2 * 8, WHITE, 2, BLACK);
+                break;
+            case 2:
+                FastFont::printRom("<-BS", (320 - 4 * 2 * 6) / 2, 220 - 2 * 8, WHITE, 2, BLACK);
+                break;
+            case 3:
+                FastFont::printRom("A/a", (320 - 3 * 2 * 6) / 2, 220 - 2 * 8, WHITE, 2, BLACK);
+                break;
+            }
+        }
+        else
+        {
+            char *txt = new char[5];
+            sprintf(txt, "%c", GetSoftKeyboardChar((sellectChar + 73) % 73));
+            FastFont::printRom(txt, 145, 172, WHITE, 6, BLACK);
+            delete[] txt;
+        }
+        for (int i = 0; i < 2; i++)
+        {
+            if (GetSoftKeyboardChar((sellectChar + 73 - 1 + i * 2) % 73) < 16)
+            {
+                switch (GetSoftKeyboardChar((sellectChar + 73 - 1 + i * 2) % 73))
+                {
+                case 0:
+                    FastFont::printRom("EXIT", (160 - 4 * 1 * 6) / 2 + 160 * i, 220 - 1 * 8, WHITE, 1, BLACK);
+                    break;
+                case 1:
+                    FastFont::printRom("SAVE", (160 - 4 * 1 * 6) / 2 + 160 * i, 220 - 1 * 8, WHITE, 1, BLACK);
+                    break;
+                case 2:
+                    FastFont::printRom("<-BS", (160 - 4 * 1 * 6) / 2 + 160 * i, 220 - 1 * 8, WHITE, 1, BLACK);
+                    break;
+                case 3:
+                    FastFont::printRom("A/a", (160 - 3 * 1 * 6) / 2 + 160 * i, 220 - 1 * 8, WHITE, 1, BLACK);
+                    break;
+                }
+            }
+            else
+            {
+                char *txt = new char[5];
+                sprintf(txt, "%c", GetSoftKeyboardChar((sellectChar + 73 - 1 + i * 2) % 73));
+                FastFont::printRom(txt, (160 - 3 * 5) / 2 + 160 * i, 220 - 3 * 8, WHITE, 3, BLACK);
+                delete[] txt;
+            }
+        }
     }
 }
-void TextBox::Draw(){
-    if(!IsFirstDraw){
-        IsFirstDraw=true;
-        FastFont::printUtf8(title, 0, 15, YELLOW, 2, INVISIBLE_COLOR);
-        FastFont::printUtf8(subTitle, 0, 40, 0x7BEF, 1, INVISIBLE_COLOR);
+void TextBox::EnterCharacter(uint8_t val)
+{
+    if (GetSoftKeyboardChar(val) >= 0 && GetSoftKeyboardChar(val) < 16)
+    { //ここはコマンド
+        switch (GetSoftKeyboardChar(val))
+        {
+        case 0: //キャンセル
+            tempStr = "";
+            Cancel();
+            break;
+        case 1: //保存
+            *ptr = tempStr;
+            break;
+        case 2: // BackSpace
+            if (tempStr.length() > 0)
+                tempStr.remove(tempStr.length() - 1, 1);
+            IsTextUpdate=false;
+            break;
+        case 3: //大文字小文字切り替え
+            IsLargeCharMode = !IsLargeCharMode;
+            break;
+        }
     }
-    if(!IsTextUpdate){
-        IsTextUpdate=true;
+    else if (GetSoftKeyboardChar(val) > 15)
+    { //文字の入力
+
+        if (tempStr.length() < maxcount){
+            tempStr += GetSoftKeyboardChar(val);
+            IsTextUpdate=false;
+        }
     }
-    if(!IsButtonUpdate){
-        IsButtonUpdate=true;
-    }
+}
+
+uint8_t TextBox::GetSoftKeyboardChar(uint8_t val)
+{
+    if (val == 0)
+        return 0; // CANCEL
+    if (val == 1)
+        return 1; // SAVE
+    if (val == 2)
+        return 2; // BACKSPACE
+    if (val >= 3 && val <= 12)
+        return '0' + val - 3;
+    if (val == 13)
+        return ' '; //スペース
+    if (val == 14)
+        return 3; // Aa切替
+    if (val >= 15 && val <= 40)
+        return 'A' + val - 15 + 32 * !IsLargeCharMode;
+    if (val >= 41 && val <= 55)
+        return '!' + val - 41;
+    if (val >= 56 && val <= 62)
+        return ':' + val - 56;
+    if (val >= 63 && val <= 68)
+        return '[' + val - 63;
+    if (val >= 69 && val <= 72)
+        return '{' + val - 69;
+    return 15; //範囲外
 }

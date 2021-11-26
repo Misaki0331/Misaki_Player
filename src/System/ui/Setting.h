@@ -135,6 +135,9 @@ namespace Core
 
             String tempStr;
             int sellectChar;
+            bool IsLargeCharMode;
+            void EnterCharacter(uint8_t val);
+            uint8_t GetSoftKeyboardChar(uint8_t val);
         };
     }
 

@@ -85,9 +85,9 @@ void FastFont::displayASCII(int x, int y, uint8_t chara, uint8_t siz, long color
 }
 void FastFont::displayMiniAscii(int x, int y, uint8_t chara, uint8_t siz, long color)
 {
-  if (chara < 32||chara>127)
+  if (chara < 32 || chara > 127)
     return;
-  int ptr = AsciiMiniFontPtr[chara-32];
+  int ptr = AsciiMiniFontPtr[chara - 32];
   while (1)
   {
     uint8_t tm = AsciiMiniFontBin[ptr];
@@ -173,20 +173,35 @@ void FastFont::printRom(String t, int x, int y, uint16_t color, uint8_t siz)
 {
   printRom(t, x, y, color, siz, -1);
 }
-void FastFont::printRom(String t, int x, int y, uint16_t color, uint8_t siz, long bgc)
+void FastFont::printRom(String t, int x, int y, uint16_t color, uint8_t siz, long bgc, bool autobr = false)
 {
   if (siz == 0)
     return;
   char *text;
   text = new char[t.length() + 1];
   t.toCharArray(text, t.length() + 1);
+  int x0 = x;
   for (int j = 0; j < t.length(); j++)
   {
     if (text[j] == 0)
       break;
-    if (bgc >= 0 && bgc < 65536)
-      M5.Lcd.fillRect(x + 6 * siz * j, y, 5 * siz, 7 * siz, bgc);
-    displayASCII(x + 6 * siz * j, y, text[j], siz, color);
+    if (text[j] == '\n')
+    {
+      x0 = x;
+      y += 8;
+    }
+    else
+    {
+      if (bgc >= 0 && bgc < 65536)
+        M5.Lcd.fillRect(x0, y, 5 * siz, 7 * siz, bgc);
+      displayASCII(x0, y, text[j], siz, color);
+      x0 += 6 * siz;
+    }
+    if (x0 > 315&&autobr)
+    {
+      x0 = x;
+      y += 8*siz;
+    }
   }
   delete[] text;
 }
