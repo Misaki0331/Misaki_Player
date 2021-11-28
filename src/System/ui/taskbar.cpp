@@ -1,4 +1,6 @@
 #include"ui.h"
+#include"../Fonts/FastFont.h"
+using namespace Core::Draw;
 using namespace Core;
 void DrawTaskUI::Battery(int x,int y,int percent,bool isAllDraw){
     bool IsCharging=false;
@@ -40,7 +42,7 @@ void DrawTaskUI::Battery(int x,int y,int percent,bool isAllDraw){
     }
     
 }
-void DrawTaskUI::RSSI(int x,int y,int rssi,bool isConnected,bool isAllDraw){
+void DrawTaskUI::RSSI(int x,int y,int rssi,int profileID,bool isConnected,bool isAllDraw){
     /*if(isAllDraw){
         M5.Lcd.drawFastHLine(x+1,y+1,7,WHITE);
         M5.Lcd.drawFastVLine(x+4,y+1,10,WHITE);
@@ -48,6 +50,10 @@ void DrawTaskUI::RSSI(int x,int y,int rssi,bool isConnected,bool isAllDraw){
         M5.Lcd.drawLine(x+7,y+1,x+1+3,y+1+3,WHITE);
     }*/
     uint16_t col;
+    char* txt=new char[5];
+    sprintf(txt,"%02d",profileID);
+    FastFont::printSmall(txt,x,y+1,GREEN,1,BLACK);
+    delete[] txt;
     if(isConnected){
     if(rssi>=-60){
         col=GREEN;

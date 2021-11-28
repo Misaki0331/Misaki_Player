@@ -8,9 +8,7 @@ namespace Core{
             static void setColor(uint16_t color,long bg);
             static void setPos(int x,int y);
             static void printf(const char* format, ...);
-            static void printRom(String t, int x, int y, uint16_t color);
-            static void printRom(String t, int x, int y, uint16_t color, uint8_t siz);
-            static void printRom(String t, int x, int y, uint16_t color, uint8_t siz, long bgc,bool autobr=false);
+            static void printRom(String t, int x, int y, uint16_t color=WHITE, uint8_t siz=1, long bgc=INVISIBLE_COLOR,bool autobr=false);
             static void printConsole(String ctext,int x,int y);
             static void printSjis(String t,int x,int y,uint16_t color,uint8_t siz,long bg);
             static uint16_t Color16[];

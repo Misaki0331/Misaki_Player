@@ -1,6 +1,8 @@
 #include <M5Stack.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
+#ifndef SETTING_H
+#define SETTING_H
 namespace Core
 {
     namespace Setting
@@ -142,3 +144,4 @@ namespace Core
     }
 
 }
+#endif

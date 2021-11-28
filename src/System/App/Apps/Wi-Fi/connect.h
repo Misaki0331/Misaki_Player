@@ -1,4 +1,6 @@
 #include<M5Stack.h>
+#include"../../../ui/Setting.h"
+using namespace Core::Setting;
 #define WIFI_SSID_CHAR 26
 #define WIFI_PASSWORD_CHAR 26
 namespace App{
@@ -23,31 +25,30 @@ namespace App{
             bool toHome;
             String ssid;
             String password;
-            void SaveProfile(uint8_t profile);
-            void ReadProfile(uint8_t profile);
-            void SaveProfile(){SaveProfile(0);};
-            void ReadProfile(){ReadProfile(0);};
+            void SaveProfile(uint8_t profile=0);
+            void ReadProfile(uint8_t profile=0);
+            void DelProfile(uint8_t profile=0);
             void ModeEnter();
             int mode=0;
             int sellectMode=0;
             bool IsFirstDraw;
             bool IsDraw;
             int startTimer=0;
+            bool IsFileExists;
             enum Function{
                 Menu=-1,
                 WiFi_Detail=0,
-                WiFi_Test=1,
-                WiFi_SetSSID=2,
-                WiFi_SetPassword=3,
-                WiFi_Return=4
+                SettingProfileID=1,
+                DeleteProfile=2,
+                WiFi_Test=3,
+                WiFi_SetSSID=4,
+                WiFi_SetPassword=5,
+                WiFi_Return=6,
+                SettingNum=-998,
+                SettingTextBox=-999
             };
             String GetMacAddress();
-            bool IsLargeCharMode;
-            char GetSoftKeyboardChar(int value);
-            int sellecting_char;
-            String TempSetString;
-            void EnterCharacter(int val);
-            void DrawKeyBoardUI();
+            int CurrentProfileID;
             int scroll;
             int testmode=0;
             int tempmode=-1;
@@ -61,6 +62,8 @@ namespace App{
                 byte sec;
             };
             DateTime UnixToDateTime(long value);
+            TextBox textbox;
+            Num numbox;
             
         };
     }

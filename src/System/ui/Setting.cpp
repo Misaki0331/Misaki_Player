@@ -598,6 +598,7 @@ void TextBox::Begin(String *value, uint8_t max)
     IsSetting = true;
     IsTextUpdate = false;
     IsButtonUpdate = false;
+    IsFirstDraw=false;
     //設定初期化
     sellectChar = 0;
     IsLargeCharMode = 0;
@@ -655,17 +656,17 @@ void TextBox::Draw()
     if (!IsTextUpdate)
     {
         IsTextUpdate = true;
-        short col;
+        short col=WHITE;
         char* text=new char[20];
         if (100 * tempStr.length() / maxcount >= 75)
             col = YELLOW;
         if (tempStr.length() == maxcount)
             col = RED;
-        sprintf(text, "Length %2d/%2d", tempStr.length(), maxcount);
-        FastFont::printRom(text, 320 - 6 * strlen(text), 30, col, 1, BLACK);
+        sprintf(text, "Length %3d/%3d", tempStr.length(), maxcount);
+        FastFont::printRom(text, 320 - 6 * strlen(text), 54, col, 1, BLACK);
         delete[] text;
-        M5.Lcd.fillRect(0, 40, 320, 16*(maxcount/26+1), BLACK);
-        FastFont::printRom(tempStr, 0, 40, YELLOW, 2, BLACK,true);
+        M5.Lcd.fillRect(0, 62, 320, 16*(maxcount/26+1), BLACK);
+        FastFont::printRom(tempStr, 0, 62, YELLOW, 2, BLACK,true);
     }
     if (!IsButtonUpdate)
     {
@@ -753,7 +754,7 @@ void TextBox::EnterCharacter(uint8_t val)
     { //文字の入力
 
         if (tempStr.length() < maxcount){
-            tempStr += GetSoftKeyboardChar(val);
+            tempStr += (char)GetSoftKeyboardChar(val);
             IsTextUpdate=false;
         }
     }

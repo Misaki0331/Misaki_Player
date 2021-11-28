@@ -33,6 +33,7 @@ void Main::Begin(){                 //M5Stackのバッテリ初期化
     FirstWiFiConnect();
     Logger::Log("Wi-Fi Initialized");
 }
+int Main::WiFiProfileID=0;
 void Main::FirstWiFiConnect(){
     String ssid="";
     String password="";
@@ -42,8 +43,12 @@ void Main::FirstWiFiConnect(){
         Logger::Log("SPIFFS Formated");
     }
     fs::FS fs = SPIFFS;
-    File config = fs.open("/config/Wi-Fi_00.ini",FILE_READ);
+    char* txt = new char[60];
+    sprintf(txt,"/config/Wi-Fi_%02d.ini",WiFiProfileID);
+    File config = fs.open(txt,FILE_READ);
+    delete[] txt;
     if(!config){
+        WiFiProfileID=0;
         SPIFFS.end();
         return;
     }
@@ -68,7 +73,7 @@ void Main::Draw(){
                 }
     if(systemData.UpdateSignalUI){
         systemData.UpdateSignalUI=false;
-        drawUI.RSSI(275,0,SystemAPI::WiFiLevel,SystemAPI::WiFiIsConnected,1);
+        drawUI.RSSI(275,0,SystemAPI::WiFiLevel,WiFiProfileID,SystemAPI::WiFiIsConnected,1);
     
     }
 }
@@ -76,6 +81,7 @@ int Main::ButtonACount=0;
 int Main::ButtonBCount=0;
 int Main::ButtonCCount=0;
 int Main::LatestConnection=0;
+bool Main::WiFiError=false;
 void Main::Loop(){
     //主な処理
     M5.update(); 
@@ -108,9 +114,16 @@ void Main::Loop(){
     int MilliSecounds=millis();
     if(WiFi.status()!=WL_CONNECTED){
         if(LatestConnection+30000<MilliSecounds){
+        
+        if(WiFiError){
+        WiFiProfileID++;
+        WiFiProfileID%=100;
+        }
         FirstWiFiConnect();
+        WiFiError=true;
         }
     }else{
+        WiFiError=false;
         LatestConnection=MilliSecounds;
     }
     char text[100];

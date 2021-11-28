@@ -87,7 +87,7 @@ void FastFont::displayMiniAscii(int x, int y, uint8_t chara, uint8_t siz, long c
 {
   if (chara < 32 || chara > 127)
     return;
-  int ptr = AsciiMiniFontPtr[chara - 32];
+  short ptr = AsciiMiniFontPtr[chara - 32];
   while (1)
   {
     uint8_t tm = AsciiMiniFontBin[ptr];
@@ -98,7 +98,7 @@ void FastFont::displayMiniAscii(int x, int y, uint8_t chara, uint8_t siz, long c
     {
       tm -= 0x40;
 
-      uint8_t tm2 = AsciiFontBin[ptr + 1];
+      uint8_t tm2 = AsciiMiniFontBin[ptr + 1];
 
       // sprintf(tex,"%s%02X |",tex,tm2);
       if (tm2 >= 0x80)
@@ -165,14 +165,6 @@ void FastFont::displayMiniAscii(int x, int y, uint8_t chara, uint8_t siz, long c
   // sprintf(tex,"%s(Ptr:%4d) ",tex,pgm_read_word(ASCII_Font_ptr+chara));
   // Serial.println(tex);
 }
-void FastFont::printRom(String t, int x, int y, uint16_t color)
-{
-  printRom(t, x, y, color, 1, -1);
-}
-void FastFont::printRom(String t, int x, int y, uint16_t color, uint8_t siz)
-{
-  printRom(t, x, y, color, siz, -1);
-}
 void FastFont::printRom(String t, int x, int y, uint16_t color, uint8_t siz, long bgc, bool autobr)
 {
   if (siz == 0)
@@ -197,7 +189,7 @@ void FastFont::printRom(String t, int x, int y, uint16_t color, uint8_t siz, lon
       displayASCII(x0, y, text[j], siz, color);
       x0 += 6 * siz;
     }
-    if (x0 > 315&&autobr)
+    if (x0 > 319-6*siz&&autobr)
     {
       x0 = x;
       y += 8*siz;
