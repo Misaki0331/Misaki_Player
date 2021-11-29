@@ -306,6 +306,7 @@ void Path::Cancel()
 
 void List::Begin(String *name, const String *args, int argcount)
 {
+    isCancel=false;
     IsSetting = true;
     scroll = -1;
     sellect = -1;
@@ -330,6 +331,7 @@ void List::Button(int type)
         if (sellect == -1)
         {
             IsSetting = false;
+            isCancel=true;
         }
         else
         {
@@ -411,11 +413,13 @@ void List::Release()
 }
 void List::Cancel()
 {
+    isCancel=true;
     IsSetting = false;
 }
 
 void Num::Begin(int *value, uint8_t degit)
 {
+    isCancel=false;
     temp = 0;
     min = -2147483647;
     max = 2147483647;
@@ -561,6 +565,7 @@ void Num::Release()
 }
 void Num::Cancel()
 {
+    isCancel=true;
     IsSetting = false;
 }
 long Num::powi(int x, int y)
@@ -591,7 +596,7 @@ void Num::SetMax(int value)
 
 void TextBox::Begin(String *value, uint8_t max)
 {
-
+    isCancel=false;
     ptr = value;
     maxcount = max;
     //表示初期化
@@ -614,6 +619,7 @@ void TextBox::Release()
 }
 void TextBox::Cancel()
 {
+    isCancel=true;
     IsSetting = false;
 }
 bool TextBox::GetIsUpdate()
@@ -739,6 +745,7 @@ void TextBox::EnterCharacter(uint8_t val)
             break;
         case 1: //保存
             *ptr = tempStr;
+            IsSetting=false;
             break;
         case 2: // BackSpace
             if (tempStr.length() > 0)

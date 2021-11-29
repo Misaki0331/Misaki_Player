@@ -41,18 +41,22 @@ namespace App{
                 SettingProfileID=1,
                 DeleteProfile=2,
                 WiFi_Test=3,
-                WiFi_SetSSID=4,
-                WiFi_SetPassword=5,
-                WiFi_Return=6,
+                WiFi_EasySetting=4,
+                WiFi_SetSSID=5,
+                WiFi_SetPassword=6,
+                WiFi_Return=7,
+                SettingList=-997,
                 SettingNum=-998,
                 SettingTextBox=-999
             };
             String GetMacAddress();
+            String* AccessPoints;
             int CurrentProfileID;
             int scroll;
             int testmode=0;
             int tempmode=-1;
             int connectingTime=0;
+            bool isEasySetting;
             struct DateTime {
                 int  year;
                 byte month;
@@ -64,6 +68,7 @@ namespace App{
             DateTime UnixToDateTime(long value);
             TextBox textbox;
             Num numbox;
+            List listbox;
             
         };
     }

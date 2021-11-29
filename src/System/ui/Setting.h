@@ -59,6 +59,7 @@ namespace Core
             }
             void Begin(String *name, const String *args, int argcount);
             void Draw();
+            bool IsCancel(){return isCancel;};
             void Button(int type);
             void Release();
             void Cancel();
@@ -66,6 +67,7 @@ namespace Core
             bool GetIsSetting();
 
         private:
+            bool isCancel;
             bool IsSetting;
             bool IsUpdate;
             String title;
@@ -95,8 +97,10 @@ namespace Core
             void Cancel();
             bool GetIsUpdate();
             bool GetIsSetting();
+            bool IsCanceled(){return isCancel;};
 
         private:
+            bool isCancel;
             bool IsSetting;
             bool IsUpdate;
             String title;
@@ -123,9 +127,11 @@ namespace Core
             void Button(int type);
             void Release();
             void Cancel();
+            bool IsCanceled(){return isCancel;};
             bool GetIsUpdate();
             bool GetIsSetting();
             private:
+            bool isCancel;
             bool IsSetting;
             bool IsTextUpdate;
             bool IsButtonUpdate;
