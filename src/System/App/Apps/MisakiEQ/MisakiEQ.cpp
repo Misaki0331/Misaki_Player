@@ -16,6 +16,9 @@ EEW::~EEW()
 }
 void EEW::Begin()
 {
+    Core::SystemData::UpdateBatteryUI=1;
+    Core::SystemData::UpdateSignalUI=1;
+
     TestTime = 0;
 
     IsActive = false;
@@ -1060,7 +1063,9 @@ void EEW::ModeEnter()
         return;
     }
     M5.Lcd.fillRect(0, 14, 320, 226, BLACK);
-
+    
+    Core::SystemData::UpdateBatteryUI=1;
+    Core::SystemData::UpdateSignalUI=1;
     IsPingUpdate = false;
     IsButtonUIUpdate = false;
     IsFirstDrawed = false;

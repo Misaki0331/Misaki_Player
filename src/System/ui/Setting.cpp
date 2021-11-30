@@ -1,5 +1,6 @@
 #include "Setting.h"
 #include "../Fonts/FastFont.h"
+#include "../Config.h"
 using namespace Core::Draw;
 using namespace Core::Setting;
 
@@ -243,6 +244,8 @@ void Path::Draw()
         IsFirstDraw = true;
         FastFont::printUtf8(title, 0, 15, YELLOW, 2, INVISIBLE_COLOR);
         FastFont::printUtf8(subTitle, 0, 40, 0x7BEF, 1, INVISIBLE_COLOR);
+        Core::SystemData::UpdateBatteryUI=1;
+        Core::SystemData::UpdateSignalUI=1;
         //ここに画面初期化処理
 
         M5.Lcd.drawRect(300, 66, 20, 156, 0x7BEF);
@@ -362,6 +365,8 @@ void List::Draw()
         IsFirstDraw = true;
         FastFont::printUtf8(title, 0, 15, mainstrcol, 2, INVISIBLE_COLOR);
         FastFont::printUtf8(subTitle, 0, 40, substrcol, 1, INVISIBLE_COLOR);
+        Core::SystemData::UpdateBatteryUI=1;
+        Core::SystemData::UpdateSignalUI=1;
 
         M5.Lcd.drawRect(300, 61, 20, 157, 0x7BEF);
         //ここに画面初期化処理
@@ -517,6 +522,8 @@ void Num::Draw()
         IsFirstDraw = true;
         FastFont::printUtf8(title, 0, 15, YELLOW, 2, INVISIBLE_COLOR);
         FastFont::printUtf8(subTitle, 0, 40, 0x7BEF, 1, INVISIBLE_COLOR);
+        Core::SystemData::UpdateBatteryUI=1;
+        Core::SystemData::UpdateSignalUI=1;
         //ここに画面初期化処理
         for (int i = 0; i < totalDegit && i < 10; i++)
         {
@@ -674,6 +681,8 @@ void TextBox::Draw()
         IsFirstDraw = true;
         FastFont::printUtf8(title, 0, 15, YELLOW, 2, INVISIBLE_COLOR);
         FastFont::printUtf8(subTitle, 0, 40, 0x7BEF, 1, INVISIBLE_COLOR, true);M5.Lcd.drawFastHLine(0, 224, 320, WHITE);
+        Core::SystemData::UpdateBatteryUI=1;
+        Core::SystemData::UpdateSignalUI=1;
         FastFont::printUtf8("←", 19 + 94 * 0 + (100 - 12) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
         FastFont::printUtf8("決定", 19 + 94 * 1 + (100 - 25) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
         FastFont::printUtf8("→", 19 + 94 * 2 + (100 - 12) / 2, 226, WHITE, 1, INVISIBLE_COLOR);

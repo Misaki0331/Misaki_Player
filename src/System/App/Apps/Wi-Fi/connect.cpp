@@ -42,6 +42,8 @@ void Connect::Begin()
     CurrentProfileID = 0;
     toHome = 0;
     M5.lcd.fillRect(0, 0, 320, 240, BLACK);
+    Core::SystemData::UpdateBatteryUI=1;
+    Core::SystemData::UpdateSignalUI=1;
 }
 void Connect::SaveProfile(uint8_t profile)
 {
@@ -454,6 +456,9 @@ void Connect::ButtonPress(int Type)
 
 void Connect::ModeEnter()
 {
+    
+    Core::SystemData::UpdateBatteryUI=1;
+    Core::SystemData::UpdateSignalUI=1;
     IsFirstDraw = true;
     IsDraw = true;
     mode = sellectMode;
