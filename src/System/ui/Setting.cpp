@@ -246,6 +246,11 @@ void Path::Draw()
         //ここに画面初期化処理
 
         M5.Lcd.drawRect(300, 66, 20, 156, 0x7BEF);
+
+        M5.Lcd.drawFastHLine(0, 224, 320, WHITE);
+        FastFont::printUtf8("↑", 19 + 94 * 0 + (100 - 12) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
+        FastFont::printUtf8("決定", 19 + 94 * 1 + (100 - 25) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
+        FastFont::printUtf8("↓", 19 + 94 * 2 + (100 - 12) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
     }
     if (!IsPathUpdate)
     {
@@ -306,6 +311,8 @@ void Path::Cancel()
 
 void List::Begin(String *name, const String *args, int argcount)
 {
+    mainstrcol=YELLOW;
+    substrcol=0x7BEF;
     isCancel=false;
     IsSetting = true;
     scroll = -1;
@@ -353,11 +360,16 @@ void List::Draw()
     if (!IsFirstDraw)
     {
         IsFirstDraw = true;
-        FastFont::printUtf8(title, 0, 15, YELLOW, 2, INVISIBLE_COLOR);
-        FastFont::printUtf8(subTitle, 0, 40, 0x7BEF, 1, INVISIBLE_COLOR);
+        FastFont::printUtf8(title, 0, 15, mainstrcol, 2, INVISIBLE_COLOR);
+        FastFont::printUtf8(subTitle, 0, 40, substrcol, 1, INVISIBLE_COLOR);
 
         M5.Lcd.drawRect(300, 61, 20, 157, 0x7BEF);
         //ここに画面初期化処理
+        
+        M5.Lcd.drawFastHLine(0, 224, 320, WHITE);
+        FastFont::printUtf8("↑", 19 + 94 * 0 + (100 - 12) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
+        FastFont::printUtf8("決定", 19 + 94 * 1 + (100 - 25) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
+        FastFont::printUtf8("↓", 19 + 94 * 2 + (100 - 12) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
     }
     for (int i = 0; i < 13; i++)
     {
@@ -510,6 +522,10 @@ void Num::Draw()
         {
             M5.lcd.drawRect(160 - 17 * totalDegit + 34 * i, 96, 5 * 6 + 4, 46, 0x7BEF);
         }
+        M5.Lcd.drawFastHLine(0, 224, 320, WHITE);
+        FastFont::printUtf8("←/－", -10+19 + 94 * 0 + (100 - 12) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
+        FastFont::printUtf8("変更/決定", -16+19 + 94 * 1 + (100 - 25) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
+        FastFont::printUtf8("→/＋", -10+19 + 94 * 2 + (100 - 12) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
     }
 
     //ここに描画処理
@@ -657,7 +673,11 @@ void TextBox::Draw()
     {
         IsFirstDraw = true;
         FastFont::printUtf8(title, 0, 15, YELLOW, 2, INVISIBLE_COLOR);
-        FastFont::printUtf8(subTitle, 0, 40, 0x7BEF, 1, INVISIBLE_COLOR, true);
+        FastFont::printUtf8(subTitle, 0, 40, 0x7BEF, 1, INVISIBLE_COLOR, true);M5.Lcd.drawFastHLine(0, 224, 320, WHITE);
+        FastFont::printUtf8("←", 19 + 94 * 0 + (100 - 12) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
+        FastFont::printUtf8("決定", 19 + 94 * 1 + (100 - 25) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
+        FastFont::printUtf8("→", 19 + 94 * 2 + (100 - 12) / 2, 226, WHITE, 1, INVISIBLE_COLOR);
+    
     }
     if (!IsTextUpdate)
     {

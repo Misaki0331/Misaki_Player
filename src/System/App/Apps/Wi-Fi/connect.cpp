@@ -294,7 +294,7 @@ void Connect::Draw()
                         FastFont::printConsole(ts, 0, 20 + scroll);
                         scroll += 8;
 
-                        FastFont::printUtf8(Data, 0, 20 + scroll, GREEN, 1, BLACK, true);
+                        //FastFont::printUtf8(Data, 0, 20 + scroll, GREEN, 1, BLACK, true);
 
                         // for(int i=0;i<Data.length();i+=32)Serial.print(Data.substring(i,i+31).c_str());
                         Data.clear();
@@ -480,6 +480,7 @@ void Connect::ModeEnter()
         if(ssid==""){
             mode=Menu;
         }else{
+        Core::SystemAPI::WiFiCurrentProfile=CurrentProfileID;
         scroll = 0;
         testmode = 0;
         tempmode = -1;
@@ -505,23 +506,34 @@ void Connect::ModeEnter()
         break;
     case WiFi_EasySetting:
         // |No.001 100% [AUTH] ACCESS Point
+        if(WiFi.status()!=WL_CONNECTED)WiFi.disconnect();
         isEasySetting = true;
+        M5.Lcd.clear();
+        FastFont::printUtf8("Wi-Fiスポットを検索中\nしばらくお待ちください…",0,15,YELLOW,2,INVISIBLE_COLOR);
         int n = WiFi.scanNetworks();
+        M5.lcd.clear();
         AccessPoints = new String[n];
         char*text=new char[256];
         for(int i=0;i<n&&i<99;i++){
             int percent=WiFi.RSSI(i);
-            percent+=90;
-            percent*=2;
-            if(percent<0)percent=0;
-            if(percent>99)percent=99;
-            
-            sprintf(text,"No.%02d %2d%% %c %s",i+1,percent,(WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? ' ' : '*',WiFi.SSID(i).c_str());
+            percent+=100;
+            float per=percent/80.0*100.0;
+            percent=(int)per;
+            if(percent<0)per=0;
+            if(percent>100)percent=100;
+            if(percent==100){
+                sprintf(text,"No.%02d MAX %c %s",i+1,(WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? ' ' : '*',WiFi.SSID(i).c_str());
+           
+            }else{
+                sprintf(text,"No.%02d %2d%% %c %s",i+1,percent,(WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? ' ' : '*',WiFi.SSID(i).c_str());
+           
+            }
             AccessPoints[i]=text;
         }
         listbox.Begin(&ssid, AccessPoints, n>99?99:n);
         sprintf(text,"%d 個のアクセスポイントが見つかりました。",n);
         listbox.SetTitle("Wi-Fiの選択",text);
+        listbox.SetColor(YELLOW,GREEN);
         delete[] text;
         mode = SettingList;
         break;

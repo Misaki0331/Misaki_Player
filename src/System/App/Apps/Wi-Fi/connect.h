@@ -1,5 +1,6 @@
 #include<M5Stack.h>
 #include"../../../ui/Setting.h"
+#include "../../../config.h"
 using namespace Core::Setting;
 #define WIFI_SSID_CHAR 26
 #define WIFI_PASSWORD_CHAR 26
@@ -25,9 +26,9 @@ namespace App{
             bool toHome;
             String ssid;
             String password;
-            void SaveProfile(uint8_t profile=0);
-            void ReadProfile(uint8_t profile=0);
-            void DelProfile(uint8_t profile=0);
+            void SaveProfile(uint8_t profile=Core::SystemAPI::WiFiCurrentProfile);
+            void ReadProfile(uint8_t profile=Core::SystemAPI::WiFiCurrentProfile);
+            void DelProfile(uint8_t profile);
             void ModeEnter();
             int mode=0;
             int sellectMode=0;

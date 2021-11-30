@@ -1,6 +1,8 @@
 #include<M5Stack.h>
 #define RAMSIZE 327680
 #define CHATTERING_DELAY 12
+#ifndef API_H
+#define API_H
 namespace Core{
     class SystemData
     {
@@ -37,5 +39,7 @@ namespace Core{
         static bool BatteryIsSupply;
         static int WiFiLevel; //Wi-Fi強度
         static bool WiFiIsConnected; //Wi-Fiの接続状態
+        static uint8_t WiFiCurrentProfile;
     }static systemAPI;
 }
+#endif

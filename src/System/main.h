@@ -12,7 +12,6 @@ namespace Core{
         static int MainLPS;
         static int BatteryPercent;
         static int FreeHeapMemory;
-        static int WiFiProfileID;
         static bool WiFiError;
         static bool DisableUI;
         private:

@@ -111,12 +111,15 @@ void EEW::Loop()
         IsnotLCDLight = false;
         LCDLightUp();
     }
-    if(IsPingOpen&&!IsPingUpdate){
-        if(PingCount%1200==1199){
-                PingSave();
-            }
-        if(!(mode==EEWMode||mode==PingMode)){
-            IsPingUpdate=true;
+    if (IsPingOpen && !IsPingUpdate)
+    {
+        if (PingCount % 1200 == 1199)
+        {
+            PingSave();
+        }
+        if (!(mode == EEWMode || mode == PingMode))
+        {
+            IsPingUpdate = true;
         }
     }
     if (config.RebootTimer != 0 && Reboottimer != 0)
@@ -303,18 +306,19 @@ void EEW::Loop()
         }
     }
 }
-void EEW::LCDLightUp(){
-    int lev=0;
+void EEW::LCDLightUp()
+{
+    int lev = 0;
     if (Core::SystemAPI::BatteryIsSupply)
-            {
-                lev = config.LCDLightLvSupply;
-            }
-            else
-            {
-                lev = config.LCDLightLvBattery;
-            }
-            
-            M5.Lcd.setBrightness(lev);
+    {
+        lev = config.LCDLightLvSupply;
+    }
+    else
+    {
+        lev = config.LCDLightLvBattery;
+    }
+
+    M5.Lcd.setBrightness(lev);
 }
 void EEW::BackGround()
 {
@@ -806,7 +810,7 @@ void EEW::Draw()
                 if (PingValue[i] != 0)
                 {
                     total += PingValue[i] * 100;
-                    
+
                     cnt++;
                 }
             }
@@ -1099,47 +1103,48 @@ void EEW::GetNetworkFile(void *args)
     while (RunThread)
     {
         int start = millis();
-        if(WiFi.status()==WL_CONNECTED){
-        http[0].begin("https://api.iedred7584.com/eew/json/");
+        if (WiFi.status() == WL_CONNECTED)
+        {
+            http[0].begin("https://api.iedred7584.com/eew/json/");
 
-        int httpcode = http[0].GET();
-        if (httpcode < 0)
-        {
-            IsHttpError = true;
-            LatestHttpError = http[0].errorToString(httpcode);
-        }
-        else
-        {
-            switch (httpcode)
+            int httpcode = http[0].GET();
+            if (httpcode < 0)
             {
-            case 200:
-                if (TestTime != 0)
+                IsHttpError = true;
+                LatestHttpError = http[0].errorToString(httpcode);
+            }
+            else
+            {
+                switch (httpcode)
                 {
-                    if (millis() > TestTime && millis() < TestTime + 30000)
+                case 200:
+                    if (TestTime != 0)
                     {
-                        deserializeJson(json, TestJson);
-                    }
-                    else if (millis() > TestTime + 30000)
-                    {
-                        TestTime = 0;
-                        deserializeJson(json, http[0].getString());
+                        if (millis() > TestTime && millis() < TestTime + 30000)
+                        {
+                            deserializeJson(json, TestJson);
+                        }
+                        else if (millis() > TestTime + 30000)
+                        {
+                            TestTime = 0;
+                            deserializeJson(json, http[0].getString());
+                        }
+                        else
+                        {
+                            deserializeJson(json, http[0].getString());
+                        }
                     }
                     else
                     {
                         deserializeJson(json, http[0].getString());
                     }
+                    break;
+                default:
+                    LatestHttpError = httpcode;
+                    break;
                 }
-                else
-                {
-                    deserializeJson(json, http[0].getString());
-                }
-                break;
-            default:
-                LatestHttpError = httpcode;
-                break;
             }
-        }
-        http[0].end();
+            http[0].end();
         }
         int t = millis();
         JsonReadTime = t - start;
@@ -1166,7 +1171,14 @@ void EEW::GetNetworkFile(void *args)
                 }
                 for (int i = 1; i < PingData; i++)
                     PingValue12sec[i - 1] = PingValue12sec[i];
-                PingValue12sec[PingData - 1] = calcData / calcCount;
+                if (calcCount != 0)
+                {
+                    PingValue12sec[PingData - 1] = calcData / calcCount;
+                }
+                else
+                {
+                    PingValue12sec[PingData - 1] = 0;
+                }
             }
             if (PingCount % 100 == 99)
             {
@@ -1180,7 +1192,14 @@ void EEW::GetNetworkFile(void *args)
                 }
                 for (int i = 1; i < PingData; i++)
                     PingValue60sec[i - 1] = PingValue60sec[i];
-                PingValue60sec[PingData - 1] = calcData / calcCount;
+                if (calcCount != 0)
+                {
+                    PingValue60sec[PingData - 1] = calcData / calcCount;
+                }
+                else
+                {
+                    PingValue60sec[PingData - 1] = 0;
+                }
             }
         }
         LatestReadTime = t;

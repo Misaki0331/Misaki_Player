@@ -57,6 +57,11 @@ namespace Core
                 title = t;
                 subTitle = t2;
             }
+            
+            void SetColor(uint16_t main,uint16_t sub){
+                mainstrcol=main;
+                substrcol=sub;
+            }
             void Begin(String *name, const String *args, int argcount);
             void Draw();
             bool IsCancel(){return isCancel;};
@@ -70,6 +75,8 @@ namespace Core
             bool isCancel;
             bool IsSetting;
             bool IsUpdate;
+            uint16_t mainstrcol;
+            uint16_t substrcol;
             String title;
             String subTitle;
             bool IsFirstDraw;
@@ -140,7 +147,6 @@ namespace Core
             bool IsFirstDraw;
             String *ptr;
             uint8_t maxcount;
-
             String tempStr;
             int sellectChar;
             bool IsLargeCharMode;
