@@ -703,16 +703,16 @@ void TextBox::Draw()
             switch (GetSoftKeyboardChar((sellectChar + 73) % 73))
             {
             case 0:
-                FastFont::printRom("EXIT", (320 - 4 * 2 * 6) / 2, 220 - 2 * 8, WHITE, 2, BLACK);
+                FastFont::printRom("EXIT", (320 - 4 * 2 * 6) / 2+3, 220 - 2 * 8, WHITE, 2, BLACK);
                 break;
             case 1:
-                FastFont::printRom("SAVE", (320 - 4 * 2 * 6) / 2, 220 - 2 * 8, WHITE, 2, BLACK);
+                FastFont::printRom("SAVE", (320 - 4 * 2 * 6) / 2+3, 220 - 2 * 8, WHITE, 2, BLACK);
                 break;
             case 2:
-                FastFont::printRom("<-BS", (320 - 4 * 2 * 6) / 2, 220 - 2 * 8, WHITE, 2, BLACK);
+                FastFont::printRom("<-BS", (320 - 4 * 2 * 6) / 2+3, 220 - 2 * 8, WHITE, 2, BLACK);
                 break;
             case 3:
-                FastFont::printRom("A/a", (320 - 3 * 2 * 6) / 2, 220 - 2 * 8, WHITE, 2, BLACK);
+                FastFont::printRom("A/a", (320 - 3 * 2 * 6) / 2+3, 220 - 2 * 8, WHITE, 2, BLACK);
                 break;
             }
         }
@@ -720,7 +720,7 @@ void TextBox::Draw()
         {
             char *txt = new char[5];
             sprintf(txt, "%c", GetSoftKeyboardChar((sellectChar + 73) % 73));
-            FastFont::printRom(txt, 145, 172, WHITE, 6, BLACK);
+            FastFont::printRom(txt, 148, 172, WHITE, 6, BLACK);
             delete[] txt;
         }
         for (int i = 0; i < 2; i++)
@@ -730,16 +730,16 @@ void TextBox::Draw()
                 switch (GetSoftKeyboardChar((sellectChar + 73 - 1 + i * 2) % 73))
                 {
                 case 0:
-                    FastFont::printRom("EXIT", (160 - 4 * 1 * 6) / 2 + 160 * i, 220 - 1 * 8, WHITE, 1, BLACK);
+                    FastFont::printRom("EXIT", (140 - 4 * 1 * 6) / 2 + 186 * i, 220 - 1 * 8, WHITE, 1, BLACK);
                     break;
                 case 1:
-                    FastFont::printRom("SAVE", (160 - 4 * 1 * 6) / 2 + 160 * i, 220 - 1 * 8, WHITE, 1, BLACK);
+                    FastFont::printRom("SAVE", (140 - 4 * 1 * 6) / 2 + 186 * i, 220 - 1 * 8, WHITE, 1, BLACK);
                     break;
                 case 2:
-                    FastFont::printRom("<-BS", (160 - 4 * 1 * 6) / 2 + 160 * i, 220 - 1 * 8, WHITE, 1, BLACK);
+                    FastFont::printRom("<-BS", (140 - 4 * 1 * 6) / 2 + 186 * i, 220 - 1 * 8, WHITE, 1, BLACK);
                     break;
                 case 3:
-                    FastFont::printRom("A/a", (160 - 3 * 1 * 6) / 2 + 160 * i, 220 - 1 * 8, WHITE, 1, BLACK);
+                    FastFont::printRom("A/a", (140 - 3 * 1 * 6) / 2 + 186 * i, 220 - 1 * 8, WHITE, 1, BLACK);
                     break;
                 }
             }
@@ -747,7 +747,7 @@ void TextBox::Draw()
             {
                 char *txt = new char[5];
                 sprintf(txt, "%c", GetSoftKeyboardChar((sellectChar + 73 - 1 + i * 2) % 73));
-                FastFont::printRom(txt, (160 - 3 * 5) / 2 + 160 * i, 220 - 3 * 8, WHITE, 3, BLACK);
+                FastFont::printRom(txt, (140 - 3 * 5) / 2 + 186 * i, 220 - 3 * 8, WHITE, 3, BLACK);
                 delete[] txt;
             }
         }
@@ -762,6 +762,7 @@ void TextBox::EnterCharacter(uint8_t val)
         case 0: //キャンセル
             tempStr = "";
             Cancel();
+            IsSetting=false;
             break;
         case 1: //保存
             *ptr = tempStr;
