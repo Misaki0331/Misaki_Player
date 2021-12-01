@@ -143,6 +143,9 @@ namespace App
             bool TempIsBatterySupply;
             String BoolToStr(bool val);
             void LCDLightUp();
+
+            static const uint16_t Japan_map_bin[];
+            static const uint16_t Japan_map_ptr[];
         };
 
     }
