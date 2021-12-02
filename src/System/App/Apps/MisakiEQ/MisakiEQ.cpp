@@ -677,14 +677,14 @@ void EEW::Draw()
             }
             if (json["Type"]["Code"] == 9)sprintf(text,"第 %d 報(最終報)",(int)json["Serial"]);
             FastFont::printUtf8(text,40,14,WHITE,1,BLACK);
-            M5.lcd.fillRect(0,212,320,12,BLACK);
-            FastFont::printUtf8(json["Hypocenter"]["Name"],0,212,WHITE,1,INVISIBLE_COLOR);
-            FastFont::printUtf8(json["Hypocenter"]["Magnitude"]["String"],140,212,WHITE,1,INVISIBLE_COLOR);
+            M5.lcd.fillRect(0,210,320,14,BLACK);
+            FastFont::printUtf8(json["Hypocenter"]["Name"],0,211,WHITE,1,INVISIBLE_COLOR);
+            FastFont::printUtf8(json["Hypocenter"]["Magnitude"]["String"],140,211,WHITE,1,INVISIBLE_COLOR);
             sprintf(text,"深さ:%3d km",(int)json["Hypocenter"]["Location"]["Depth"]["Int"]);
-            FastFont::printUtf8(text,180,212,WHITE,1,INVISIBLE_COLOR);
+            FastFont::printUtf8(text,180,211,WHITE,1,INVISIBLE_COLOR);
             String str=json["MaxIntensity"]["To"];
             sprintf(text,"最大:%s",str.c_str());
-            FastFont::printUtf8(text,273,212,WHITE,1,INVISIBLE_COLOR);
+            FastFont::printUtf8(text,273,211,WHITE,1,INVISIBLE_COLOR);
             FastFont::printUtf8(json["OriginTime"]["String"], 320-7*19, 14, WHITE, 1, BLACK);
                     
             
