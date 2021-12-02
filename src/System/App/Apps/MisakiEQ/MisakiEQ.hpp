@@ -11,10 +11,22 @@ namespace App
     {
         class Map{
             public:
-            void Draw(short x0, short y0,uint8_t size);
+            void Draw(double longitude ,double latitude,uint8_t size);
             private:
-            static const uint16_t Japan_map_bin[];
-            static const uint16_t Japan_map_ptr[];
+            void DrawPnt(short x, short y,uint8_t size);
+            void DrawLeft(short x0, short y0,uint8_t size);
+
+            //マップ配列(5サイズ)
+            static const uint16_t map_2500_bin[];
+            static const uint16_t map_2500_ptr[];
+            static const uint16_t map_2000_bin[];
+            static const uint16_t map_2000_ptr[];
+            static const uint16_t map_1500_bin[];
+            static const uint16_t map_1500_ptr[];
+            static const uint16_t map_1000_bin[];
+            static const uint16_t map_1000_ptr[];
+            static const uint16_t map_500_bin[];
+            static const uint16_t map_500_ptr[];
         };
         class EEW
         {
@@ -77,8 +89,9 @@ namespace App
             {
                 ExitMode = -1,
                 EEWMode = 0,
-                PingMode = 1,
-                SettingMode = 2,
+                MapMode =1,
+                PingMode = 2,
+                SettingMode = 3,
                 SettingNum = -999,
                 SettingList = -998,
                 SettingPath = -997
@@ -151,6 +164,7 @@ namespace App
             void LCDLightUp();
             Map map;
             bool IsMapMode;
+            int MapSize;
 
             
         };

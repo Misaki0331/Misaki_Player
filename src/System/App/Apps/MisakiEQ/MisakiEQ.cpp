@@ -20,7 +20,7 @@ void EEW::Begin()
     Core::SystemData::UpdateSignalUI = 1;
 
     TestTime = 0;
-
+    MapSize=1;
     IsActive = false;
     toHome = 0;
     FirstCheck = false;
@@ -390,7 +390,6 @@ void EEW::Draw()
             }
             else
             {
-                map.Draw(600, 500, 4);
             }
         }
 
@@ -655,6 +654,15 @@ void EEW::Draw()
                 FastFont::printRom(text, 320 - 4 * 6 + 3 * (4 - strlen(text)), 23, col, 1, -1);
                 delete[] text;
             }
+        }
+        break;
+    case MapMode:
+        if(!IsFirstDrawed){
+            IsFirstDrawed=true;
+            map.Draw(json["Hypocenter"]["Location"]["Long"], json["Hypocenter"]["Location"]["Lat"], MapSize);
+        }
+        if(!IsUpdated){
+            IsUpdated=true;
         }
         break;
     case PingMode:
@@ -1011,6 +1019,11 @@ void EEW::Draw()
                     fillx = 46;
                     FcName = "EEW情報";
                     break;
+                case MapMode:
+                    x += (100 - 46) / 2;
+                    fillx = 46;
+                    FcName = "EEW地区";
+                    break;
                 case PingMode:
                     x += (100 - 77) / 2;
                     fillx = 77;
@@ -1052,10 +1065,12 @@ void EEW::ModeEnter()
         switch (mode)
         {
         case EEWMode:
-            IsMapMode = !IsMapMode;
+            break;
+        case MapMode:
+            MapSize++;
+            if(MapSize>5)MapSize=1;
             IsFirstDrawed = false;
             IsUpdated = false;
-            IsPingUpdate = false;
             break;
         case PingMode:
             pingGraphMode++;
