@@ -29,10 +29,21 @@ void Map::Draw(double longitude, double latitude, uint8_t size)
     y *= zoom;
     DrawPnt((short)x, (short)y, size);
 }
-void Map::DrawPnt(short x, short y,uint8_t size){
-                DrawLeft(x-320/2,y-210/2,size);
-                M5.lcd.drawLine(160-3,14+105-3,160+3,14+105+3,RED);
-                M5.lcd.drawLine(160+3,14+105-3,160-3,14+105+3,RED);
+void Map::DrawPnt(short x, short y, uint8_t size)
+{
+    DrawLeft(x - 320 / 2, y - 210 / 2, size);
+    int ix=160;
+    int iy=14+105;
+    M5.lcd.drawLine(ix - 5, iy - 7, ix + 7, iy + 5,RED);
+    M5.lcd.drawLine(ix - 6, iy - 7, ix + 7, iy + 6,RED);
+    M5.lcd.drawLine(ix - 6, iy - 6, ix + 6, iy + 6,RED);
+    M5.lcd.drawLine(ix - 7, iy - 6, ix + 6, iy + 7,RED);
+    M5.lcd.drawLine(ix - 7, iy - 5, ix + 5, iy + 7,RED);
+    M5.lcd.drawLine(ix - 5, iy + 7, ix + 7, iy - 5,RED);
+    M5.lcd.drawLine(ix - 6, iy + 7, ix + 7, iy - 6,RED);
+    M5.lcd.drawLine(ix - 6, iy + 6, ix + 6, iy - 6,RED);
+    M5.lcd.drawLine(ix - 7, iy + 6, ix + 6, iy - 7,RED);
+    M5.lcd.drawLine(ix - 7, iy + 5, ix + 5, iy - 7,RED);
 }
 void Map::DrawLeft(short x0, short y0, uint8_t size)
 {

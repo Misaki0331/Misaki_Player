@@ -516,8 +516,8 @@ void FastFont::printUtf8(String t, int x, int y, uint16_t color, uint8_t size, l
     {
       int chr = (text[i] + 256) % 256;
       if (bg >= 0)
-        M5.Lcd.fillRect(x + dx, y, 6 * size, 12 * size, bg);
-      displayHSjis(x + dx, y, chr - 0x20, size, color);
+        M5.Lcd.fillRect(x + dx, y, 7 * size, 12 * size, bg);
+        displayHSjis(x + dx, y, chr - 0x20, size, color);
       dx += 7 * size;
       i++;
     }
@@ -541,7 +541,7 @@ void FastFont::printUtf8(String t, int x, int y, uint16_t color, uint8_t size, l
         continue;
       }
       if (bg >= 0)
-        M5.Lcd.fillRect(x + dx, y, 12 * size, 12 * size, bg);
+        M5.Lcd.fillRect(x + dx, y, 13 * size, 12 * size, bg);
       displaySjis(x + dx, y, Utf8FontPtr[Utf8FontPtr2[ptr] * 16 + chr % 16], size, color);
       dx += 13 * size;
       i += 2;
@@ -569,7 +569,7 @@ void FastFont::printUtf8(String t, int x, int y, uint16_t color, uint8_t size, l
         continue;
       }
       if (bg >= 0)
-        M5.Lcd.fillRect(x + dx, y, 12 * size, 12 * size, bg);
+        M5.Lcd.fillRect(x + dx, y, 13 * size, 12 * size, bg);
       displaySjis(x + dx, y, Utf8FontPtr[ptr * 16 + chr % 16], size, color);
       i += 3;
       dx += 13 * size;

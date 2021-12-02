@@ -166,8 +166,12 @@ void EEW::Loop()
 
                 IsUpdated = 0;
                 LCDTimer = millis();
+                if(mode!=MapMode){
                 sellectMode = EEWMode;
                 ModeEnter();
+                }else{
+                    IsUpdated=false;
+                }
                 if (!FirstCheck)
                 {
                     FirstCheck = true;
@@ -659,10 +663,32 @@ void EEW::Draw()
     case MapMode:
         if(!IsFirstDrawed){
             IsFirstDrawed=true;
-            map.Draw(json["Hypocenter"]["Location"]["Long"], json["Hypocenter"]["Location"]["Lat"], MapSize);
+            
         }
         if(!IsUpdated){
             IsUpdated=true;
+            map.Draw(json["Hypocenter"]["Location"]["Long"], json["Hypocenter"]["Location"]["Lat"], MapSize);
+            char* text=new char[128];
+            sprintf(text,"第 %d 報",(int)json["Serial"]);
+            if(json["Warn"]){
+                FastFont::printUtf8("[警報]",0,14,WHITE,1,RED);
+            }else{
+                FastFont::printUtf8("[予報]",0,14,WHITE,1,BLUE);
+            }
+            if (json["Type"]["Code"] == 9)sprintf(text,"第 %d 報(最終報)",(int)json["Serial"]);
+            FastFont::printUtf8(text,40,14,WHITE,1,BLACK);
+            M5.lcd.fillRect(0,212,320,12,BLACK);
+            FastFont::printUtf8(json["Hypocenter"]["Name"],0,212,WHITE,1,INVISIBLE_COLOR);
+            FastFont::printUtf8(json["Hypocenter"]["Magnitude"]["String"],140,212,WHITE,1,INVISIBLE_COLOR);
+            sprintf(text,"深さ:%3d km",(int)json["Hypocenter"]["Location"]["Depth"]["Int"]);
+            FastFont::printUtf8(text,180,212,WHITE,1,INVISIBLE_COLOR);
+            String str=json["MaxIntensity"]["To"];
+            sprintf(text,"最大:%s",str.c_str());
+            FastFont::printUtf8(text,273,212,WHITE,1,INVISIBLE_COLOR);
+            FastFont::printUtf8(json["OriginTime"]["String"], 320-7*19, 14, WHITE, 1, BLACK);
+                    
+            
+            delete[] text;
         }
         break;
     case PingMode:
@@ -1311,7 +1337,7 @@ void EEW::PressButton(int type)
                     ModeEnter();
                     break;
                 case 3:
-                    if (sellectMode < 2)
+                    if (sellectMode < 3)
                         sellectMode++;
                     IsButtonUIUpdate = 0;
                     break;
