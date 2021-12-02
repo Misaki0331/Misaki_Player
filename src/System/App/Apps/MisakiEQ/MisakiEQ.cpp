@@ -16,8 +16,8 @@ EEW::~EEW()
 }
 void EEW::Begin()
 {
-    Core::SystemData::UpdateBatteryUI=1;
-    Core::SystemData::UpdateSignalUI=1;
+    Core::SystemData::UpdateBatteryUI = 1;
+    Core::SystemData::UpdateSignalUI = 1;
 
     TestTime = 0;
 
@@ -375,172 +375,253 @@ void EEW::Draw()
         if (!IsFirstDrawed)
         {
             IsFirstDrawed = 1;
-
-            FastFont::printUtf8("第", 100, 27, WHITE, 1, BLACK);
-            FastFont::printUtf8("報", 113 + 6 * 3 * 2, 27, WHITE, 1, BLACK);
-            FastFont::printUtf8("発生時刻", 0, 50, WHITE, 1, BLACK);
-            FastFont::printUtf8("震源地", 13, 78, WHITE, 1, BLACK);
-            FastFont::printUtf8("規模", 26, 106, WHITE, 1, BLACK);
-            FastFont::printUtf8("深さ", 160, 106, WHITE, 1, BLACK);
-            FastFont::printRom("Ping", 320 - 4 * 6, 15, WHITE, 1, BLACK);
-            FastFont::printUtf8("最大震度", 320 - 13 * 4, 126, WHITE, 1, BLACK);
+            
+            M5.Lcd.fillRect(0, 14, 320, 210, BLACK);
+            if (!IsMapMode)
+            {
+                FastFont::printUtf8("第", 100, 27, WHITE, 1, BLACK);
+                FastFont::printUtf8("報", 113 + 6 * 3 * 2, 27, WHITE, 1, BLACK);
+                FastFont::printUtf8("発生時刻", 0, 50, WHITE, 1, BLACK);
+                FastFont::printUtf8("震源地", 13, 78, WHITE, 1, BLACK);
+                FastFont::printUtf8("規模", 26, 106, WHITE, 1, BLACK);
+                FastFont::printUtf8("深さ", 160, 106, WHITE, 1, BLACK);
+                FastFont::printRom("Ping", 320 - 4 * 6, 15, WHITE, 1, BLACK);
+                FastFont::printUtf8("最大震度", 320 - 13 * 4, 126, WHITE, 1, BLACK);
+            }
+            else
+            {
+                map.Draw(600, 500, 4);
+            }
         }
 
         if (!IsUpdated)
         {
             IsUpdated = 1;
-            IsRegionUpdate = false;
-            if (json["ParseStatus"] == "Success")
+            if (!IsMapMode)
             {
-                if (json["Status"]["Code"] == "00" || json["Status"]["Code"] == "01")
+                IsRegionUpdate = false;
+                if (json["ParseStatus"] == "Success")
                 {
-                    if (json["Warn"])
+                    if (json["Status"]["Code"] == "00" || json["Status"]["Code"] == "01")
                     {
-                        M5.lcd.fillRect(0, 15, 94, 24, RED);
-                        IsRegionUpdate = true;
-                        FastFont::printUtf8(" 警 報 ", 0, 15, WHITE, 2, RED);
+                        if (json["Warn"])
+                        {
+                            M5.lcd.fillRect(0, 15, 94, 24, RED);
+                            IsRegionUpdate = true;
+                            FastFont::printUtf8(" 警 報 ", 0, 15, WHITE, 2, RED);
+                        }
+                        else
+                        {
+
+                            M5.lcd.fillRect(0, 15, 94, 24, BLUE);
+                            FastFont::printUtf8(" 予 報 ", 0, 15, WHITE, 2, BLUE);
+                        }
                     }
-                    else
+                    else if (json["Status"]["Code"] == "10" || json["Status"]["Code"] == "11")
                     {
-
-                        M5.lcd.fillRect(0, 15, 94, 24, BLUE);
-                        FastFont::printUtf8(" 予 報 ", 0, 15, WHITE, 2, BLUE);
+                        M5.lcd.fillRect(0, 15, 94, 24, GREEN);
+                        FastFont::printUtf8(" 取 消 ", 0, 15, WHITE, 2, GREEN);
                     }
-                }
-                else if (json["Status"]["Code"] == "10" || json["Status"]["Code"] == "11")
-                {
-                    M5.lcd.fillRect(0, 15, 94, 24, GREEN);
-                    FastFont::printUtf8(" 取 消 ", 0, 15, WHITE, 2, GREEN);
-                }
-            }
-            else
-            {
-                M5.lcd.fillRect(0, 15, 94, 24, BLACK);
-                FastFont::printUtf8(" 不 明 ", 0, 15, WHITE, 2, BLACK);
-            }
-            if (1)
-            { // json["ParseStatus"]=="Success"){
-                char *text = new char[80];
-                int num = json["Serial"];
-                if (num > 999)
-                    num = 999;
-                if (num < -99)
-                    num = -99;
-                sprintf(text, "%d", num);
-                M5.Lcd.fillRect(113, 23, 36, 16, BLACK);
-                FastFont::printRom(text, 113 + (3 - (strlen(text))) * 6, 25, WHITE, 2, BLACK);
-
-                M5.Lcd.fillRect(113 + 6 * 3 * 2 + 1 + 12, 27, 110, 12, BLACK);
-                if (json["Type"]["Code"] == 9)
-                    FastFont::printUtf8("(最終報)", 113 + 6 * 3 * 2 + 1 + 12, 27, WHITE, 1, BLACK);
-                if (json["Status"]["Code"] == "01")
-                {
-                    FastFont::printUtf8("訓練中", 113 + 6 * 3 * 2 + 1 + 12 + 55, 27, WHITE, 1, BLACK);
-                }
-                else if (json["Status"]["Code"] == "11")
-                {
-                    FastFont::printUtf8("訓練取消", 113 + 6 * 3 * 2 + 1 + 12 + 55, 27, RED, 1, BLACK);
-                }
-                FastFont::printRom(json["OriginTime"]["String"], 56, 46, WHITE, 2, BLACK);
-                M5.Lcd.fillRect(56, 66, 264, 24, BLACK);
-                FastFont::printUtf8(json["Hypocenter"]["Name"], 56, 66, WHITE, 2, -1);
-                FastFont::printRom(json["Hypocenter"]["Magnitude"]["String"], 56, 97, WHITE, 3, BLACK);
-                num = json["Hypocenter"]["Location"]["Depth"]["Int"];
-                m5.lcd.fillRect(194, 94, 126, 24, BLACK);
-                switch (num)
-                {
-                case 0:
-                    FastFont::printUtf8("ごく浅い", 194, 94, WHITE, 2, BLACK);
-                    break;
-                case -1:
-                    FastFont::printUtf8("不明", 194, 94, WHITE, 2, BLACK);
-                    break;
-                default:
-                    sprintf(text, "%d km", num);
-                    FastFont::printRom(text, 194, 97, WHITE, 3, BLACK);
-                    break;
-                }
-                int col;
-                int textc = WHITE;
-                String str = json["MaxIntensity"]["To"];
-                int x0 = 6;
-                if (str == "1")
-                {
-                    col = GetColor(0x808080);
-                }
-                else if (str == "2")
-                {
-                    col = GetColor(0x4169E1);
-                }
-                else if (str == "3")
-                {
-                    col = GetColor(0x2E8B57);
-                }
-                else if (str == "4")
-                {
-                    col = GetColor(0xbfbf0f);
-                }
-                else if (str == "5-")
-                {
-                    x0 = 13;
-                    col = GetColor(0xFF4500);
-                }
-                else if (str == "5+")
-                {
-                    x0 = 13;
-                    col = GetColor(0xFF4500);
-                }
-                else if (str == "6-")
-                {
-                    x0 = 13;
-                    x0 = 42 - (13 * 3) / 2;
-                    col = GetColor(0xFFC0CB);
-                }
-                else if (str == "6+")
-                {
-                    textc = RED;
-                    x0 = 13;
-                    col = GetColor(0xFFC0CB);
-                }
-                else if (str == "7")
-                {
-                    x0 = 13;
-                    col = GetColor(0x800080);
                 }
                 else
                 {
-                    x0 = 6;
-                    str = "-";
-                    col = GetColor(0x808080);
+                    M5.lcd.fillRect(0, 15, 94, 24, BLACK);
+                    FastFont::printUtf8(" 不 明 ", 0, 15, WHITE, 2, BLACK);
                 }
-                regionUpdate = millis();
-                regPos = 0;
-                pg = 1;
-                m5.Lcd.fillRect(268, 140, 51, 51, col);
-                FastFont::printUtf8(str, 268 + (51 - x0 * 3) / 2 + 2, 140 + (42 - 24) / 2, textc, 3, col);
+                if (1)
+                { // json["ParseStatus"]=="Success"){
+                    char *text = new char[80];
+                    int num = json["Serial"];
+                    if (num > 999)
+                        num = 999;
+                    if (num < -99)
+                        num = -99;
+                    sprintf(text, "%d", num);
+                    M5.Lcd.fillRect(113, 23, 36, 16, BLACK);
+                    FastFont::printRom(text, 113 + (3 - (strlen(text))) * 6, 25, WHITE, 2, BLACK);
+
+                    M5.Lcd.fillRect(113 + 6 * 3 * 2 + 1 + 12, 27, 110, 12, BLACK);
+                    if (json["Type"]["Code"] == 9)
+                        FastFont::printUtf8("(最終報)", 113 + 6 * 3 * 2 + 1 + 12, 27, WHITE, 1, BLACK);
+                    if (json["Status"]["Code"] == "01")
+                    {
+                        FastFont::printUtf8("訓練中", 113 + 6 * 3 * 2 + 1 + 12 + 55, 27, WHITE, 1, BLACK);
+                    }
+                    else if (json["Status"]["Code"] == "11")
+                    {
+                        FastFont::printUtf8("訓練取消", 113 + 6 * 3 * 2 + 1 + 12 + 55, 27, RED, 1, BLACK);
+                    }
+                    FastFont::printRom(json["OriginTime"]["String"], 56, 46, WHITE, 2, BLACK);
+                    M5.Lcd.fillRect(56, 66, 264, 24, BLACK);
+                    FastFont::printUtf8(json["Hypocenter"]["Name"], 56, 66, WHITE, 2, -1);
+                    FastFont::printRom(json["Hypocenter"]["Magnitude"]["String"], 56, 97, WHITE, 3, BLACK);
+                    num = json["Hypocenter"]["Location"]["Depth"]["Int"];
+                    m5.lcd.fillRect(194, 94, 126, 24, BLACK);
+                    switch (num)
+                    {
+                    case 0:
+                        FastFont::printUtf8("ごく浅い", 194, 94, WHITE, 2, BLACK);
+                        break;
+                    case -1:
+                        FastFont::printUtf8("不明", 194, 94, WHITE, 2, BLACK);
+                        break;
+                    default:
+                        sprintf(text, "%d km", num);
+                        FastFont::printRom(text, 194, 97, WHITE, 3, BLACK);
+                        break;
+                    }
+                    int col;
+                    int textc = WHITE;
+                    String str = json["MaxIntensity"]["To"];
+                    int x0 = 6;
+                    if (str == "1")
+                    {
+                        col = GetColor(0x808080);
+                    }
+                    else if (str == "2")
+                    {
+                        col = GetColor(0x4169E1);
+                    }
+                    else if (str == "3")
+                    {
+                        col = GetColor(0x2E8B57);
+                    }
+                    else if (str == "4")
+                    {
+                        col = GetColor(0xbfbf0f);
+                    }
+                    else if (str == "5-")
+                    {
+                        x0 = 13;
+                        col = GetColor(0xFF4500);
+                    }
+                    else if (str == "5+")
+                    {
+                        x0 = 13;
+                        col = GetColor(0xFF4500);
+                    }
+                    else if (str == "6-")
+                    {
+                        x0 = 13;
+                        x0 = 42 - (13 * 3) / 2;
+                        col = GetColor(0xFFC0CB);
+                    }
+                    else if (str == "6+")
+                    {
+                        textc = RED;
+                        x0 = 13;
+                        col = GetColor(0xFFC0CB);
+                    }
+                    else if (str == "7")
+                    {
+                        x0 = 13;
+                        col = GetColor(0x800080);
+                    }
+                    else
+                    {
+                        x0 = 6;
+                        str = "-";
+                        col = GetColor(0x808080);
+                    }
+                    regionUpdate = millis();
+                    regPos = 0;
+                    pg = 1;
+                    m5.Lcd.fillRect(268, 140, 51, 51, col);
+                    FastFont::printUtf8(str, 268 + (51 - x0 * 3) / 2 + 2, 140 + (42 - 24) / 2, textc, 3, col);
+                    int x1 = 2;
+                    int y1 = 142;
+                    M5.lcd.fillRect(0, 127, 267, 82, BLACK);
+                    if (IsRegionUpdate)
+                    {
+
+                        M5.lcd.fillRect(0, 127, 267, 13, RED);
+                        sprintf(text, "以下の地域は強い揺れに警戒      都道府県");
+                        FastFont::printUtf8(text, 1, 128, WHITE, 1, RED);
+
+                        M5.lcd.drawRect(0, 140, 267, 69, json["Warn"] ? RED : BLACK);
+                        for (int i = 0;; i++)
+                        {
+                            String name = json["WarnForecast"]["LocalAreas"][i];
+                            if (name == "null")
+                                break;
+                            int x = name.length() / 3 * 13 + 6;
+                            if (x1 + x > 265)
+                            {
+                                x1 = 2;
+                                y1 += 13;
+                                if (y1 >= 207)
+                                    break;
+                            }
+                            FastFont::printUtf8(name, x1, y1, WHITE, 1, BLACK);
+                            x1 += x;
+                        }
+                    }
+                    delete[] text;
+                }
+            }
+        }
+        if (!WarnRegionDisplay)
+        {
+            if (!IsMapMode)
+            {
+                WarnRegionDisplay = true;
+                char *text = new char[100];
                 int x1 = 2;
                 int y1 = 142;
                 M5.lcd.fillRect(0, 127, 267, 82, BLACK);
-                if (IsRegionUpdate)
+                M5.lcd.drawRect(0, 140, 267, 69, json["Warn"] ? RED : BLACK);
+                if (regPos == -1)
                 {
-
                     M5.lcd.fillRect(0, 127, 267, 13, RED);
                     sprintf(text, "以下の地域は強い揺れに警戒      都道府県");
                     FastFont::printUtf8(text, 1, 128, WHITE, 1, RED);
-
-                    M5.lcd.drawRect(0, 140, 267, 69, json["Warn"] ? RED : BLACK);
                     for (int i = 0;; i++)
                     {
                         String name = json["WarnForecast"]["LocalAreas"][i];
                         if (name == "null")
+                        {
                             break;
+                        }
                         int x = name.length() / 3 * 13 + 6;
                         if (x1 + x > 265)
                         {
                             x1 = 2;
                             y1 += 13;
                             if (y1 >= 207)
+                            {
                                 break;
+                            }
+                        }
+                        FastFont::printUtf8(name, x1, y1, WHITE, 1, BLACK);
+                        x1 += x;
+                    }
+                    pg = 1;
+                    regPos = 0;
+                }
+                else
+                {
+                    M5.lcd.fillRect(0, 127, 267, 13, RED);
+                    sprintf(text, "以下の地域は強い揺れに警戒        詳細%2d", pg);
+                    FastFont::printUtf8(text, 1, 128, WHITE, 1, RED);
+                    for (int i = regPos;; i++)
+                    {
+                        String name = json["WarnForecast"]["Regions"][i];
+                        if (name == "null")
+                        {
+                            regPos = -1;
+                            break;
+                        }
+                        int x = name.length() / 3 * 13 + 6;
+                        if (x1 + x > 265)
+                        {
+                            x1 = 2;
+                            y1 += 13;
+                            if (y1 >= 207)
+                            {
+                                regPos = i;
+                                pg++;
+                                break;
+                            }
                         }
                         FastFont::printUtf8(name, x1, y1, WHITE, 1, BLACK);
                         x1 += x;
@@ -549,94 +630,31 @@ void EEW::Draw()
                 delete[] text;
             }
         }
-        if (!WarnRegionDisplay)
-        {
-            WarnRegionDisplay = true;
-            char *text = new char[100];
-            int x1 = 2;
-            int y1 = 142;
-            M5.lcd.fillRect(0, 127, 267, 82, BLACK);
-            M5.lcd.drawRect(0, 140, 267, 69, json["Warn"] ? RED : BLACK);
-            if (regPos == -1)
-            {
-                M5.lcd.fillRect(0, 127, 267, 13, RED);
-                sprintf(text, "以下の地域は強い揺れに警戒      都道府県");
-                FastFont::printUtf8(text, 1, 128, WHITE, 1, RED);
-                for (int i = 0;; i++)
-                {
-                    String name = json["WarnForecast"]["LocalAreas"][i];
-                    if (name == "null")
-                    {
-                        break;
-                    }
-                    int x = name.length() / 3 * 13 + 6;
-                    if (x1 + x > 265)
-                    {
-                        x1 = 2;
-                        y1 += 13;
-                        if (y1 >= 207)
-                        {
-                            break;
-                        }
-                    }
-                    FastFont::printUtf8(name, x1, y1, WHITE, 1, BLACK);
-                    x1 += x;
-                }
-                pg = 1;
-                regPos = 0;
-            }
-            else
-            {
-                M5.lcd.fillRect(0, 127, 267, 13, RED);
-                sprintf(text, "以下の地域は強い揺れに警戒        詳細%2d", pg);
-                FastFont::printUtf8(text, 1, 128, WHITE, 1, RED);
-                for (int i = regPos;; i++)
-                {
-                    String name = json["WarnForecast"]["Regions"][i];
-                    if (name == "null")
-                    {
-                        regPos = -1;
-                        break;
-                    }
-                    int x = name.length() / 3 * 13 + 6;
-                    if (x1 + x > 265)
-                    {
-                        x1 = 2;
-                        y1 += 13;
-                        if (y1 >= 207)
-                        {
-                            regPos = i;
-                            pg++;
-                            break;
-                        }
-                    }
-                    FastFont::printUtf8(name, x1, y1, WHITE, 1, BLACK);
-                    x1 += x;
-                }
-            }
-            delete[] text;
-        }
         if (!IsPingUpdate)
         {
-            IsPingUpdate = true;
-            char *text = new char[12];
-            sprintf(text, "%d", JsonReadTime > 9999 ? 9999 : JsonReadTime);
-            int col = 0;
-            if (JsonReadTime > 500)
+            if (!IsMapMode)
             {
-                col = RED;
+
+                IsPingUpdate = true;
+                char *text = new char[12];
+                sprintf(text, "%d", JsonReadTime > 9999 ? 9999 : JsonReadTime);
+                int col = 0;
+                if (JsonReadTime > 500)
+                {
+                    col = RED;
+                }
+                else if (JsonReadTime > 100)
+                {
+                    col = YELLOW;
+                }
+                else
+                {
+                    col = GREEN;
+                }
+                m5.Lcd.fillRect(320 - 4 * 6, 23, 24, 8, BLACK);
+                FastFont::printRom(text, 320 - 4 * 6 + 3 * (4 - strlen(text)), 23, col, 1, -1);
+                delete[] text;
             }
-            else if (JsonReadTime > 100)
-            {
-                col = YELLOW;
-            }
-            else
-            {
-                col = GREEN;
-            }
-            m5.Lcd.fillRect(320 - 4 * 6, 23, 24, 8, BLACK);
-            FastFont::printRom(text, 320 - 4 * 6 + 3 * (4 - strlen(text)), 23, col, 1, -1);
-            delete[] text;
         }
         break;
     case PingMode:
@@ -1033,6 +1051,12 @@ void EEW::ModeEnter()
     {
         switch (mode)
         {
+        case EEWMode:
+            IsMapMode = !IsMapMode;
+            IsFirstDrawed = false;
+            IsUpdated = false;
+            IsPingUpdate = false;
+            break;
         case PingMode:
             pingGraphMode++;
             if (pingGraphMode > Ping_5hoursMode)
@@ -1063,9 +1087,9 @@ void EEW::ModeEnter()
         return;
     }
     M5.Lcd.fillRect(0, 14, 320, 226, BLACK);
-    
-    Core::SystemData::UpdateBatteryUI=1;
-    Core::SystemData::UpdateSignalUI=1;
+
+    Core::SystemData::UpdateBatteryUI = 1;
+    Core::SystemData::UpdateSignalUI = 1;
     IsPingUpdate = false;
     IsButtonUIUpdate = false;
     IsFirstDrawed = false;

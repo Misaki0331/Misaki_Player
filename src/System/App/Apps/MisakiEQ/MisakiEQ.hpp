@@ -9,7 +9,13 @@ namespace App
 {
     namespace MisakiEQ
     {
-
+        class Map{
+            public:
+            void Draw(short x0, short y0,uint8_t size);
+            private:
+            static const uint16_t Japan_map_bin[];
+            static const uint16_t Japan_map_ptr[];
+        };
         class EEW
         {
         public:
@@ -143,11 +149,12 @@ namespace App
             bool TempIsBatterySupply;
             String BoolToStr(bool val);
             void LCDLightUp();
+            Map map;
+            bool IsMapMode;
 
-            static const uint16_t Japan_map_bin[];
-            static const uint16_t Japan_map_ptr[];
+            
         };
-
+        
     }
 
 }
