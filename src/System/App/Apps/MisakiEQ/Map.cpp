@@ -2,8 +2,8 @@
 using namespace App::MisakiEQ;
 void Map::Draw(double longitude, double latitude, uint8_t size)
 {
-    double x = (90.5988 * longitude - 11055.691) / 2500.0;
-    double y = (-105.72 * latitude + 5018.9725) / 2500;
+    double x = (91.096262 * longitude - 11121.6491) / 2500.0;
+    double y = (4322.4854-60.13934*latitude-0.7343239*pow(latitude,2)) / 2500;
     int zoom = 0;
     switch (size)
     {
