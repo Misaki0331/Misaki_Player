@@ -20,7 +20,7 @@ void EEW::Begin()
     Core::SystemData::UpdateSignalUI = 1;
 
     TestTime = 0;
-    MapSize=1;
+    MapSize = 1;
     IsActive = false;
     toHome = 0;
     FirstCheck = false;
@@ -166,11 +166,14 @@ void EEW::Loop()
 
                 IsUpdated = 0;
                 LCDTimer = millis();
-                if(mode!=MapMode){
-                sellectMode = EEWMode;
-                ModeEnter();
-                }else{
-                    IsUpdated=false;
+                if (mode != MapMode)
+                {
+                    sellectMode = EEWMode;
+                    ModeEnter();
+                }
+                else
+                {
+                    IsUpdated = false;
                 }
                 if (!FirstCheck)
                 {
@@ -379,7 +382,7 @@ void EEW::Draw()
         if (!IsFirstDrawed)
         {
             IsFirstDrawed = 1;
-            
+
             M5.Lcd.fillRect(0, 14, 320, 210, BLACK);
             if (!IsMapMode)
             {
@@ -661,33 +664,57 @@ void EEW::Draw()
         }
         break;
     case MapMode:
-        if(!IsFirstDrawed){
-            IsFirstDrawed=true;
-            
+        if (!IsFirstDrawed)
+        {
+            IsFirstDrawed = true;
         }
-        if(!IsUpdated){
-            IsUpdated=true;
+        if (!IsUpdated)
+        {
+            IsUpdated = true;
+            bool IsWarn = json["Warn"];
             map.Draw(json["Hypocenter"]["Location"]["Long"], json["Hypocenter"]["Location"]["Lat"], MapSize);
-            char* text=new char[128];
-            sprintf(text,"第 %d 報",(int)json["Serial"]);
-            if(json["Warn"]){
-                FastFont::printUtf8("[警報]",0,14,WHITE,1,RED);
-            }else{
-                FastFont::printUtf8("[予報]",0,14,WHITE,1,BLUE);
+            if (IsWarn)
+            {
+                for(int ii=1;ii<10;ii++){
+                for (int i = 0;; i++)
+                {
+                    int code = json["Forecast"][i]["Intensity"]["Code"];
+                    if (code != 0)
+                    {
+                        String val=json["Forecast"][i]["Intensity"]["From"];
+                        if(map.GetShindoName(ii)==val)map.DrawShindo(code, val);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                }
             }
-            if (json["Type"]["Code"] == 9)sprintf(text,"第 %d 報(最終報)",(int)json["Serial"]);
-            FastFont::printUtf8(text,40,14,WHITE,1,BLACK);
-            M5.lcd.fillRect(0,210,320,14,BLACK);
-            FastFont::printUtf8(json["Hypocenter"]["Name"],0,211,WHITE,1,INVISIBLE_COLOR);
-            FastFont::printUtf8(json["Hypocenter"]["Magnitude"]["String"],140,211,WHITE,1,INVISIBLE_COLOR);
-            sprintf(text,"深さ:%3d km",(int)json["Hypocenter"]["Location"]["Depth"]["Int"]);
-            FastFont::printUtf8(text,180,211,WHITE,1,INVISIBLE_COLOR);
-            String str=json["MaxIntensity"]["To"];
-            sprintf(text,"最大:%s",str.c_str());
-            FastFont::printUtf8(text,273,211,WHITE,1,INVISIBLE_COLOR);
-            FastFont::printUtf8(json["OriginTime"]["String"], 320-7*19, 14, WHITE, 1, BLACK);
-                    
-            
+            map.DrawHypocenter(json["Hypocenter"]["Location"]["Long"], json["Hypocenter"]["Location"]["Lat"]);
+            char *text = new char[128];
+            sprintf(text, "第 %d 報", (int)json["Serial"]);
+            if (json["Warn"])
+            {
+                FastFont::printUtf8("[警報]", 0, 14, WHITE, 1, RED);
+            }
+            else
+            {
+                FastFont::printUtf8("[予報]", 0, 14, WHITE, 1, BLUE);
+            }
+            if (json["Type"]["Code"] == 9)
+                sprintf(text, "第 %d 報(最終報)", (int)json["Serial"]);
+            FastFont::printUtf8(text, 40, 14, WHITE, 1, BLACK);
+            M5.lcd.fillRect(0, 210, 320, 14, BLACK);
+            FastFont::printUtf8(json["Hypocenter"]["Name"], 0, 211, WHITE, 1, INVISIBLE_COLOR);
+            FastFont::printUtf8(json["Hypocenter"]["Magnitude"]["String"], 140, 211, WHITE, 1, INVISIBLE_COLOR);
+            sprintf(text, "深さ:%3d km", (int)json["Hypocenter"]["Location"]["Depth"]["Int"]);
+            FastFont::printUtf8(text, 180, 211, WHITE, 1, INVISIBLE_COLOR);
+            String str = json["MaxIntensity"]["To"];
+            sprintf(text, "最大:%s", str.c_str());
+            FastFont::printUtf8(text, 273, 211, WHITE, 1, INVISIBLE_COLOR);
+            FastFont::printUtf8(json["OriginTime"]["String"], 320 - 7 * 19, 14, WHITE, 1, BLACK);
+
             delete[] text;
         }
         break;
@@ -1094,7 +1121,8 @@ void EEW::ModeEnter()
             break;
         case MapMode:
             MapSize++;
-            if(MapSize>5)MapSize=1;
+            if (MapSize > 5)
+                MapSize = 1;
             IsFirstDrawed = false;
             IsUpdated = false;
             break;

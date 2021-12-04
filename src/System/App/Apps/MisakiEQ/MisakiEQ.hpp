@@ -12,9 +12,16 @@ namespace App
         class Map{
             public:
             void Draw(double longitude ,double latitude,uint8_t size);
+            double GetPointLatitude(uint16_t ID);
+            double GetPointLongitude(uint16_t ID);
+            void DrawShindo(uint16_t ID,String Shindo);
+            void DrawHypocenter(double longitude, double latitude);
+            String GetShindoName(int val);
             private:
+            uint8_t GetShindoValue(String str);
             void DrawPnt(short x, short y,uint8_t size);
             void DrawLeft(short x0, short y0,uint8_t size);
+            void drawShindo(int16_t x, int16_t y, uint8_t value);
 
             //マップ配列(5サイズ)
             static const uint16_t map_2500_bin[];
@@ -27,6 +34,15 @@ namespace App
             static const uint16_t map_1000_ptr[];
             static const uint16_t map_500_bin[];
             static const uint16_t map_500_ptr[];
+
+            //震度地点
+            static const uint16_t Map_EEW_Num[];
+            static const double Map_EEW_lat[];
+            static const double Map_EEW_long[];
+            static const uint16_t JPN_shindo_color[];
+            int MapX;
+            int MapY;
+            int zm;
         };
         class EEW
         {
