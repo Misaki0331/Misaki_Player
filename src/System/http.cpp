@@ -18,12 +18,17 @@ const String Main::index_html = R"rawliteral(
 </head>
 <body>
   <h2>Misaki Player</h2>
+  <div style="text-align:right;">
   <input type="button"  value="Reload" onclick="location.reload();"><br>
+  </div>
+  <div style="text-align:center;">
   <input type="button"  value="Button A" onclick="window.location.href = '/BA';">
   <input type="button"  value="Button B" onclick="window.location.href = '/BB';">
   <input type="button"  value="Button C" onclick="window.location.href = '/BC';"><br>
-
+  </div>
+  <div style="text-align:center;">
   <img src="screenshot"><br>
+  </div>
   
 </body>  
 </html>)rawliteral";
