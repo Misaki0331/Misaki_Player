@@ -3,16 +3,12 @@
 using namespace Core::Draw;
 using namespace Core;
 void DrawTaskUI::Battery(int x,int y,int percent,bool isAllDraw){
-    bool IsCharging=false;
-    bool IsFull=false;
     short color=WHITE;
     if(percent>=200){
-        IsCharging=1;
         percent-=200;
         color=ORANGE;
     }
     if(percent>=400){
-        IsFull=1;
         percent-=400;
         color=GREEN;
     }

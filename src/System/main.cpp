@@ -193,13 +193,13 @@ void Main::Loop()
         }
         int CPULoad = (int)(((sqrt(MaxLPS) - sqrt(MainLPS)) / sqrt(MaxLPS)) * 10000);
         float per = (float)(RAMSIZE - FreeHeapMemory) / RAMSIZE * 100.0;
-        int per2 = (float)per * 100;
+        //int per2 = (float)per * 100;
         if (CPULoad < 0)
             CPULoad = 0;
         if (CPULoad > 99999)
             CPULoad = 99999;
         float val = FreeHeapMemory / 1024.0 * 100.0;
-        int val2 = val;
+        //int val2 = val;
 
         sprintf(text, "CPU:%3d.%02d%%(%4d) RAM:%6dB", CPULoad / 100, CPULoad % 100,
                 SystemAPI::LPS, FreeHeapMemory);
@@ -222,7 +222,7 @@ void Main::Loop()
 void Main::ControlThread(void *arg)
 {
     drawUI.Battery(297, 0, BatteryPercent, true);
-    int UpdateTime;
+    int UpdateTime=0;
     while (1)
     {
         if (UpdateTime != millis() / 1000)

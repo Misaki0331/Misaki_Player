@@ -536,10 +536,11 @@ void Num::Draw()
     }
 
     //ここに描画処理
-    char *valchar = new char[5];
+    char *valchar = new char[2];
     for (int i = 0; i < totalDegit && i < 10; i++)
     {
-        sprintf(valchar, "%c", '0' + temp / powi(10, totalDegit - i - 1) % 10);
+        valchar[0]= '0' + temp / powi(10, totalDegit - i - 1) % 10;
+        valchar[1]='\0';
         if (i == sellectDegit)
         {
             if (IsDegitMode)

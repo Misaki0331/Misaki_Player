@@ -709,10 +709,10 @@ void EEW::Draw()
             FastFont::printUtf8(json["Hypocenter"]["Name"], 0, 211, WHITE, 1, INVISIBLE_COLOR);
             FastFont::printUtf8(json["Hypocenter"]["Magnitude"]["String"], 140, 211, WHITE, 1, INVISIBLE_COLOR);
             sprintf(text, "深さ:%3d km", (int)json["Hypocenter"]["Location"]["Depth"]["Int"]);
-            FastFont::printUtf8(text, 180, 211, WHITE, 1, INVISIBLE_COLOR);
+            FastFont::printUtf8(text, 177, 211, WHITE, 1, INVISIBLE_COLOR);
             String str = json["MaxIntensity"]["To"];
             sprintf(text, "最大:%s", str.c_str());
-            FastFont::printUtf8(text, 273, 211, WHITE, 1, INVISIBLE_COLOR);
+            FastFont::printUtf8(text, 262, 211, WHITE, 1, INVISIBLE_COLOR);
             FastFont::printUtf8(json["OriginTime"]["String"], 320 - 7 * 19, 14, WHITE, 1, BLACK);
 
             delete[] text;
@@ -756,10 +756,10 @@ void EEW::Draw()
 
             for (int i = 0; i < 300; i++)
             {
-                int val;
-                int data;
-                int graph_x_lightgray;
-                int graph_x_gray;
+                int val=0;
+                int data=0;
+                int graph_x_lightgray=0;
+                int graph_x_gray=0;
                 int graph_x_loght_offset = 0;
                 switch (pingGraphMode)
                 {

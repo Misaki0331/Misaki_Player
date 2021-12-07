@@ -34,8 +34,6 @@ void Map::Draw(double longitude, double latitude, uint8_t size)
 void Map::DrawPnt(short x, short y, uint8_t size)
 {
     DrawLeft(x - 320 / 2, y - 210 / 2, size);
-    int ix = 160;
-    int iy = 14 + 105;
 }
 void Map::DrawLeft(short x0, short y0, uint8_t size)
 {
@@ -257,7 +255,7 @@ String Map::GetShindoName(int val){
     }
 }
 const uint16_t Map::JPN_shindo_color[] = { //某放送協会の震度表示の色を真似ました。外枠の線から内枠の塗り、文字色まで設定しています。
-    0, 0, 0, 0, 0, 0,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     0xA6BF, 0x7E3F, 0x4479, 0x33B5, 0x559F, 0x0000,
     0xBF54, 0x9EF0, 0x6548, 0x5467, 0x7EAB, 0x0000,
     0xF777, 0xF733, 0xBD8C, 0xA4AA, 0xF6EF, 0x0000,
@@ -266,4 +264,5 @@ const uint16_t Map::JPN_shindo_color[] = { //某放送協会の震度表示の�
     0xD3F1, 0xC24A, 0x8863, 0x7042, 0xB064, 0xFFFF,
     0xFF5E, 0xFEDC, 0xC30D, 0xA125, 0xFE7B, 0x8800,
     0xFF5E, 0xFEDC, 0xC30D, 0xA125, 0xFE7B, 0x8800,
-    0xFF53, 0xFF2F, 0xFE82, 0xF5E0, 0xB064, 0xFFFF};
+    0xFF53, 0xFF2F, 0xFE82, 0xF5E0, 0xB064, 0xFFFF
+};

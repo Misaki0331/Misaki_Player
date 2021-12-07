@@ -64,7 +64,7 @@ size_t WavePlayer::fill_data(int type, float dB){
   dB = constrain( dB, -96, 0);                  // Clip to -96~0
   float f;
   float g  = 32767.0 * pow(10, dB / 20);        // for flat gain
-  float gd = g * pow(0.5, (float)ct2);          // for decay gain
+  //float gd = g * pow(0.5, (float)ct2);          // for decay gain
   int sz=sizeof(src_buf);
   size_t r_size = sz;
     
@@ -109,7 +109,7 @@ size_t WavePlayer::fill_data(int type, float dB){
       if (++ct >= srate/4) {
         ct = 0;
         if (++ct2 >= DECAY_MAX) ct2 = 0;
-        gd = g * pow(0.5, (float)ct2);          // update decay gain
+        //gd = g * pow(0.5, (float)ct2);          // update decay gain
       }
       int32_t id = (int32_t)(f + 0.5);          // f32->i32 & Round Up
       id = constrain( id, -32768, +32767);      // Clip to i16 Range

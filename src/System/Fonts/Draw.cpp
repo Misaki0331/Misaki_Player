@@ -294,7 +294,7 @@ uint16_t FastFont::TextColor = 0xFFFF;
 long FastFont::BackColor = 0x0000;
 void FastFont::printf(const char *format, ...)
 {
-  char *buffer = "";
+  char *buffer=new char[128];
   va_list ap;
   va_start(ap, format);
   vsprintf(buffer, format, ap);
