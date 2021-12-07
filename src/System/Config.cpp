@@ -35,3 +35,6 @@ bool SystemAPI::WiFiIsConnected=false;
 int SystemData::LPS=0;
 bool SystemData::UpdateSignalUI=0;
 uint8_t SystemAPI::WiFiCurrentProfile=0;
+bool SystemData::IsHttpPressA=false;
+bool SystemData::IsHttpPressB=false;
+bool SystemData::IsHttpPressC=false;

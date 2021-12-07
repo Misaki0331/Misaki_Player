@@ -13,6 +13,9 @@ namespace Core{
         static bool UpdateBatteryUI;
         static int TempBatteryPercent;
         static bool UpdateSignalUI;
+        static bool IsHttpPressA;
+        static bool IsHttpPressB;
+        static bool IsHttpPressC;
     }static systemData;
     class SystemConfig
     {
@@ -40,6 +43,7 @@ namespace Core{
         static int WiFiLevel; //Wi-Fi強度
         static bool WiFiIsConnected; //Wi-Fiの接続状態
         static uint8_t WiFiCurrentProfile;
+        
     }static systemAPI;
 }
 #endif

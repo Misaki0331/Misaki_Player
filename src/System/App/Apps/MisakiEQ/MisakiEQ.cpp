@@ -18,7 +18,7 @@ void EEW::Begin()
 {
     Core::SystemData::UpdateBatteryUI = 1;
     Core::SystemData::UpdateSignalUI = 1;
-
+    Serial.println("MisakiEQ Begining");
     TestTime = 0;
     MapSize = 1;
     IsActive = false;
@@ -54,8 +54,11 @@ void EEW::Begin()
         PingValue60sec[i] = 0;
     }
     IsPingOpen = true;
+    Serial.println("MisakiEQ TaskCreating...");
     xTaskCreatePinnedToCore(GetNetworkFile, "MisakiEQ_EEW", 16800, NULL, 5, NULL, 1);
+    Serial.println("MisakiEQ Config Reading...");
     ReadConfig();
+    Serial.println("MisakiEQ Init...");
     LCDLightUp();
     PingLoad();
     if (SPIFFS.begin(0))
@@ -73,6 +76,7 @@ void EEW::Begin()
         }
         SPIFFS.end();
     }
+    Serial.println("MisakiEQ init done!");
 }
 void EEW::Loop()
 {
@@ -1519,14 +1523,16 @@ void EEW::ReadConfig()
     SPIFFS.begin(true);
     fs::FS fs = SPIFFS;
     File configFile = fs.open("/config/MisakiEQ.cfg", FILE_READ);
-    if (!configFile)
+    if (!configFile||!fs.exists("/config/MisakiEQ.cfg"))
     {
         config.OnlyListEvent = "全都道府県";
+        config.LCDLightLvBattery = 50;
+        config.LCDLightLvSupply = 100;
         SPIFFS.end();
         return;
     }
     String *tmps = new String[2];
-    for (int i = 0;; i++)
+    for (int i = 0;i<999; i++)
     {
         if (!configFile.available())
             break;

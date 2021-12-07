@@ -1,6 +1,7 @@
 #include <M5Stack.h>
 #include "sound/sound.h"
 #include "App/sellect.h"
+#include <ESPAsyncWebServer.h>
 namespace Core{
     class Main{
         public: 
@@ -9,6 +10,7 @@ namespace Core{
         static void Loop();            //ループ
         static void ControlThread(void* arg);   //コントロール用スレッド
         static void SoundThread(void* arg);
+        static void HTTPInit();
         static int MainLPS;
         static int BatteryPercent;
         static int FreeHeapMemory;
@@ -16,7 +18,7 @@ namespace Core{
         static bool DisableUI;
         private:
         static void Draw();
-        static void FirstWiFiConnect();
+        static bool FirstWiFiConnect();
         static class DrawTaskUI drawUI;
         static class Sound::WavePlayer wavePlayer;
         static int TempMs;
@@ -28,6 +30,11 @@ namespace Core{
         static int ButtonACount;
         static int ButtonBCount;
         static int ButtonCCount;
+        const static String index_html;
+        const static uint8_t BMP_Header[];
+        static AsyncWebServer *server;
+        static int ScreenshotRequest;
+        
     };
     
     

@@ -13,7 +13,8 @@ Main::Main()
 void Main::Begin()
 {               // M5Stackのバッテリ初期化
     M5.begin(); // M5Stackを初期化
-
+    SPIFFS.begin(1);
+    SPIFFS.end();
     M5.Power.begin();
     M5.Power.setPowerVin(true); // USBが抜かれても動作し続けるように
     setCpuFrequencyMhz(240);
@@ -29,12 +30,14 @@ void Main::Begin()
     FastFont::begin();
 
     Logger::Log("Font is ok.");
-    FirstWiFiConnect();
+    bool IsInited = FirstWiFiConnect();
     Logger::Log("Wi-Fi Initialized");
+    if(IsInited)HTTPInit();
+    Logger::Log("Server Initialized");
 }
-void Main::FirstWiFiConnect()
+bool Main::FirstWiFiConnect()
 {
-    systemData.UpdateSignalUI=true;
+    systemData.UpdateSignalUI = true;
     String ssid = "";
     String password = "";
     if (!SPIFFS.begin(0))
@@ -46,7 +49,7 @@ void Main::FirstWiFiConnect()
     fs::FS fs = SPIFFS;
     char *txt = new char[60];
     sprintf(txt, "/config/Wi-Fi_%02d.ini", SystemAPI::WiFiCurrentProfile);
-    Serial.printf("Profile:%02d ",SystemAPI::WiFiCurrentProfile);
+    Serial.printf("Profile:%02d ", SystemAPI::WiFiCurrentProfile);
     File config = fs.open(txt, FILE_READ);
     if (!config)
     {
@@ -54,7 +57,7 @@ void Main::FirstWiFiConnect()
         SystemAPI::WiFiCurrentProfile = 99;
         SPIFFS.end();
         delete[] txt;
-        return;
+        return 0;
     }
     delete[] txt;
     ssid = config.readStringUntil('\n');
@@ -63,17 +66,19 @@ void Main::FirstWiFiConnect()
     password.remove(password.length() - 1, 1);
     config.close();
     SPIFFS.end();
-    
-    Serial.printf("SSID:%s PASS:%s\n",ssid.c_str(),password.c_str());
-    if(ssid==""){
+
+    Serial.printf("SSID:%s PASS:%s\n", ssid.c_str(), password.c_str());
+    if (ssid == "")
+    {
         SystemAPI::WiFiCurrentProfile = 99;
         SPIFFS.end();
-        return;
+        return 0;
     }
     WiFi.begin(ssid.c_str(), password.c_str());
     ssid.clear();
     password.clear();
     LatestConnection = millis();
+    return 1;
 }
 int Main::UpdateUI = 0;
 int Main::TempMs = 0;
@@ -144,12 +149,12 @@ void Main::Loop()
         if (LatestConnection + 15000 < MilliSecounds)
         {
 
-            if (WiFiError )
+            if (WiFiError)
             {
                 SystemAPI::WiFiCurrentProfile++;
                 SystemAPI::WiFiCurrentProfile %= 100;
             }
-            LatestConnection=MilliSecounds;
+            LatestConnection = MilliSecounds;
             FirstWiFiConnect();
             WiFiError = true;
         }
@@ -193,13 +198,13 @@ void Main::Loop()
         }
         int CPULoad = (int)(((sqrt(MaxLPS) - sqrt(MainLPS)) / sqrt(MaxLPS)) * 10000);
         float per = (float)(RAMSIZE - FreeHeapMemory) / RAMSIZE * 100.0;
-        //int per2 = (float)per * 100;
+        // int per2 = (float)per * 100;
         if (CPULoad < 0)
             CPULoad = 0;
         if (CPULoad > 99999)
             CPULoad = 99999;
         float val = FreeHeapMemory / 1024.0 * 100.0;
-        //int val2 = val;
+        // int val2 = val;
 
         sprintf(text, "CPU:%3d.%02d%%(%4d) RAM:%6dB", CPULoad / 100, CPULoad % 100,
                 SystemAPI::LPS, FreeHeapMemory);
@@ -218,11 +223,54 @@ void Main::Loop()
     }
     SystemData::LPS += 1;
     TempMs = MilliSecounds;
+    if (ScreenshotRequest)
+    {
+        Serial.println("screenshot requested.");
+        SPIFFS.begin(1);
+        fs::FS fs = SD;
+        if (fs.exists("/scrnshot.bmp"))
+            fs.remove("/scrnshot.bmp");
+        File screenshot = fs.open("/scrnshot.bmp", FILE_WRITE);
+
+        Serial.println("/scrnshot.bmp opened.");
+            screenshot.write(BMP_Header,0x36);
+            for (int y = 239; y >=0; y--)
+            {
+                uint16_t *rect = new uint16_t[320];
+                m5.lcd.readRect(0, y, 320, 1, rect);
+                uint8_t *buf = new uint8_t[960];
+
+                for (int i = 0; i < 320; i++)
+                {
+                    uint16_t col = rect[i];
+                    buf[i * 3 + 2] = col % 32 > 0 ? col % 32 * 8 - 1 : 0;
+                    buf[i * 3 + 0] = col / 32 % 64 > 0 ? col / 32 % 64 * 4 - 1 : 0;
+                    buf[i * 3 + 1] = col / 32 / 64 > 0 ? col / 32 / 64 * 8 - 1 : 0;
+                }
+                screenshot.write(buf, 960);
+
+                delete[] rect;
+                delete[] buf;
+                rect = nullptr;
+                Serial.printf("\rCompleted %d/240 Lines. Heap:%d", 240 - y, esp_get_free_heap_size());
+            }
+        
+        
+        
+
+        Serial.println("\n/scrnshot.bmp closed.");
+        screenshot.close();
+        screenshot = fs.open("/scrnshot.bmp");
+        Serial.printf("File size: %d Bytes\n",screenshot.size());
+        screenshot.close();
+        SPIFFS.end();
+        ScreenshotRequest = 0;
+    }
 }
 void Main::ControlThread(void *arg)
 {
     drawUI.Battery(297, 0, BatteryPercent, true);
-    int UpdateTime=0;
+    int UpdateTime = 0;
     while (1)
     {
         if (UpdateTime != millis() / 1000)

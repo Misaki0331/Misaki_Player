@@ -15,6 +15,18 @@ void AppSelect::Select::SetButtonStatus(unsigned int value){
     if ((value & (1<<3))!=(ButtonStatus & (1<<3)))HoldButtonA();
     if ((value & (1<<4))!=(ButtonStatus & (1<<4)))HoldButtonB();
     if ((value & (1<<5))!=(ButtonStatus & (1<<5)))HoldButtonC();
+    if(SystemData::IsHttpPressA){
+        SystemData::IsHttpPressA=0;
+        PressButtonA();
+    }
+    if(SystemData::IsHttpPressB){
+        SystemData::IsHttpPressB=0;
+        PressButtonB();
+    }
+    if(SystemData::IsHttpPressC){
+        SystemData::IsHttpPressC=0;
+        PressButtonC();
+    }
     if(ButtonStatus!=value){//Home
         if((value & (1<<3))&&(value & (1<<4))&&(value & (1<<5))){
             Logger::Log("Called return Launcher");
