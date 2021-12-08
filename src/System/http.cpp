@@ -27,6 +27,28 @@ const String Main::index_html = R"rawliteral(
   <input type="button"  value="Button C" onclick="window.location.href = '/BC';"><br>
   </div>
   <div style="text-align:center;">
+  <input type="button"  value="Enable Screenshot" onclick="window.location.href = '/enabled_screenshot';">
+  </div>
+  
+</body>  
+</html>)rawliteral";
+const String Main::index_html_sc = R"rawliteral(
+<!DOCTYPE HTML><html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <h2>Misaki Player</h2>
+  <div style="text-align:right;">
+  <input type="button"  value="Reload" onclick="location.reload();"><br>
+  </div>
+  <div style="text-align:center;">
+  <input type="button"  value="Button A" onclick="window.location.href = '/BA_s';">
+  <input type="button"  value="Button B" onclick="window.location.href = '/BB_s';">
+  <input type="button"  value="Button C" onclick="window.location.href = '/BC_s';"><br>
+  </div>
+  <div style="text-align:center;">
+  <input type="button"  value="Disable Screenshot" onclick="window.location.href = '/';"><br>
   <img src="screenshot"><br>
   </div>
   
@@ -38,6 +60,8 @@ void Main::HTTPInit()
   server = new AsyncWebServer(80);
   server[0].on("/", HTTP_GET, [](AsyncWebServerRequest *request)
                { request->send_P(200, "text/html", index_html.c_str()); });
+  server[0].on("/enabled_screenshot", HTTP_GET, [](AsyncWebServerRequest *request)
+               { request->send_P(200, "text/html", index_html_sc.c_str()); });
     server[0].on("/screenshot", HTTP_GET, [](AsyncWebServerRequest *request)
                  {
     ScreenshotRequest = 1;
@@ -60,6 +84,21 @@ void Main::HTTPInit()
     server[0].on("/BC", HTTP_GET, [](AsyncWebServerRequest *request) {
       SystemData::IsHttpPressC=true;
       request->redirect("/");
+    });
+
+    server[0].on("/BA_s", HTTP_GET, [](AsyncWebServerRequest *request) {
+      SystemData::IsHttpPressA=true;
+      request->redirect("/enabled_screenshot");
+    });
+
+    server[0].on("/BB_s", HTTP_GET, [](AsyncWebServerRequest *request) {
+      SystemData::IsHttpPressB=true;
+      request->redirect("/enabled_screenshot");
+    });
+
+    server[0].on("/BC_s", HTTP_GET, [](AsyncWebServerRequest *request) {
+      SystemData::IsHttpPressC=true;
+      request->redirect("/enabled_screenshot");
     });
 
     server[0].begin();

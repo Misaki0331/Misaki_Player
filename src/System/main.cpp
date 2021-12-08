@@ -7,6 +7,15 @@
 using namespace Core;
 using namespace Core::Draw;
 using namespace Core::Debug;
+uint16_t Main::bitFlip16(uint16_t x)
+{
+    uint16_t y = 0;
+    for (int i = 0; i < 16; i++)
+        if (x & (1 << i))
+            y |= (1 << 15 - i);
+
+    return y;
+}
 Main::Main()
 {
 }
@@ -21,7 +30,7 @@ void Main::Begin()
     M5.Lcd.clear(BLACK); //表示リセット
     wavePlayer.Begin();
     Serial.begin(115200);
-    xTaskCreatePinnedToCore(ControlThread, "ControlThread", 1024, NULL, 3, NULL, 1);
+    xTaskCreatePinnedToCore(ControlThread, "ControlThread", 2048, NULL, 3, NULL, 1);
     xTaskCreatePinnedToCore(SoundThread, "SoundThread", 8192, NULL, 1, NULL, 1);
     appSelecter.Begin();
     appSelecter.Update();
@@ -32,7 +41,8 @@ void Main::Begin()
     Logger::Log("Font is ok.");
     bool IsInited = FirstWiFiConnect();
     Logger::Log("Wi-Fi Initialized");
-    if(IsInited)HTTPInit();
+    if (IsInited)
+        HTTPInit();
     Logger::Log("Server Initialized");
 }
 bool Main::FirstWiFiConnect()
@@ -225,43 +235,38 @@ void Main::Loop()
     TempMs = MilliSecounds;
     if (ScreenshotRequest)
     {
-        Serial.println("screenshot requested.");
+        // Serial.println("screenshot requested.");
         SPIFFS.begin(1);
         fs::FS fs = SD;
         if (fs.exists("/scrnshot.bmp"))
             fs.remove("/scrnshot.bmp");
         File screenshot = fs.open("/scrnshot.bmp", FILE_WRITE);
 
-        Serial.println("/scrnshot.bmp opened.");
-            screenshot.write(BMP_Header,0x36);
-            for (int y = 239; y >=0; y--)
+        // Serial.println("/scrnshot.bmp opened.");
+        screenshot.write(BMP_Header, 54);
+        uint8_t *rect = new uint8_t[960 * 3];
+        for (int y = 239; y >= 0; y -= 3)
+        {
+            m5.lcd.readRectRGB(0, y - 2, 320, 3, rect);
+            for (int y1 = 2; y1 >= 0; y1--)
             {
-                uint16_t *rect = new uint16_t[320];
-                m5.lcd.readRect(0, y, 320, 1, rect);
-                uint8_t *buf = new uint8_t[960];
-
                 for (int i = 0; i < 320; i++)
                 {
-                    uint16_t col = rect[i];
-                    buf[i * 3 + 2] = col % 32 > 0 ? col % 32 * 8 - 1 : 0;
-                    buf[i * 3 + 0] = col / 32 % 64 > 0 ? col / 32 % 64 * 4 - 1 : 0;
-                    buf[i * 3 + 1] = col / 32 / 64 > 0 ? col / 32 / 64 * 8 - 1 : 0;
+                    screenshot.write(rect[i * 3 + 2 + 960 * y1]);
+                    screenshot.write(rect[i * 3 + 1 + 960 * y1]);
+                    screenshot.write(rect[i * 3 + 0 + 960 * y1]);
                 }
-                screenshot.write(buf, 960);
-
-                delete[] rect;
-                delete[] buf;
-                rect = nullptr;
-                Serial.printf("\rCompleted %d/240 Lines. Heap:%d", 240 - y, esp_get_free_heap_size());
             }
-        
-        
-        
 
-        Serial.println("\n/scrnshot.bmp closed.");
+            // Serial.printf("\rCompleted %d/240 Lines. Heap:%d", 240 - y, esp_get_free_heap_size());
+        }
+        delete[] rect;
+        rect = nullptr;
+
+        // Serial.println("\n/scrnshot.bmp closed.");
         screenshot.close();
         screenshot = fs.open("/scrnshot.bmp");
-        Serial.printf("File size: %d Bytes\n",screenshot.size());
+        // Serial.printf("File size: %d Bytes\n", screenshot.size());
         screenshot.close();
         SPIFFS.end();
         ScreenshotRequest = 0;

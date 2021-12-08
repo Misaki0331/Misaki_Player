@@ -136,8 +136,7 @@ void EEW::Loop()
         {
             M5.Lcd.setBrightness(0);
             PingSave();
-            M5.Power.deepSleep(5000000);
-            M5.Power.reset();
+            int x=0/0;
         }
     }
     if (mode != EEWMode)

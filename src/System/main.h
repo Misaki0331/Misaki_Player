@@ -17,6 +17,7 @@ namespace Core{
         static bool WiFiError;
         static bool DisableUI;
         private:
+        static uint16_t bitFlip16(uint16_t x);
         static void Draw();
         static bool FirstWiFiConnect();
         static class DrawTaskUI drawUI;
@@ -31,6 +32,7 @@ namespace Core{
         static int ButtonBCount;
         static int ButtonCCount;
         const static String index_html;
+        const static String index_html_sc;
         const static uint8_t BMP_Header[];
         static AsyncWebServer *server;
         static int ScreenshotRequest;
