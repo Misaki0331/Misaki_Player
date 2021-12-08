@@ -1,5 +1,6 @@
 #include<M5Stack.h>
 
+
 #define SD_WAV  "/sample.wav" // SDCard上のWaveFile定義．44.1kHz 16bit Stereo専用
 #define SRC_FS  48000         // Source Sampling Rate [Hz]
 #define OSR     3             // Over Sampling Rate (1~8) 

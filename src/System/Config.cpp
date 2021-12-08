@@ -38,3 +38,4 @@ uint8_t SystemAPI::WiFiCurrentProfile=0;
 bool SystemData::IsHttpPressA=false;
 bool SystemData::IsHttpPressB=false;
 bool SystemData::IsHttpPressC=false;
+bool SystemData::IsCaptureAvailable=true;

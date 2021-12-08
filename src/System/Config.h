@@ -16,6 +16,7 @@ namespace Core{
         static bool IsHttpPressA;
         static bool IsHttpPressB;
         static bool IsHttpPressC;
+        static bool IsCaptureAvailable;
     }static systemData;
     class SystemConfig
     {

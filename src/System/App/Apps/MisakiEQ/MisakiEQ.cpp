@@ -136,7 +136,7 @@ void EEW::Loop()
         {
             M5.Lcd.setBrightness(0);
             PingSave();
-            int x=0/0;
+            int *overflow=new int[655360];
         }
     }
     if (mode != EEWMode)

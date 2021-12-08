@@ -1,4 +1,5 @@
 #include"sound.h"
+#include"../Config.h"
 #include "driver/i2s.h"
 using namespace Core::Sound;
 char WavePlayer::src_buf[]={0};
@@ -39,6 +40,7 @@ void WavePlayer::i2s_Init(){
   i2s_driver_install( I2S_NUM_0, &i2s_config, 0, NULL );
   i2s_set_pin( I2S_NUM_0, NULL );
   isSpeak=true;
+  SystemData::IsCaptureAvailable=false;
 }
 }
 void WavePlayer::i2s_End(){
@@ -47,6 +49,7 @@ void WavePlayer::i2s_End(){
     delay(20);
   i2s_driver_uninstall(I2S_NUM_0);
   
+  SystemData::IsCaptureAvailable=true;
   }
 }
 int WavePlayer::Pos=0;

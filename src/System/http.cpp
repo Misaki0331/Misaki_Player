@@ -2,7 +2,7 @@
 #include "Fonts/FastFont.h"
 #include <WiFi.h>
 #include <Server.h>
-#include"Config.h"
+#include "Config.h"
 using namespace Core;
 using namespace Core::Draw;
 AsyncWebServer *Main::server;
@@ -62,44 +62,51 @@ void Main::HTTPInit()
                { request->send_P(200, "text/html", index_html.c_str()); });
   server[0].on("/enabled_screenshot", HTTP_GET, [](AsyncWebServerRequest *request)
                { request->send_P(200, "text/html", index_html_sc.c_str()); });
-    server[0].on("/screenshot", HTTP_GET, [](AsyncWebServerRequest *request)
+  server[0].on("/screenshot", HTTP_GET, [](AsyncWebServerRequest *request)
+               {
+                 if (SystemData::IsCaptureAvailable)
                  {
-    ScreenshotRequest = 1;
-    Serial.println("screenshot requesting...");
-    while (ScreenshotRequest > 0)
-      vTaskDelay(1);
-    Serial.println("screenshot Sending...");
-    request->send(SD, "/scrnshot.bmp", "image/bmp");});
-        
-    server[0].on("/BA", HTTP_GET, [](AsyncWebServerRequest *request) {
+                   ScreenshotRequest = 1;
+                   while (ScreenshotRequest > 0)
+                     vTaskDelay(1);
+                   Serial.println("screenshot Sending...");
+                   request->send(SD, "/scrnshot.bmp", "image/bmp");
+                 }
+                 else
+                 {
+                   request->send(503, "text/plain", "Couldn't captured because SD Card is busy.\nReason : Sound Player is active! You can't capture while M5stack is playing sound.");
+                 }
+               });
+
+  server[0].on("/BA", HTTP_GET, [](AsyncWebServerRequest *request)
+               {
       SystemData::IsHttpPressA=true;
-      request->redirect("/");
-    });
+      request->redirect("/"); });
 
-    server[0].on("/BB", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server[0].on("/BB", HTTP_GET, [](AsyncWebServerRequest *request)
+               {
       SystemData::IsHttpPressB=true;
-      request->redirect("/");
-    });
+      request->redirect("/"); });
 
-    server[0].on("/BC", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server[0].on("/BC", HTTP_GET, [](AsyncWebServerRequest *request)
+               {
       SystemData::IsHttpPressC=true;
-      request->redirect("/");
-    });
+      request->redirect("/"); });
 
-    server[0].on("/BA_s", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server[0].on("/BA_s", HTTP_GET, [](AsyncWebServerRequest *request)
+               {
       SystemData::IsHttpPressA=true;
-      request->redirect("/enabled_screenshot");
-    });
+      request->redirect("/enabled_screenshot"); });
 
-    server[0].on("/BB_s", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server[0].on("/BB_s", HTTP_GET, [](AsyncWebServerRequest *request)
+               {
       SystemData::IsHttpPressB=true;
-      request->redirect("/enabled_screenshot");
-    });
+      request->redirect("/enabled_screenshot"); });
 
-    server[0].on("/BC_s", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server[0].on("/BC_s", HTTP_GET, [](AsyncWebServerRequest *request)
+               {
       SystemData::IsHttpPressC=true;
-      request->redirect("/enabled_screenshot");
-    });
+      request->redirect("/enabled_screenshot"); });
 
-    server[0].begin();
+  server[0].begin();
 }
