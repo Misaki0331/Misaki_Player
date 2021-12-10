@@ -77,7 +77,7 @@ bool Main::FirstWiFiConnect()
     config.close();
     SPIFFS.end();
 
-    Serial.printf("SSID:%s PASS:%s\n", ssid.c_str(), password.c_str());
+    // Serial.printf("SSID:%s PASS:%s\n", ssid.c_str(), password.c_str());
     if (ssid == "")
     {
         SystemAPI::WiFiCurrentProfile = 99;
@@ -174,6 +174,9 @@ void Main::Loop()
         WiFiError = false;
         LatestConnection = MilliSecounds;
     }
+    if(!GotTime){
+        if(WiFi.isConnected())GetClock();
+    }
     char text[100];
     if (MilliSecounds / 1000 > UpdateUI)
     {
@@ -219,12 +222,29 @@ void Main::Loop()
         sprintf(text, "CPU:%3d.%02d%%(%4d) RAM:%6dB", CPULoad / 100, CPULoad % 100,
                 SystemAPI::LPS, FreeHeapMemory);
         FastFont::printRom(text, 0, 0, systemConfig.UIUsageCPU_TextColor, 1, systemConfig.UIUsageCPU_BackColor);
+        if(SystemAPI::Time_year!=0){
+        sprintf(text, "%2d:%02d",
+                SystemAPI::Time_currentTime / 3600000,
+                SystemAPI::Time_currentTime / 60000 % 60
+                );
+        }else{
+            sprintf(text,"--:--");
+        }
+        FastFont::printUtf8(text, 223, 0, systemConfig.UIUpTime_TextColor, 1, systemConfig.UIUpTime_BackColor);
+        if(SystemAPI::Time_year!=0){
+        sprintf(text,"%02d",
+                SystemAPI::Time_currentTime / 1000 % 60);
+        }else{
+            sprintf(text,"--");
+        }
+        FastFont::printRom(text,223+7*5,4,systemConfig.UIUpTime_TextColor, 1, systemConfig.UIUpTime_BackColor);
     }
     if (MilliSecounds / 1000 != DrawUpdate)
     {
         DrawUpdate = MilliSecounds / 1000;
         Draw();
     }
+    AddClock(MilliSecounds);
     // 1000Hz固定
     while (MilliSecounds == TempMs)
     {
@@ -236,7 +256,6 @@ void Main::Loop()
     if (ScreenshotRequest)
     {
         // Serial.println("screenshot requested.");
-        SPIFFS.begin(1);
         fs::FS fs = SD;
         if (fs.exists("/scrnshot.bmp"))
             fs.remove("/scrnshot.bmp");
@@ -244,19 +263,17 @@ void Main::Loop()
 
         // Serial.println("/scrnshot.bmp opened.");
         screenshot.write(BMP_Header, 54);
-        uint8_t *rect = new uint8_t[960 * 3];
-        for (int y = 239; y >= 0; y -= 3)
+        uint8_t *rect = new uint8_t[960 * 1];
+        for (int y = 239; y >= 0; y -= 1)
         {
-            m5.lcd.readRectRGB(0, y - 2, 320, 3, rect);
-            for (int y1 = 2; y1 >= 0; y1--)
-            {
+            m5.lcd.readRectRGB(0, y , 320, 1, rect);
                 for (int i = 0; i < 320; i++)
                 {
-                    screenshot.write(rect[i * 3 + 2 + 960 * y1]);
-                    screenshot.write(rect[i * 3 + 1 + 960 * y1]);
-                    screenshot.write(rect[i * 3 + 0 + 960 * y1]);
+                    screenshot.write(rect[i * 3 + 2]);
+                    screenshot.write(rect[i * 3 + 1]);
+                    screenshot.write(rect[i * 3 + 0]);
                 }
-            }
+            
 
             // Serial.printf("\rCompleted %d/240 Lines. Heap:%d", 240 - y, esp_get_free_heap_size());
         }
@@ -265,10 +282,6 @@ void Main::Loop()
 
         // Serial.println("\n/scrnshot.bmp closed.");
         screenshot.close();
-        screenshot = fs.open("/scrnshot.bmp");
-        // Serial.printf("File size: %d Bytes\n", screenshot.size());
-        screenshot.close();
-        SPIFFS.end();
         ScreenshotRequest = 0;
     }
 }
@@ -318,6 +331,93 @@ void Main::ControlThread(void *arg)
         vTaskDelay(1000);
     }
 }
+void Main::AddClock(int t)
+{
+    if (SystemAPI::Time_month != 0)
+    {
+        SystemAPI::Time_currentTime += t - TempMillis;
+        if (SystemAPI::Time_currentTime >= 86400000)
+        {
+            SystemAPI::Time_currentTime -= 86400000;
+            SystemAPI::Time_day++;
+            switch (SystemAPI::Time_month)
+            {
+            case 1:
+            case 3:
+            case 5:
+            case 7:
+            case 8:
+            case 10:
+            case 12:
+                if (SystemAPI::Time_day > 31)
+                {
+                    SystemAPI::Time_day -= 31;
+                    SystemAPI::Time_month++;
+                }
+                break;
+            case 4:
+            case 6:
+            case 9:
+            case 11:
+                if (SystemAPI::Time_day > 30)
+                {
+                    SystemAPI::Time_day -= 30;
+                    SystemAPI::Time_month++;
+                }
+                break;
+            case 2:
+                int uruu = 28;
+                if (SystemAPI::Time_year % 400 != 0 && SystemAPI::Time_year % 100 == 0)
+                {
+                    uruu = 28;
+                }
+                else if (SystemAPI::Time_year % 4 == 0)
+                {
+                    uruu = 29;
+                }
+                else
+                {
+                    uruu = 28;
+                }
+                if (SystemAPI::Time_day > uruu)
+                {
+                    SystemAPI::Time_day -= uruu;
+                    SystemAPI::Time_month++;
+                }
+                break;
+            }
+            if (SystemAPI::Time_month > 12)
+            {
+                SystemAPI::Time_month -= 12;
+                SystemAPI::Time_year++;
+            }
+        }
+    }
+    TempMillis = t;
+}
+void Main::GetClock()
+{
+    DynamicJsonDocument json(1000);
+    HTTPClient http;
+    http.begin("http://worldtimeapi.org/api/timezone/Asia/Tokyo");
+    int httpcode = http.GET();
+    if(httpcode<0)return;
+    deserializeJson(json, http.getString());
+    String time = json["datetime"];
+    Serial.println(time);
+    if (time.length() == 32)
+    {
+        SystemAPI::Time_year = time.substring(0, 4).toInt();
+        SystemAPI::Time_month = time.substring(5, 7).toInt();
+        SystemAPI::Time_day = time.substring(8, 10).toInt();
+        SystemAPI::Time_currentTime = time.substring(11, 13).toInt() * 3600000 + time.substring(14, 16).toInt() * 60000 + time.substring(17, 19).toInt() * 1000 + time.substring(20, 23).toInt();
+        SystemAPI::Time_LatestSet = millis();
+    }
+    json.clear();
+    time.clear();
+    http.end();
+    GotTime=true;
+}
 int Main::DrawUpdate = 0;
 String Main::DrawTemp = "";
 int Main::MainLPS = 0;
@@ -340,3 +440,5 @@ int Core::SystemConfig::BatteryPosY = 0;
 bool Core::SystemConfig::EnableALLUpdate = 0;
 Apps::System::Select Main::appSelecter;
 int Main::FreeHeapMemory = 0;
+int Main::TempMillis = 0;
+bool Main::GotTime=0;

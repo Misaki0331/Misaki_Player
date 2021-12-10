@@ -2,6 +2,7 @@
 #include "sound/sound.h"
 #include "App/sellect.h"
 #include <ESPAsyncWebServer.h>
+#include <ArduinoJson.h>
 namespace Core{
     class Main{
         public: 
@@ -36,7 +37,11 @@ namespace Core{
         const static uint8_t BMP_Header[];
         static AsyncWebServer *server;
         static int ScreenshotRequest;
-        
+
+        static int TempMillis;
+        static void AddClock(int t);
+        static void GetClock();
+        static bool GotTime;
     };
     
     

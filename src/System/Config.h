@@ -45,6 +45,13 @@ namespace Core{
         static bool WiFiIsConnected; //Wi-Fiの接続状態
         static uint8_t WiFiCurrentProfile;
         
+
+        static uint16_t Time_year;
+        static uint8_t Time_month;
+        static uint8_t Time_day;
+        static uint32_t Time_currentTime;
+        static uint32_t Time_LatestSet;
+    
     }static systemAPI;
 }
 #endif

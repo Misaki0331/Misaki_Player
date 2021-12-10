@@ -4,7 +4,6 @@ Main main;
 void setup() {
   main.Begin();
 }
-
-void loop() {
+void loop(){
   while(1)main.Loop();
-}
+};

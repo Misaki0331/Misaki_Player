@@ -204,13 +204,20 @@ void FastFont::printSmall(String t, int x, int y, uint16_t color, uint8_t siz, l
   char *text;
   text = new char[t.length() + 1];
   t.toCharArray(text, t.length() + 1);
+  int c=0;
   for (int j = 0; j < t.length(); j++)
   {
     if (text[j] == 0)
       break;
     if (bgc >= 0 && bgc < 65536)
-      M5.Lcd.fillRect(x + 4 * siz * j, y, 3 * siz, 5 * siz, bgc);
-    displayMiniAscii(x + 4 * siz * j, y, text[j], siz, color);
+      M5.Lcd.fillRect(x + 4 * siz * c, y, 3 * siz, 5 * siz, bgc);
+    if(text[j]=='\n'){
+      c=-1;
+      y+=6;
+    }else{
+      displayMiniAscii(x + 4 * siz * c, y, text[j], siz, color);
+    }
+    c++;
   }
   delete[] text;
 }
