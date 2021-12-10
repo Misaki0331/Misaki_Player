@@ -94,7 +94,8 @@ const String Main::index_html_sc = R"rawliteral(
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
-<script>
+<script>isloadMain=false;
+ isloadSub=false;
  var newImage = new Image();
     var imageReload = function(){
       if(newImage.complete) {
@@ -110,8 +111,16 @@ const String Main::index_html_sc = R"rawliteral(
       xhr.open("GET", button, true);
       xhr.send(null);
     }
+    
+    var loadendMain=function(){
+      isloadMain=false;
+    }
+    var loadendSub=function(){
+      isloadSub=false;
+    }
     var getMain = function () {
-      if(1){
+      if(!isloadMain){
+        isloadMain=true;
       var xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
@@ -128,11 +137,13 @@ const String Main::index_html_sc = R"rawliteral(
       };
       xhr.open("GET", "/api/freeram", true);
       xhr.send(null);
+      xhr.addEventListener("loadend", loadendMain);
       }
     }
     
     var getSub = function () {
-      if(1){
+      if(!isloadSub){
+        isloadSub=true;
       var xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
@@ -149,12 +160,14 @@ const String Main::index_html_sc = R"rawliteral(
       };
       xhr.open("GET", "/api/power", true);
       xhr.send(null);
+      xhr.addEventListener("loadend", loadendSub);
       }    
     }
     getMain();
     getSub();
     setInterval(getMain, 1000);
     setInterval(getSub, 10000);
+    
   </script>
 <body>
   <h2>Misaki Player</h2>
@@ -221,20 +234,6 @@ void Main::HTTPInit()
       SystemData::IsHttpPressC=true;
       request->redirect("/"); });
 
-  server[0].on("/BA_s", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
-      SystemData::IsHttpPressA=true;
-      request->redirect("/enabled_screenshot"); });
-
-  server[0].on("/BB_s", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
-      SystemData::IsHttpPressB=true;
-      request->redirect("/enabled_screenshot"); });
-
-  server[0].on("/BC_s", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
-      SystemData::IsHttpPressC=true;
-      request->redirect("/enabled_screenshot"); });
   server[0].on("/api/clock", HTTP_GET, [](AsyncWebServerRequest *request)
                {
                  char*text=new char[30];
