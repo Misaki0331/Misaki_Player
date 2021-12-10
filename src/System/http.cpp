@@ -16,6 +16,7 @@ const String Main::index_html = R"rawliteral(
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 <script>
     var pushButton = function(button){
       var xhr = new XMLHttpRequest();
@@ -23,48 +24,16 @@ const String Main::index_html = R"rawliteral(
       xhr.send(null);
     }
     var getMain = function () {
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("clock").innerHTML = this.responseText;
-        }
-      };
-      xhr.open("GET", "/api/clock", true);
-      xhr.send(null);
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("freeram").innerHTML = this.responseText;
-        }
-      };
-      xhr.open("GET", "/api/freeram", true);
-      xhr.send(null);
-      
-    }
-    
-    var getSub = function () {
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("battery").innerHTML = this.responseText;
-        }
-      };
-      xhr.open("GET", "/api/battery", true);
-      xhr.send(null);
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("ischarge").innerHTML = this.responseText;
-        }
-      };
-      xhr.open("GET", "/api/power", true);
-      xhr.send(null);
-      
+      $.getJSON("api/json", (data) => {
+        document.getElementById("clock").innerHTML = data.clock;
+        document.getElementById("freeram").innerHTML = data.freeram;
+        document.getElementById("uptime").innerHTML = data.uptime;
+        document.getElementById("battery").innerHTML = data.battery;
+        document.getElementById("ischarge").innerHTML = data.power;
+      });
     }
     getMain();
-    getSub();
     setInterval(getMain, 1000);
-    setInterval(getSub, 10000);
   </script>
 <body>
   <h2>Misaki Player</h2>
@@ -73,6 +42,7 @@ const String Main::index_html = R"rawliteral(
       <tr><td>Battery(%)</td><td><span id="battery" class="value"></span>
       <tr><td>Power Supply</td><td><span id="ischarge" class="value"></span>
       <tr><td>Free RAM</td><td><span id="freeram" class="value"></span>
+      <tr><td>Uptime</td><td><span id="uptime" class="value"></span>
       </td></tr>
   </table></p>
   <div style="text-align:right;">
@@ -94,16 +64,16 @@ const String Main::index_html_sc = R"rawliteral(
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
-<script>isloadMain=false;
- isloadSub=false;
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<script>
+ isImageLoad=false;
  var newImage = new Image();
     var imageReload = function(){
       if(newImage.complete) {
           newImage = new Image();
-          newImage.src = '/screenshot';
-          var temp = newImage.src;
-          newImage = new Image();
-          document.getElementById("screenshot").src = temp;
+          newImage.src = "/screenshot"+"?" + new Date().getTime();
+          document.getElementById("screenshot").src = newImage.src;
+          isImageLoad=false;
           }
     }
     var pushButton = function(button){
@@ -112,61 +82,19 @@ const String Main::index_html_sc = R"rawliteral(
       xhr.send(null);
     }
     
-    var loadendMain=function(){
-      isloadMain=false;
-    }
-    var loadendSub=function(){
-      isloadSub=false;
-    }
     var getMain = function () {
-      if(!isloadMain){
-        isloadMain=true;
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("clock").innerHTML = this.responseText;
-        }
-      };
-      xhr.open("GET", "/api/clock", true);
-      xhr.send(null);
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("freeram").innerHTML = this.responseText;
-        }
-      };
-      xhr.open("GET", "/api/freeram", true);
-      xhr.send(null);
-      xhr.addEventListener("loadend", loadendMain);
+      if(isImageLoad){
+      $.getJSON("/api/json", (data) => {
+        document.getElementById("clock").innerHTML = data.clock;
+        document.getElementById("freeram").innerHTML = data.freeram;
+        document.getElementById("uptime").innerHTML = data.uptime;
+        document.getElementById("battery").innerHTML = data.battery;
+        document.getElementById("ischarge").innerHTML = data.power;
+      });
       }
     }
-    
-    var getSub = function () {
-      if(!isloadSub){
-        isloadSub=true;
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("battery").innerHTML = this.responseText;
-        }
-      };
-      xhr.open("GET", "/api/battery", true);
-      xhr.send(null);
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById("ischarge").innerHTML = this.responseText;
-        }
-      };
-      xhr.open("GET", "/api/power", true);
-      xhr.send(null);
-      xhr.addEventListener("loadend", loadendSub);
-      }    
-    }
     getMain();
-    getSub();
     setInterval(getMain, 1000);
-    setInterval(getSub, 10000);
     
   </script>
 <body>
@@ -177,6 +105,7 @@ const String Main::index_html_sc = R"rawliteral(
       <tr><td>Battery(%)</td><td><span id="battery" class="value"></span>
       <tr><td>Power Supply</td><td><span id="ischarge" class="value"></span>
       <tr><td>Free RAM</td><td><span id="freeram" class="value"></span>
+      <tr><td>Uptime</td><td><span id="uptime" class="value"></span>
       </td></tr>
   </table></p>
   <div style="text-align:right;">
@@ -191,7 +120,7 @@ const String Main::index_html_sc = R"rawliteral(
   </div>
   <div style="text-align:center;">
   <input type="button"  value="Disable Screenshot" onclick="window.location.href = '/';"><br>
-  <img id="screenshot" src="screenshot"><br>
+  <img id="screenshot" src="screenshot" onload="isImageLoad=true"><br>
   </div>
   
 </body>  
@@ -234,33 +163,32 @@ void Main::HTTPInit()
       SystemData::IsHttpPressC=true;
       request->redirect("/"); });
 
-  server[0].on("/api/clock", HTTP_GET, [](AsyncWebServerRequest *request)
+  server[0].on("/api/json", HTTP_GET, [](AsyncWebServerRequest *request)
                {
-                 char*text=new char[30];
+                 char*text=new char[200];
                 sprintf(text, "%4d/%02d/%02d %02d:%02d:%02d",SystemAPI::Time_year,SystemAPI::Time_month,SystemAPI::Time_day,
                 SystemAPI::Time_currentTime/3600000,SystemAPI::Time_currentTime/60000%60,SystemAPI::Time_currentTime/1000%60);
+                String clock=text;
+                sprintf(text,"%d",SystemAPI::FreeRAM);
+                String freeram=text;
+                sprintf(text,"%d",SystemAPI::BatteryLeft);
+                String battery=text;
+                String isPower;
+                if(SystemAPI::BatteryIsFull){
+                  isPower="Full";
+                }else if(SystemAPI::BatteryIsSupply){
+                  isPower="Charging";
+                }else{
+                  isPower="Discharge";
+                }
+                sprintf(text,"%d:%02d:%02d",millis()/3600000,millis()/60000%60,millis()/1000%60);
+                String uptime=text;
+                sprintf(text,"{\"clock\":\"%s\",\"freeram\":\"%s\",\"battery\":\"%s\",\"power\":\"%s\",\"uptime\":\"%s\"}",
+                clock.c_str(),freeram.c_str(),battery.c_str(),isPower.c_str(),uptime.c_str());
+
                 request->send(200, "text/plain",text); 
                 delete[] text; });
 
-  server[0].on("/api/freeram", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
-                 char*text=new char[30];
-                sprintf(text,"%d",SystemAPI::FreeRAM);
-                request->send(200, "text/plain",text); 
-                delete[] text; });
-  server[0].on("/api/battery", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
-                 char*text=new char[30];
-                sprintf(text,"%d",SystemAPI::BatteryLeft);
-                request->send(200, "text/plain",text); 
-                delete[] text; });
-  server[0].on("/api/power", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
-                 if(SystemAPI::BatteryIsFull||SystemAPI::BatteryIsSupply){
-                  request->send(200, "text/plain","true"); 
-                 }else{
-                  request->send(200, "text/plain","false"); 
-                 } });
 
   server[0].begin();
 }
