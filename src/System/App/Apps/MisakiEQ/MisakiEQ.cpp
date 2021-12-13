@@ -1585,7 +1585,7 @@ void EEW::ReadConfig()
 
     delete[] tmps;
     tmps = nullptr;
-    if (config.OnlyListEvent = "")
+    if (config.OnlyListEvent == "")
         config.OnlyListEvent = "全都道府県";
     if (config.LCDLightLvBattery < 1)
         config.LCDLightLvBattery = 100;

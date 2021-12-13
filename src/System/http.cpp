@@ -12,118 +12,310 @@ const uint8_t Main::BMP_Header[] = {
     0x00, 0x00, 0x00, 0x84, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 const String Main::index_html = R"rawliteral(
-<!DOCTYPE HTML><html>
+<!DOCTYPE HTML>
+<html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport"
+    content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 </head>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
-<script>
-    var pushButton = function(button){
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", button, true);
-      xhr.send(null);
-    }
-    var getMain = function () {
-      $.getJSON("api/json", (data) => {
-        document.getElementById("clock").innerHTML = data.clock;
-        document.getElementById("freeram").innerHTML = data.freeram;
-        document.getElementById("uptime").innerHTML = data.uptime;
-        document.getElementById("battery").innerHTML = data.battery;
-        document.getElementById("ischarge").innerHTML = data.power;
-      });
-    }
-    getMain();
-    setInterval(getMain, 1000);
-  </script>
 <body>
-  <h2>Misaki Player</h2>
-  <p><table>
-      <tr><td>Current Clock</td><td><span id="clock" class="value"></span>
-      <tr><td>Battery(%)</td><td><span id="battery" class="value"></span>
-      <tr><td>Power Supply</td><td><span id="ischarge" class="value"></span>
-      <tr><td>Free RAM</td><td><span id="freeram" class="value"></span>
-      <tr><td>Uptime</td><td><span id="uptime" class="value"></span>
-      </td></tr>
-  </table></p>
-  <div style="text-align:right;">
-  <input type="button"  value="Reload" onclick="location.reload();"><br>
-  </div>
-  <div style="text-align:center;">
-  <input type="button"  value="Button A" onclick="pushButton('/BA');">
-  <input type="button"  value="Button B" onclick="pushButton('/BB');">
-  <input type="button"  value="Button C" onclick="pushButton('/BC');"><br>
-  </div>
-  <div style="text-align:center;">
-  <input type="button"  value="Enable Screenshot" onclick="window.location.href = '/enabled_screenshot';">
-  </div>
-  
-</body>  
-</html>)rawliteral";
-const String Main::index_html_sc = R"rawliteral(
-<!DOCTYPE HTML><html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+</body>
+</html>
 </head>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 <script>
- isImageLoad=false;
- var newImage = new Image();
-    var imageReload = function(){
-      if(newImage.complete) {
-          newImage = new Image();
-          newImage.src = "/screenshot"+"?" + new Date().getTime();
-          document.getElementById("screenshot").src = newImage.src;
-          isImageLoad=false;
-          }
+  isImageLoad = true;
+  var newImage = new Image();
+  var imageReload = function () {
+    if (newImage.complete) {
+      newImage = new Image();
+      newImage.src = "/screenshot" + "?" + new Date().getTime();
+      document.getElementById("screenshot").src = newImage.src;
+      isImageLoad = false;
     }
-    var pushButton = function(button){
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", button, true);
-      xhr.send(null);
-    }
-    
-    var getMain = function () {
-      if(isImageLoad){
+  }
+  var pushButton = function (button) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", button, true);
+    xhr.send(null);
+  }
+
+  var getMain = function () {
+    if (isImageLoad) {
       $.getJSON("/api/json", (data) => {
         document.getElementById("clock").innerHTML = data.clock;
         document.getElementById("freeram").innerHTML = data.freeram;
         document.getElementById("uptime").innerHTML = data.uptime;
         document.getElementById("battery").innerHTML = data.battery;
         document.getElementById("ischarge").innerHTML = data.power;
+        document.getElementById("cpu").innerHTML = data.cpu;
       });
-      }
     }
-    getMain();
-    setInterval(getMain, 1000);
-    
-  </script>
+  }
+  getMain();
+  setInterval(getMain, 1000);
+
+</script>
+<style>
+  .api_list table td:nth-of-type(2) {
+    background-color: #afffff;
+    width: 210px;
+  }
+
+  .api_list table td:nth-of-type(1) {
+    background-color: #dfffff;
+    width: 130px
+  }
+
+  .api_list table tr,
+  td {
+    border: solid 1px;
+  }
+
+  .box {
+    width: 300px;
+    height: 200px;
+    margin: 10px 50px 10px 50px;
+
+    float: left;
+    /* 2 */
+    text-align: center
+  }
+
+  .boxContainer {
+
+    overflow: hidden;
+    height: 0em;
+    position: relative;
+
+    float: left;
+    /* 2 */
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+
+
+
+  }
+
+  .buttons {
+    width: 70px;
+    height: 40px;
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+</style>
+
 <body>
   <h2>Misaki Player</h2>
-  
-  <p><table>
-      <tr><td>Current Clock</td><td><span id="clock" class="value"></span>
-      <tr><td>Battery(%)</td><td><span id="battery" class="value"></span>
-      <tr><td>Power Supply</td><td><span id="ischarge" class="value"></span>
-      <tr><td>Free RAM</td><td><span id="freeram" class="value"></span>
-      <tr><td>Uptime</td><td><span id="uptime" class="value"></span>
-      </td></tr>
-  </table></p>
-  <div style="text-align:right;">
-  
-  <input type="button"  value="Reload" onclick="imageReload();
-"><br>
+  <div class="boxContain">
+    <div class="box">
+      <div class="api_list">
+        <p>
+        <table style="border-collapse: collapse; text-align: left; border: solid 2px;">
+          <tr>
+            <td>Current Clock</td>
+            <td><span id="clock" class="value"></span>
+          <tr>
+            <td>Battery(%)</td>
+            <td><span id="battery" class="value"></span>
+          <tr>
+            <td>Power Supply</td>
+            <td><span id="ischarge" class="value"></span>
+          <tr>
+            <td>CPU Usage(%)</td>
+            <td><span id="cpu" class="value"></span>
+          <tr>
+            <td>Free RAM</td>
+            <td><span id="freeram" class="value"></span>
+          <tr>
+            <td>Uptime</td>
+            <td><span id="uptime" class="value"></span>
+            </td>
+          </tr>
+        </table>
+        </p>
+      </div>
+    </div>
+    <div class="box">
+      <div class="Screen">
+        <div style="text-align:center; float:left; width: 320px;height: 50px;">
+          <input type="button" value="Enable ScreenCapture" onclick="window.location.href = '/enabled_screenshot';"
+            style="height:40px; width:120px;margin-right: 35px;   white-space: normal;">
+          <input type="button" class="b_reload" value="Reload Screen" onclick=""
+            style="height:40px;width:90px; margin-left:65px;  white-space: normal;">
+
+          <br>
+
+        </div>
+        <div style="width: 320px; height: 240px;background-color: black;">
+        <p style="color: white;">Disabled Screen capture</p>
+        <br>
+        </div><br>
+        <div class="button_contain" style="text-align:center; width: 320px; height: 40px; margin-top: 30px;">
+          <input type="button" class="buttons" value="" onclick="pushButton('/BA');">
+          <input type="button" class="buttons" value="" onclick="pushButton('/BB');">
+          <input type="button" class="buttons" value="" onclick="pushButton('/BC');"><br>
+        </div>
+      </div>
+    </div>
   </div>
-  <div style="text-align:center;">
-  <input type="button"  value="Button A" onclick="pushButton('/BA');">
-  <input type="button"  value="Button B" onclick="pushButton('/BB');">
-  <input type="button"  value="Button C" onclick="pushButton('/BC');"><br>
+
+</body>
+
+</html>)rawliteral";
+const String Main::index_html_sc = R"rawliteral(
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="viewport"
+    content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+</head>
+<body>
+</body>
+</html>
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<script>
+  isImageLoad = false;
+  var newImage = new Image();
+  var imageReload = function () {
+    if (newImage.complete) {
+      newImage = new Image();
+      newImage.src = "/screenshot" + "?" + new Date().getTime();
+      document.getElementById("screenshot").src = newImage.src;
+      isImageLoad = false;
+    }
+  }
+  var pushButton = function (button) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", button, true);
+    xhr.send(null);
+  }
+
+  var getMain = function () {
+    if (isImageLoad) {
+      $.getJSON("/api/json", (data) => {
+        document.getElementById("clock").innerHTML = data.clock;
+        document.getElementById("freeram").innerHTML = data.freeram;
+        document.getElementById("uptime").innerHTML = data.uptime;
+        document.getElementById("battery").innerHTML = data.battery;
+        document.getElementById("ischarge").innerHTML = data.power;
+        document.getElementById("cpu").innerHTML = data.cpu;
+      });
+    }
+  }
+  getMain();
+  setInterval(getMain, 1000);
+
+</script>
+<style>
+  .api_list table td:nth-of-type(2) {
+    background-color: #afffff;
+    width: 210px;
+  }
+
+  .api_list table td:nth-of-type(1) {
+    background-color: #dfffff;
+    width: 130px
+  }
+
+  .api_list table tr,
+  td {
+    border: solid 1px;
+  }
+
+  .box {
+    width: 300px;
+    height: 200px;
+    margin: 10px 50px 10px 50px;
+
+    float: left;
+    /* 2 */
+    text-align: center
+  }
+
+  .boxContainer {
+
+    overflow: hidden;
+    height: 0em;
+    position: relative;
+
+    float: left;
+    /* 2 */
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+
+
+
+  }
+
+  .buttons {
+    width: 70px;
+    height: 40px;
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+</style>
+
+<body>
+  <h2>Misaki Player</h2>
+  <div class="boxContain">
+    <div class="box">
+      <div class="api_list">
+        <p>
+        <table style="border-collapse: collapse; text-align: left; border: solid 2px;">
+          <tr>
+            <td>Current Clock</td>
+            <td><span id="clock" class="value"></span>
+          <tr>
+            <td>Battery(%)</td>
+            <td><span id="battery" class="value"></span>
+          <tr>
+            <td>Power Supply</td>
+            <td><span id="ischarge" class="value"></span>
+          <tr>
+            <td>CPU Usage(%)</td>
+            <td><span id="cpu" class="value"></span>
+          <tr>
+            <td>Free RAM</td>
+            <td><span id="freeram" class="value"></span>
+          <tr>
+            <td>Uptime</td>
+            <td><span id="uptime" class="value"></span>
+            </td>
+          </tr>
+        </table>
+        </p>
+      </div>
+    </div>
+    <div class="box">
+      <div class="Screen">
+        <div style="text-align:center; float:left; width: 320px;height: 50px;">
+          <input type="button" value="Disable ScreenCapture" onclick="window.location.href = '/';"
+            style="height:40px; width:120px;margin-right: 35px;   white-space: normal;">
+          <input type="button" class="b_reload" value="Reload Screen" onclick="imageReload();"
+            style="height:40px;width:90px; margin-left:65px;  white-space: normal;">
+
+          <br>
+
+        </div>
+        <div style="width: 320px; height: 240px;">
+          <img id="screenshot" src="screenshot" onload="isImageLoad=true"
+            style="width: 320px; height: 240px;  background-color: black;"><br>
+        </div><br>
+        <div class="button_contain" style="text-align:center; width: 320px; height: 40px; margin-top: 30px;">
+          <input type="button" class="buttons" value="" onclick="pushButton('/BA');">
+          <input type="button" class="buttons" value="" onclick="pushButton('/BB');">
+          <input type="button" class="buttons" value="" onclick="pushButton('/BC');"><br>
+        </div>
+      </div>
+    </div>
   </div>
-  <div style="text-align:center;">
-  <input type="button"  value="Disable Screenshot" onclick="window.location.href = '/';"><br>
-  <img id="screenshot" src="screenshot" onload="isImageLoad=true"><br>
-  </div>
-  
-</body>  
+
+</body>
+
 </html>)rawliteral";
 int Main::ScreenshotRequest = 0;
 void Main::HTTPInit()
@@ -140,7 +332,6 @@ void Main::HTTPInit()
                    ScreenshotRequest = 1;
                    while (ScreenshotRequest > 0)
                      vTaskDelay(1);
-                   Serial.println("screenshot Sending...");
                    request->send(SD, "/scrnshot.bmp", "image/bmp");
                  }
                  else
@@ -169,10 +360,6 @@ void Main::HTTPInit()
                 sprintf(text, "%4d/%02d/%02d %02d:%02d:%02d",SystemAPI::Time_year,SystemAPI::Time_month,SystemAPI::Time_day,
                 SystemAPI::Time_currentTime/3600000,SystemAPI::Time_currentTime/60000%60,SystemAPI::Time_currentTime/1000%60);
                 String clock=text;
-                sprintf(text,"%d",SystemAPI::FreeRAM);
-                String freeram=text;
-                sprintf(text,"%d",SystemAPI::BatteryLeft);
-                String battery=text;
                 String isPower;
                 if(SystemAPI::BatteryIsFull){
                   isPower="Full";
@@ -183,8 +370,8 @@ void Main::HTTPInit()
                 }
                 sprintf(text,"%d:%02d:%02d",millis()/3600000,millis()/60000%60,millis()/1000%60);
                 String uptime=text;
-                sprintf(text,"{\"clock\":\"%s\",\"freeram\":\"%s\",\"battery\":\"%s\",\"power\":\"%s\",\"uptime\":\"%s\"}",
-                clock.c_str(),freeram.c_str(),battery.c_str(),isPower.c_str(),uptime.c_str());
+                sprintf(text,"{\"clock\":\"%s\",\"cpu\":%.1f,\"freeram\":%d,\"battery\":%d,\"power\":\"%s\",\"uptime\":\"%s\"}",
+                clock.c_str(), (100.0-SystemAPI::LPS/10.0),SystemAPI::FreeRAM,SystemAPI::BatteryLeft,isPower.c_str(),uptime.c_str());
 
                 request->send(200, "text/plain",text); 
                 delete[] text; });

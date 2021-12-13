@@ -76,7 +76,7 @@ void Map::DrawLeft(short x0, short y0, uint8_t size)
     zm=maxy;
     for (int y1 = 0; y1 < 210; y1++)
     {
-        if (y1 + y0 >= maxy && y1 + y0 < 0)
+        if (y1 + y0 >= maxy || y1 + y0 < 0)
             continue;
         int x1 = 0;
         for (int ptr = map_ptr[y1 + y0]; map_bin[ptr] != 0xFFFF; ptr++)
