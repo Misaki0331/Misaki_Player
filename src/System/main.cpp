@@ -4,6 +4,7 @@
 #include "Fonts/FastFont.h"
 #include "System/Debug/Logger.h"
 #include "WiFi.h"
+
 using namespace Core;
 using namespace Core::Draw;
 using namespace Core::Debug;
@@ -30,7 +31,6 @@ void Main::Begin()
     M5.Lcd.clear(BLACK); //表示リセット
     wavePlayer.Begin();
     Serial.begin(115200);
-    xTaskCreatePinnedToCore(ControlThread, "ControlThread", 2048, NULL, 3, NULL, 1);
     xTaskCreatePinnedToCore(SoundThread, "SoundThread", 8192, NULL, 1, NULL, 1);
     appSelecter.Begin();
     appSelecter.Update();
@@ -44,6 +44,14 @@ void Main::Begin()
     if (IsInited)
         HTTPInit();
     Logger::Log("Server Initialized");
+
+    SystemAPI::AccelDatas = new int16_t[ACCELDATA_SIZE];
+    for (int i = 0; i < ACCELDATA_SIZE; i++)
+    {
+        SystemAPI::AccelDatas[i] = 0;
+    }
+    IMU.initMPU9250();
+    xTaskCreatePinnedToCore(ControlThread, "ControlThread", 2048, NULL, 3, NULL, 1);
 }
 bool Main::FirstWiFiConnect()
 {
@@ -174,8 +182,10 @@ void Main::Loop()
         WiFiError = false;
         LatestConnection = MilliSecounds;
     }
-    if(!GotTime){
-        if(WiFi.isConnected())GetClock();
+    if (!GotTime)
+    {
+        if (WiFi.isConnected())
+            GetClock();
     }
     char text[100];
     if (MilliSecounds / 1000 > UpdateUI)
@@ -222,22 +232,27 @@ void Main::Loop()
         sprintf(text, "CPU:%3d.%02d%%(%4d) RAM:%6dB", CPULoad / 100, CPULoad % 100,
                 SystemAPI::LPS, FreeHeapMemory);
         FastFont::printRom(text, 0, 0, systemConfig.UIUsageCPU_TextColor, 1, systemConfig.UIUsageCPU_BackColor);
-        if(SystemAPI::Time_year!=0){
-        sprintf(text, "%2d:%02d",
-                SystemAPI::Time_currentTime / 3600000,
-                SystemAPI::Time_currentTime / 60000 % 60
-                );
-        }else{
-            sprintf(text,"--:--");
+        if (SystemAPI::Time_year != 0)
+        {
+            sprintf(text, "%2d:%02d",
+                    SystemAPI::Time_currentTime / 3600000,
+                    SystemAPI::Time_currentTime / 60000 % 60);
+        }
+        else
+        {
+            sprintf(text, "--:--");
         }
         FastFont::printUtf8(text, 223, 0, systemConfig.UIUpTime_TextColor, 1, systemConfig.UIUpTime_BackColor);
-        if(SystemAPI::Time_year!=0){
-        sprintf(text,"%02d",
-                SystemAPI::Time_currentTime / 1000 % 60);
-        }else{
-            sprintf(text,"--");
+        if (SystemAPI::Time_year != 0)
+        {
+            sprintf(text, "%02d",
+                    SystemAPI::Time_currentTime / 1000 % 60);
         }
-        FastFont::printRom(text,223+7*5,4,systemConfig.UIUpTime_TextColor, 1, systemConfig.UIUpTime_BackColor);
+        else
+        {
+            sprintf(text, "--");
+        }
+        FastFont::printRom(text, 223 + 7 * 5, 4, systemConfig.UIUpTime_TextColor, 1, systemConfig.UIUpTime_BackColor);
     }
     if (MilliSecounds / 1000 != DrawUpdate)
     {
@@ -266,14 +281,13 @@ void Main::Loop()
         uint8_t *rect = new uint8_t[960 * 1];
         for (int y = 239; y >= 0; y -= 1)
         {
-            m5.lcd.readRectRGB(0, y , 320, 1, rect);
-                for (int i = 0; i < 320; i++)
-                {
-                    screenshot.write(rect[i * 3 + 2]);
-                    screenshot.write(rect[i * 3 + 1]);
-                    screenshot.write(rect[i * 3 + 0]);
-                }
-            
+            m5.lcd.readRectRGB(0, y, 320, 1, rect);
+            for (int i = 0; i < 320; i++)
+            {
+                screenshot.write(rect[i * 3 + 2]);
+                screenshot.write(rect[i * 3 + 1]);
+                screenshot.write(rect[i * 3 + 0]);
+            }
 
             // Serial.printf("\rCompleted %d/240 Lines. Heap:%d", 240 - y, esp_get_free_heap_size());
         }
@@ -289,6 +303,7 @@ void Main::ControlThread(void *arg)
 {
     drawUI.Battery(297, 0, BatteryPercent, true);
     int UpdateTime = 0;
+    int UpdateAc = 0;
     while (1)
     {
         if (UpdateTime != millis() / 1000)
@@ -328,7 +343,24 @@ void Main::ControlThread(void *arg)
             }
             SystemAPI::WiFiIsConnected = WiFi.status() == WL_CONNECTED;
         }
-        vTaskDelay(1000);
+        if (UpdateAc != millis() / 20)
+        {
+            UpdateAc = millis() / 20;
+            double x, y, z;
+            if (IMU.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
+            {
+                IMU.readAccelData(IMU.accelCount);
+                IMU.getAres();
+                x = (double)IMU.accelCount[0] * IMU.aRes;
+                y = (double)IMU.accelCount[1] * IMU.aRes;
+                z = (double)IMU.accelCount[2] * IMU.aRes;
+                for(int i=ACCELDATA_SIZE-1;i>0;i--){
+                    SystemAPI::AccelDatas[i]=SystemAPI::AccelDatas[i-1];
+                }
+                SystemAPI::AccelDatas[0]=(double)sqrt(x*x+y*y+z*z)*10000.0-10330;
+            }
+        }
+        vTaskDelay(1);
     }
 }
 void Main::AddClock(int t)
@@ -401,7 +433,8 @@ void Main::GetClock()
     HTTPClient http;
     http.begin("http://worldtimeapi.org/api/timezone/Asia/Tokyo");
     int httpcode = http.GET();
-    if(httpcode<0)return;
+    if (httpcode < 0)
+        return;
     deserializeJson(json, http.getString());
     String time = json["datetime"];
     Serial.println(time);
@@ -416,7 +449,7 @@ void Main::GetClock()
     json.clear();
     time.clear();
     http.end();
-    GotTime=true;
+    GotTime = true;
 }
 int Main::DrawUpdate = 0;
 String Main::DrawTemp = "";
@@ -441,4 +474,5 @@ bool Core::SystemConfig::EnableALLUpdate = 0;
 Apps::System::Select Main::appSelecter;
 int Main::FreeHeapMemory = 0;
 int Main::TempMillis = 0;
-bool Main::GotTime=0;
+bool Main::GotTime = 0;
+MPU9250 Main::IMU;

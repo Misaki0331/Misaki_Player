@@ -1,6 +1,7 @@
 #include<M5Stack.h>
 #define RAMSIZE 327680
 #define CHATTERING_DELAY 12
+#define ACCELDATA_SIZE 2000
 #ifndef API_H
 #define API_H
 namespace Core{
@@ -51,6 +52,8 @@ namespace Core{
         static uint8_t Time_day;
         static uint32_t Time_currentTime;
         static uint32_t Time_LatestSet;
+
+        static int16_t* AccelDatas;
     
     }static systemAPI;
 }

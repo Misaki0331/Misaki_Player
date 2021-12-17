@@ -3,6 +3,9 @@
 #include "App/sellect.h"
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
+
+#include "utility/MPU9250.h"
+#include "utility/quaternionFilters.h"
 namespace Core{
     class Main{
         public: 
@@ -34,6 +37,7 @@ namespace Core{
         static int ButtonCCount;
         const static String index_html;
         const static String index_html_sc;
+        const static String AccelGraph;
         const static uint8_t BMP_Header[];
         static AsyncWebServer *server;
         static int ScreenshotRequest;
@@ -42,6 +46,8 @@ namespace Core{
         static void AddClock(int t);
         static void GetClock();
         static bool GotTime;
+
+        static MPU9250 IMU;
     };
     
     

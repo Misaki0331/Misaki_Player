@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" charset="UTF-8">
+    <title>振動グラフ</title>
+</head>
+
+<body>
+    <!-- ライブラリの取り込み -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js">
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+
+    <!-- 描画先 -->
+    <canvas id="chart_cv"></canvas>
+    <!-- データを与える -->
+    <script type="text/javascript">
+        // データ
+        var jsonlabel = [0];
+        for (i = 1; i < 1000; i++) {
+            jsonlabel.push(i);
+        }
+        var datas;
+        var chartdata;
+        var isUpdating = false;
+        var update = function () {
+            if (!isUpdating) {
+                isUpdating = true;
+                $.getJSON("/api/acceldata", (datas) => {
+                    let data = {
+
+                        labels: jsonlabel,
+                        datasets: [{
+                            label: 'list',
+                            data: datas,
+                            borderColor: 'rgba(255,100,100, 1)',
+                            fill: false,
+                            pointRadius: 0
+                        }]
+                    }
+                    if (chartdata) chartdata.destroy();
+                    // グラフを描画
+                    const ctx = document.getElementById('chart_cv')
+                    chartdata = new Chart(ctx, {
+                        type: 'line',
+                        data: data,
+                        options: {
+                            animation: false,
+                            legend: {
+                                display: false, // 凡例を非表示
+                            },
+                            scales: {
+                                xAxes: [{
+                                    scaleLabel: {                 // 軸ラベル
+                                        display: false
+                                    },
+                                    gridLines: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        display: false //this will remove only the label
+                                    }
+                                }]
+                            }
+                        }
+                    })
+                });
+                isUpdating = false;
+            }
+        }
+        setInterval(update, 50);
+
+    </script>
+</body>
+
+</html>
