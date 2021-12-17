@@ -38,19 +38,28 @@ const String Main::AccelGraph = R"rawliteral(
     <!-- データを与える -->
     <script type="text/javascript">
         // データ
-        var jsonlabel = [0];
-        for (i = 1; i < 2000; i++) {
-            jsonlabel.push(i);
-        }
+
         var datas;
-        var errorcount=0;
+        var errorcount = 0;
         var chartdata;
         var isUpdating = false;
         var update = function () {
             if (!isUpdating) {
-              errorcount=0;
+                errorcount = 0;
                 isUpdating = true;
                 $.getJSON("/api/acceldata", (datas) => {
+                    var max_ = 0;
+                    var jsonlabel = [0];
+                    for (i = 0; i < datas.length; i++) {
+                        if (Math.abs(datas[i]) > max_) {
+                            max_ = Math.abs(datas[i]);
+                        }
+                        if (i > 0) {
+                            jsonlabel.push(i);
+                        }
+                    }
+                    if (max_ < 100) max_ = 100;
+
                     let data = {
 
                         labels: jsonlabel,
@@ -84,20 +93,33 @@ const String Main::AccelGraph = R"rawliteral(
                                     ticks: {
                                         display: false //this will remove only the label
                                     }
+                                }],
+                                yAxes: [{
+                                    ticks: {     // 目盛り        
+                                        min: -(max_),      // 最小値
+                                        max: max_,     // 最大値
+                                        stepSize: 100,  // 間隔
+                                        beginAtZero: true
+                                    }
                                 }]
+
                             }
                         }
                     })
                 });
                 isUpdating = false;
-            }else{
-              errorcount++;
-              if(errorcount==60){
-                Location.reload()
-              }
+            } else {
+                errorcount++;
+                if(errorcount==30){
+                    isUpdating=false;
+                }
+                if (errorcount == 60) {
+                    Location.reload()
+                }
+
             }
         }
-        setInterval(update, 500);
+        setInterval(update, 1000);
 
     </script>
 </body>
@@ -170,7 +192,7 @@ void Main::HTTPInit()
                  char*text=new char[20];
                  str="[";
                  for(int i=ACCELDATA_SIZE-1;i>=0;i--){
-                   sprintf(text,"%d",SystemAPI::AccelDatas[i]);
+                   sprintf(text,"%.1f",SystemAPI::AccelDatas[i]/10.0);
                    str+=text;
                    if(i==0)break;
                    str+=",";

@@ -18,17 +18,28 @@
     <!-- データを与える -->
     <script type="text/javascript">
         // データ
-        var jsonlabel = [0];
-        for (i = 1; i < 1000; i++) {
-            jsonlabel.push(i);
-        }
+
         var datas;
+        var errorcount = 0;
         var chartdata;
         var isUpdating = false;
         var update = function () {
             if (!isUpdating) {
+                errorcount = 0;
                 isUpdating = true;
                 $.getJSON("/api/acceldata", (datas) => {
+                    var max_ = 0;
+                    var jsonlabel = [0];
+                    for (i = 0; i < data.length; i++) {
+                        if (math.abs(data[i]) > max_) {
+                            max_ = math.abs(data[i]);
+                        }
+                        if (i > 0) {
+                            jsonlabel.push(i);
+                        }
+                    }
+                    if (max_ < 100) max_ = 100;
+
                     let data = {
 
                         labels: jsonlabel,
@@ -62,15 +73,33 @@
                                     ticks: {
                                         display: false //this will remove only the label
                                     }
+                                }],
+                                yAxes: [{
+                                    ticks: {     // 目盛り        
+                                        min: -(max_),      // 最小値
+                                        max: max_,     // 最大値
+                                        stepSize: 100,  // 間隔
+                                        beginAtZero: true
+                                    }
                                 }]
+
                             }
                         }
                     })
                 });
                 isUpdating = false;
+            } else {
+                errorcount++;
+                if(errorcount==30){
+                    isUpdating=false;
+                }
+                if (errorcount == 60) {
+                    Location.reload()
+                }
+
             }
         }
-        setInterval(update, 50);
+        setInterval(update, 500);
 
     </script>
 </body>

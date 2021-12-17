@@ -1,7 +1,7 @@
 #include<M5Stack.h>
 #define RAMSIZE 327680
 #define CHATTERING_DELAY 12
-#define ACCELDATA_SIZE 2000
+#define ACCELDATA_SIZE 1500
 #ifndef API_H
 #define API_H
 namespace Core{
