@@ -304,6 +304,7 @@ void Main::ControlThread(void *arg)
     drawUI.Battery(297, 0, BatteryPercent, true);
     int UpdateTime = 0;
     int UpdateAc = 0;
+    int tmpGal=0;
     while (1)
     {
         if (UpdateTime != millis() / 1000)
@@ -357,7 +358,9 @@ void Main::ControlThread(void *arg)
                 for(int i=ACCELDATA_SIZE-1;i>0;i--){
                     SystemAPI::AccelDatas[i]=SystemAPI::AccelDatas[i-1];
                 }
-                SystemAPI::AccelDatas[0]=(double)sqrt(x*x+y*y+z*z)*10000.0-10330;
+                double value=sqrt(x*x+y*y+z*z)*0.980665*10000.0;
+                SystemAPI::AccelDatas[0]=value-tmpGal;
+                tmpGal=value;
             }
         }
         vTaskDelay(1);
