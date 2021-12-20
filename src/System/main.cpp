@@ -377,6 +377,14 @@ void Main::ControlThread(void *arg)
 }
 void Main::AddClock(int t)
 {
+    if(SystemAPI::Time_currentTime/1000==18000){
+        if(!AutoAdj){
+            AutoAdj=true;
+            GetClock();
+        }
+    }else{
+        AutoAdj=false;
+    }
     if (SystemAPI::Time_month != 0)
     {
         SystemAPI::Time_currentTime += t - TempMillis;
@@ -491,3 +499,4 @@ int Main::FreeHeapMemory = 0;
 int Main::TempMillis = 0;
 bool Main::GotTime = 0;
 MPU9250 Main::IMU;
+bool Main::AutoAdj=false;

@@ -46,7 +46,7 @@ namespace Core{
         static void AddClock(int t);
         static void GetClock();
         static bool GotTime;
-
+        static bool AutoAdj;
         static MPU9250 IMU;
     };
     
