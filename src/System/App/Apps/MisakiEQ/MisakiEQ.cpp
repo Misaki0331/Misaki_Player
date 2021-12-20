@@ -43,6 +43,8 @@ void EEW::Begin()
     Reboottimer = 0;
     IsAutoRotateStop = true;
     IsUserPressed = true;
+    TempMaxGal = "               ";
+    TempAvgGal = "               ";
     TempIsBatterySupply = Core::SystemAPI::BatteryIsSupply;
     pg = 1;
     http = new HTTPClient();
@@ -428,6 +430,7 @@ int EEW::GetColor(unsigned int col)
 }
 void EEW::Draw()
 {
+    char *text;
     switch (mode)
     {
     case ClockMode:
@@ -444,7 +447,7 @@ void EEW::Draw()
             clockString.AccelAvg = "      ";
             clockString.AccelMax_1 = 255;
             clockString.AccelAvg_1 = 255;
-            clockString.UpdateAccel=-1;
+            clockString.UpdateAccel = -1;
 
             FastFont::printUtf8("現在時刻", 0, 15, WHITE, 1, BLACK);
 
@@ -453,23 +456,22 @@ void EEW::Draw()
             FastFont::printUtf8("日", 172 + 41, 47, WHITE, 1, BLACK);
 
             FastFont::printUtf8("(　)", 186 + 41, 36, WHITE, 2, BLACK);
-            
-            FastFont::printUtf8("最大加速度(gal)",30,130,WHITE,1,BLACK);
-            FastFont::printUtf8("平均加速度(gal)",190,130,WHITE,1,BLACK);
-            M5.Lcd.drawRect(0,128,160,60,WHITE);
-            M5.Lcd.drawRect(160,128,160,60,WHITE);
-            FastFont::printRom("0",0,207,WHITE,1,BLACK);
-            FastFont::printRom("6",48,207,WHITE,1,BLACK);
-            FastFont::printRom("20",95,207,WHITE,1,BLACK);
-            FastFont::printRom("60",145,207,WHITE,1,BLACK);
-            FastFont::printRom("200",191,207,WHITE,1,BLACK);
-            FastFont::printRom("600",241,207,WHITE,1,BLACK);
-            FastFont::printRom("1500",297,207,WHITE,1,BLACK);
+
+            FastFont::printUtf8("最大加速度(gal)", 30, 130, WHITE, 1, BLACK);
+            FastFont::printUtf8("平均加速度(gal)", 190, 130, WHITE, 1, BLACK);
+            M5.Lcd.drawRect(0, 128, 160, 60, WHITE);
+            M5.Lcd.drawRect(160, 128, 160, 60, WHITE);
+            FastFont::printRom("0", 0, 207, WHITE, 1, BLACK);
+            FastFont::printRom("6", 48, 207, WHITE, 1, BLACK);
+            FastFont::printRom("20", 95, 207, WHITE, 1, BLACK);
+            FastFont::printRom("60", 145, 207, WHITE, 1, BLACK);
+            FastFont::printRom("200", 191, 207, WHITE, 1, BLACK);
+            FastFont::printRom("600", 241, 207, WHITE, 1, BLACK);
+            FastFont::printRom("1500", 297, 207, WHITE, 1, BLACK);
         }
         if (!IsUpdated)
         {
             IsUpdated = 1;
-            char *text;
             if (clockString.year != Core::SystemAPI::Time_year)
             {
                 clockString.year = Core::SystemAPI::Time_year;
@@ -540,134 +542,175 @@ void EEW::Draw()
                 clockString.time_str = text;
                 delete[] text;
             }
-            if(clockString.UpdateAccel!=Core::SystemAPI::Time_currentTime/100){
-                clockString.UpdateAccel=Core::SystemAPI::Time_currentTime/100;
-                int max=0;
-                int avg=0;
-                for(int i=0;i<ACCELDATA_SIZE;i++){
-                    int value=abs(Core::SystemAPI::AccelDatas[i]);
-                    if(value>max)max=value;
-                    if(i<50){
-                        avg+=value;
-                    }
-                }
-                avg/=50;
+            if (clockString.UpdateAccel != Core::SystemAPI::Time_currentTime / 20)
+            {
+                clockString.UpdateAccel = Core::SystemAPI::Time_currentTime / 20;
+                int max = Core::SystemAPI::AccelMax;
+                int avg = Core::SystemAPI::AccelAvg;
                 text = new char[20];
-                sprintf(text,"%4d",max/10);
-                FastFont::printFastRom(clockString.AccelMax,text,20,145,WHITE,5,BLACK);
-                clockString.AccelMax=text;
-                if(clockString.AccelMax_1!=max%10){
-                    clockString.AccelMax_1=max%10;
-                    sprintf(text,"%d",max%10);
-                    FastFont::printRom(text,140,160,WHITE,3,BLACK);
+                sprintf(text, "%4d", max / 10);
+                FastFont::printFastRom(clockString.AccelMax, text, 20, 145, WHITE, 5, BLACK);
+                clockString.AccelMax = text;
+                if (clockString.AccelMax_1 != max % 10)
+                {
+                    clockString.AccelMax_1 = max % 10;
+                    sprintf(text, "%d", max % 10);
+                    FastFont::printRom(text, 140, 160, WHITE, 3, BLACK);
                 }
-                sprintf(text,"%4d",avg/10);
-                FastFont::printFastRom(clockString.AccelAvg,text,180,145,WHITE,5,BLACK);
-                clockString.AccelAvg=text;
-                if(clockString.AccelAvg_1!=avg%10){
-                    clockString.AccelAvg_1=avg%10;
-                    sprintf(text,"%d",avg%10);
-                    FastFont::printRom(text,300,160,WHITE,3,BLACK);
+                sprintf(text, "%4d", avg / 10);
+                FastFont::printFastRom(clockString.AccelAvg, text, 180, 145, WHITE, 5, BLACK);
+                clockString.AccelAvg = text;
+                if (clockString.AccelAvg_1 != avg % 10)
+                {
+                    clockString.AccelAvg_1 = avg % 10;
+                    sprintf(text, "%d", avg % 10);
+                    FastFont::printRom(text, 300, 160, WHITE, 3, BLACK);
                 }
                 delete[] text;
-                //188
-                int height=18;
-                float point=0;
-                if(avg<60){
-                    point = 50*avg/60.0;
-                    point=(int)point;
-                    M5.Lcd.fillRect(0,188,point,height,CYAN);
-                    M5.Lcd.fillRect(point,188,50-point,height,GetColor(0x003F3F));
-                    //FD20
-                }else{
-                    M5.Lcd.fillRect(0,188,50,height,CYAN);
-                }
-                if(avg>=60&&avg<200){
-                    point = 50*(avg-60)/140.0;
-                    point=(int)point;
-                    M5.Lcd.fillRect(50,188,point,height,GREEN);
-                    M5.Lcd.fillRect(50+point,188,50-point,height,GetColor(0x003F00));
-
-                }else{
-                    if(avg<60){
-                        M5.Lcd.fillRect(50,188,50,height,GetColor(0x003F00));
-                    }else{
-                        M5.Lcd.fillRect(50,188,50,height,GREEN);
+                // 188
+                if (clockString.UpdateAccel % 5 == 0)
+                {
+                    int height = 18;
+                    float point = 0;
+                    if (avg < 60)
+                    {
+                        point = 50 * avg / 60.0;
+                        point = (int)point;
+                        M5.Lcd.fillRect(0, 188, point, height, CYAN);
+                        M5.Lcd.fillRect(point, 188, 50 - point, height, GetColor(0x003F3F));
+                        // FD20
+                    }
+                    else
+                    {
+                        M5.Lcd.fillRect(0, 188, 50, height, CYAN);
+                    }
+                    if (avg >= 60 && avg < 200)
+                    {
+                        point = 50 * (avg - 60) / 140.0;
+                        point = (int)point;
+                        M5.Lcd.fillRect(50, 188, point, height, GREEN);
+                        M5.Lcd.fillRect(50 + point, 188, 50 - point, height, GetColor(0x003F00));
+                    }
+                    else
+                    {
+                        if (avg < 60)
+                        {
+                            M5.Lcd.fillRect(50, 188, 50, height, GetColor(0x003F00));
+                        }
+                        else
+                        {
+                            M5.Lcd.fillRect(50, 188, 50, height, GREEN);
+                        }
+                    }
+                    if (avg >= 200 && avg < 600)
+                    {
+                        point = 50 * (avg - 200) / 400.0;
+                        point = (int)point;
+                        M5.Lcd.fillRect(100, 188, point, height, YELLOW);
+                        M5.Lcd.fillRect(100 + point, 188, 50 - point, height, GetColor(0x3F3F00));
+                    }
+                    else
+                    {
+                        if (avg < 200)
+                        {
+                            M5.Lcd.fillRect(100, 188, 50, height, GetColor(0x3F3F00));
+                        }
+                        else
+                        {
+                            M5.Lcd.fillRect(100, 188, 50, height, YELLOW);
+                        }
+                    }
+                    if (avg >= 600 && avg < 2000)
+                    {
+                        point = 50 * (avg - 600) / 1400.0;
+                        point = (int)point;
+                        M5.Lcd.fillRect(150, 188, point, height, ORANGE);
+                        M5.Lcd.fillRect(150 + point, 188, 50 - point, height, 0x3940);
+                    }
+                    else
+                    {
+                        if (avg < 600)
+                        {
+                            M5.Lcd.fillRect(150, 188, 50, height, 0x3940);
+                        }
+                        else
+                        {
+                            M5.Lcd.fillRect(150, 188, 50, height, ORANGE);
+                        }
+                    }
+                    if (avg >= 2000 && avg < 6000)
+                    {
+                        point = 50 * (avg - 2000) / 4000.0;
+                        point = (int)point;
+                        M5.Lcd.fillRect(200, 188, point, height, RED);
+                        M5.Lcd.fillRect(200 + point, 188, 50 - point, height, GetColor(0x3F0000));
+                    }
+                    else
+                    {
+                        if (avg < 2000)
+                        {
+                            M5.Lcd.fillRect(200, 188, 50, height, GetColor(0x3F0000));
+                        }
+                        else
+                        {
+                            M5.Lcd.fillRect(200, 188, 50, height, RED);
+                        }
+                    }
+                    if (avg >= 6000)
+                    {
+                        point = 50 * (avg - 6000) / 9000.0;
+                        point = (int)point;
+                        M5.Lcd.fillRect(250, 188, point, height, GetColor(0xFF00FF));
+                        M5.Lcd.fillRect(250 + point, 188, 50 - point, height, GetColor(0x3F003F));
+                    }
+                    else
+                    {
+                        M5.Lcd.fillRect(250, 188, 70, height, GetColor(0x3F003F));
+                    }
+                    if (max < 60)
+                    {
+                        point = 50 * max / 60.0;
+                        point = (int)point;
+                        M5.Lcd.drawFastVLine(point, 188, height, CYAN);
+                    }
+                    else if (max < 200)
+                    {
+                        point = 50 * (max - 60) / 140.0;
+                        point = (int)point;
+                        M5.Lcd.drawFastVLine(50 + point, 188, height, GREEN);
+                    }
+                    else if (max < 600)
+                    {
+                        point = 50 * (max - 200) / 400.0;
+                        point = (int)point;
+                        M5.Lcd.drawFastVLine(100 + point, 188, height, YELLOW);
+                    }
+                    else if (max < 2000)
+                    {
+                        point = 50 * (max - 600) / 1400.0;
+                        point = (int)point;
+                        M5.Lcd.drawFastVLine(150 + point, 188, height, ORANGE);
+                    }
+                    else if (max < 6000)
+                    {
+                        point = 50 * (max - 2000) / 4000.0;
+                        point = (int)point;
+                        M5.Lcd.drawFastVLine(200 + point, 188, height, RED);
+                    }
+                    else if (max < 15000)
+                    {
+                        point = 50 * (max - 6000) / 9000.0;
+                        point = (int)point;
+                        M5.Lcd.drawFastVLine(250 + point, 188, height, GetColor(0xFF00FF));
+                    }
+                    else
+                    {
+                        M5.Lcd.drawFastVLine(319, 188, height, GetColor(0xFF00FF));
                     }
                 }
-                if(avg>=200&&avg<600){
-                    point = 50*(avg-200)/400.0;
-                    point=(int)point;
-                    M5.Lcd.fillRect(100,188,point,height,YELLOW);
-                    M5.Lcd.fillRect(100+point,188,50-point,height,GetColor(0x3F3F00));
-                }else{
-                    if(avg<200){
-                        M5.Lcd.fillRect(100,188,50,height,GetColor(0x3F3F00));
-                    }else{
-                        M5.Lcd.fillRect(100,188,50,height,YELLOW);
-                    }
-                }
-                if(avg>=600&&avg<2000){
-                    point = 50*(avg-600)/1400.0;
-                    point=(int)point;
-                    M5.Lcd.fillRect(150,188,point,height,ORANGE);
-                    M5.Lcd.fillRect(150+point,188,50-point,height,0x3940);
-                }else{
-                    if(avg<600){
-                        M5.Lcd.fillRect(150,188,50,height,0x3940);
-                    }else{
-                        M5.Lcd.fillRect(150,188,50,height,ORANGE);
-                    }
-                }
-                if(avg>=2000&&avg<6000){
-                    point = 50*(avg-2000)/4000.0;
-                    point=(int)point;
-                    M5.Lcd.fillRect(200,188,point,height,RED);
-                    M5.Lcd.fillRect(200+point,188,50-point,height,GetColor(0x3F0000));
-                }else{
-                    if(avg<2000){
-                        M5.Lcd.fillRect(200,188,50,height,GetColor(0x3F0000));
-                    }else{
-                        M5.Lcd.fillRect(200,188,50,height,RED);
-                    }
-                }
-                if(avg>=6000){
-                    point = 50*(avg-6000)/9000.0;
-                    point=(int)point;
-                    M5.Lcd.fillRect(250,188,point,height,GetColor(0xFF00FF));
-                    M5.Lcd.fillRect(250+point,188,50-point,height,GetColor(0x3F003F));
-                }else{
-                    M5.Lcd.fillRect(250,188,70,height,GetColor(0x3F003F));
-                }
-                if(max<60){
-                    point = 50*max/60.0;
-                    point=(int)point;
-                    M5.Lcd.drawFastVLine(point,188,height,CYAN);
-                }else if(max<200){
-                    point = 50*(max-60)/140.0;
-                    point=(int)point;
-                    M5.Lcd.drawFastVLine(50+point,188,height,GREEN);
-                }else if(max<600){
-                    point = 50*(max-200)/400.0;
-                    point=(int)point;
-                    M5.Lcd.drawFastVLine(100+point,188,height,YELLOW);
-                }else if(max<2000){
-                    point = 50*(max-600)/1400.0;
-                    point=(int)point;
-                    M5.Lcd.drawFastVLine(150+point,188,height,ORANGE);
-                }else if(max<6000){
-                    point = 50*(max-2000)/4000.0;
-                    point=(int)point;
-                    M5.Lcd.drawFastVLine(200+point,188,height,RED);
-                }else if(max<15000){
-                    point = 50*(max-6000)/9000.0;
-                    point=(int)point;
-                    M5.Lcd.drawFastVLine(250+point,188,height,GetColor(0xFF00FF));
-                }else{
-                    M5.Lcd.drawFastVLine(319,188,height,GetColor(0xFF00FF));
-                }   
             }
         }
+
         break;
 
     case EEWMode:
@@ -728,7 +771,7 @@ void EEW::Draw()
                 }
                 if (1)
                 { // json["ParseStatus"]=="Success"){
-                    char *text = new char[80];
+                    text = new char[80];
                     int num = json["Serial"];
                     if (num > 999)
                         num = 999;
@@ -833,6 +876,7 @@ void EEW::Draw()
                 }
             }
         }
+
         if (!WarnRegionDisplay)
         {
             switch (mode)
@@ -841,7 +885,7 @@ void EEW::Draw()
                 if (!IsMapMode)
                 {
                     WarnRegionDisplay = true;
-                    char *text = new char[100];
+                    text = new char[100];
                     int x1 = 2;
                     int y1 = 142;
                     if (regPos < -100 && !IsAutoRotateStop)
@@ -929,7 +973,7 @@ void EEW::Draw()
             {
 
                 IsPingUpdate = true;
-                char *text = new char[12];
+                text = new char[12];
                 sprintf(text, "%d", JsonReadTime > 9999 ? 9999 : JsonReadTime);
                 int col = 0;
                 if (JsonReadTime > 500)
@@ -949,8 +993,17 @@ void EEW::Draw()
                 delete[] text;
             }
         }
+        text = new char[40];
+        sprintf(text, "Max%4d.%d", Core::SystemAPI::AccelMax / 10, Core::SystemAPI::AccelMax % 10);
+        FastFont::printFastRom(TempMaxGal, text, 320 - 9 * 6+1, 192, WHITE, 1, BLACK);
+        TempMaxGal = text;
+        sprintf(text, "Avg%4d.%d", Core::SystemAPI::AccelAvg / 10, Core::SystemAPI::AccelAvg % 10);
+        FastFont::printFastRom(TempAvgGal, text, 320 - 9 * 6+1, 200, WHITE, 1, BLACK);
+        TempAvgGal = text;
+        delete[] text;
         break;
     case MapMode:
+
         if (!IsFirstDrawed)
         {
             IsFirstDrawed = true;
@@ -981,7 +1034,7 @@ void EEW::Draw()
                 }
             }
             map.DrawHypocenter(json["Hypocenter"]["Location"]["Long"], json["Hypocenter"]["Location"]["Lat"]);
-            char *text = new char[128];
+            text = new char[128];
             sprintf(text, "第 %d 報", (int)json["Serial"]);
             if (json["Warn"])
             {
@@ -994,7 +1047,7 @@ void EEW::Draw()
             if (json["Type"]["Code"] == 9)
                 sprintf(text, "第 %d 報(最終報)", (int)json["Serial"]);
             FastFont::printUtf8(text, 40, 14, WHITE, 1, BLACK);
-            M5.lcd.fillRect(0, 210, 320, 14, BLACK);
+            M5.Lcd.fillRect(0, 210, 320, 14, BLACK);
             FastFont::printUtf8(json["Hypocenter"]["Name"], 0, 211, WHITE, 1, INVISIBLE_COLOR);
             FastFont::printUtf8(json["Hypocenter"]["Magnitude"]["String"], 140, 211, WHITE, 1, INVISIBLE_COLOR);
             sprintf(text, "深さ:%3d km", (int)json["Hypocenter"]["Location"]["Depth"]["Int"]);
@@ -1003,10 +1056,29 @@ void EEW::Draw()
             sprintf(text, "最大:%s", str.c_str());
             FastFont::printUtf8(text, 262, 211, WHITE, 1, INVISIBLE_COLOR);
             FastFont::printUtf8(json["OriginTime"]["String"], 320 - 7 * 19, 14, WHITE, 1, BLACK);
-
+            if((bool)json["Hypocenter"]["isSea"]
+            &&(float)json["Hypocenter"]["Magnitude"]["Float"]>=6.0
+            &&(int)json["Hypocenter"]["Location"]["Depth"]["Int"]<=40
+            &&(int)json["Hypocenter"]["Location"]["Depth"]["Int"]!=0){
+                FastFont::printUtf8("   津波が発生する可能性があります。",0,198,YELLOW,1,BLACK);
+                FastFont::printUtf8("[!]",0,198,RED,1,INVISIBLE_COLOR);
+            }
+            M5.Lcd.fillRect(320-13*6,195,13*6,16, BLACK);
+            TempAvgGal="         ";
+            TempMaxGal="         ";
             delete[] text;
         }
+        text = new char[40];
+        sprintf(text, "Max:%4d.%dgal", Core::SystemAPI::AccelMax / 10, Core::SystemAPI::AccelMax % 10);
+        FastFont::printFastRom(TempMaxGal, text, 320 - 13 * 6, 195, WHITE, 1, BLACK);
+        TempMaxGal = text;
+        sprintf(text, "Avg:%4d.%dgal", Core::SystemAPI::AccelAvg / 10, Core::SystemAPI::AccelAvg % 10);
+        FastFont::printFastRom(TempAvgGal, text, 320 - 13 * 6, 203, WHITE, 1, BLACK);
+        TempAvgGal = text;
+        delete[] text;
+
         break;
+
     case PingMode:
         if (!IsFirstDrawed)
         {
@@ -1151,7 +1223,7 @@ void EEW::Draw()
                 if (150 > val)
                     M5.Lcd.drawPixel(20 + i, 24 + (199 - 150), GetColor(0x802020));
             }
-            char *text = new char[20];
+            text = new char[20];
             short col;
             sprintf(text, "%4dms", JsonReadTime);
             if (JsonReadTime >= 10000)
@@ -1453,6 +1525,9 @@ void EEW::ModeEnter()
 
     Core::SystemData::UpdateBatteryUI = 1;
     Core::SystemData::UpdateSignalUI = 1;
+
+    TempMaxGal = "               ";
+    TempAvgGal = "               ";
     IsPingUpdate = false;
     IsButtonUIUpdate = false;
     IsFirstDrawed = false;
@@ -1612,6 +1687,8 @@ bool EEW::GetDrawUpdate()
 {
     if (mode >= 0)
     {
+        if (mode == 1 || mode == 2)
+            return true;
         return !IsUpdated || !IsFirstDrawed || !WarnRegionDisplay || !IsButtonUIUpdate || !IsPingUpdate;
     }
     else

@@ -355,11 +355,20 @@ void Main::ControlThread(void *arg)
                 x = (double)IMU.accelCount[0] * IMU.aRes;
                 y = (double)IMU.accelCount[1] * IMU.aRes;
                 z = (double)IMU.accelCount[2] * IMU.aRes;
+                int max=0;
+                int avg=0;
                 for(int i=ACCELDATA_SIZE-1;i>0;i--){
                     SystemAPI::AccelDatas[i]=SystemAPI::AccelDatas[i-1];
+                    if(i<50)avg+=abs(SystemAPI::AccelDatas[i]);
+                    if(max<abs(SystemAPI::AccelDatas[i]))max=abs(SystemAPI::AccelDatas[i]);
                 }
+
                 double value=sqrt(x*x+y*y+z*z)*0.980665*10000.0;
                 SystemAPI::AccelDatas[0]=value-tmpGal;
+                avg+=abs(SystemAPI::AccelDatas[0]);
+                SystemAPI::AccelMax=max;
+                avg/=50;
+                SystemAPI::AccelAvg=avg;
                 tmpGal=value;
             }
         }

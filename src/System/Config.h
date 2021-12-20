@@ -55,6 +55,8 @@ namespace Core{
         static uint32_t Time_LatestSet;
 
         static int16_t* AccelDatas;
+        static uint16_t AccelMax;
+        static uint16_t AccelAvg;
     
     }static systemAPI;
 }

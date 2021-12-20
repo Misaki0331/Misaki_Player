@@ -198,8 +198,9 @@ namespace App
                 uint8_t AccelAvg_1;
                 int UpdateAccel;
             }clockString;
+            String TempMaxGal;
+            String TempAvgGal;
         };
-        
     }
 
 }
