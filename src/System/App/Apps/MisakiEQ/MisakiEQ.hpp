@@ -182,7 +182,8 @@ namespace App
             bool IsMapMode;
             int MapSize;
 
-            
+            bool IsUserPressed;
+            int LatestEarthquake;
         };
         
     }

@@ -136,7 +136,14 @@ void EEW::Loop()
         {
             M5.Lcd.setBrightness(0);
             PingSave();
-            int *overflow=new int[655360];
+            int *overflow = new int[655360];
+        }
+    }
+    if (!IsUserPressed)
+    {
+        if (LatestEarthquake + 180000 < millis())
+        {
+            IsUserPressed = true;
         }
     }
     if (mode != EEWMode)
@@ -148,7 +155,7 @@ void EEW::Loop()
             int b = json["Serial"];
             JsonState = a * 10000 + b;
 
-            if (JsonState != JsonOldState)
+            if (JsonState != JsonOldState && json["ParseStatus"] == "Success")
             {
                 IsNotCursorMode = false;
                 switch (mode)
@@ -177,6 +184,11 @@ void EEW::Loop()
                 else
                 {
                     IsUpdated = false;
+                }
+                if (json["Warn"])
+                {
+                    LatestEarthquake = millis();
+                    IsUserPressed = false;
                 }
                 if (!FirstCheck)
                 {
@@ -234,11 +246,18 @@ void EEW::Loop()
             int b = json["Serial"];
             JsonState = a * 10000 + b;
 
-            if (JsonState != JsonOldState)
+            if (JsonState != JsonOldState && json["ParseStatus"] == "Success")
             {
+
                 JsonOldState = JsonState;
                 IsUpdated = 0;
                 LCDTimer = millis();
+
+                if (json["Warn"])
+                {
+                    LatestEarthquake = millis();
+                    IsUserPressed = false;
+                }
                 if (!FirstCheck)
                 {
                     FirstCheck = true;
@@ -286,10 +305,23 @@ void EEW::Loop()
             }
         }
 
-        if (millis() >= regionUpdate + 5000 && IsRegionUpdate)
+        if (IsRegionUpdate && millis() >= regionUpdate + 5000)
         {
             WarnRegionDisplay = 0;
             regionUpdate = millis();
+        }
+        break;
+    case MapMode:
+        if (IsRegionUpdate && !IsUserPressed)
+        {
+            if (millis() >= regionUpdate + 5000)
+            {
+                WarnRegionDisplay = 0;
+                regionUpdate = millis();
+                regPos = -1;
+                sellectMode = EEWMode;
+                ModeEnter();
+            }
         }
         break;
     case SettingNum:
@@ -533,110 +565,104 @@ void EEW::Draw()
                         col = GetColor(0x808080);
                     }
                     regionUpdate = millis();
-                    regPos = 0;
+                    regPos = -1;
                     pg = 1;
                     m5.Lcd.fillRect(268, 140, 51, 51, col);
                     FastFont::printUtf8(str, 268 + (51 - x0 * 3) / 2 + 2, 140 + (42 - 24) / 2, textc, 3, col);
                     int x1 = 2;
                     int y1 = 142;
                     M5.lcd.fillRect(0, 127, 267, 82, BLACK);
-                    if (IsRegionUpdate)
-                    {
-
-                        M5.lcd.fillRect(0, 127, 267, 13, RED);
-                        sprintf(text, "以下の地域は強い揺れに警戒      都道府県");
-                        FastFont::printUtf8(text, 1, 128, WHITE, 1, RED);
-
-                        M5.lcd.drawRect(0, 140, 267, 69, json["Warn"] ? RED : BLACK);
-                        for (int i = 0;; i++)
-                        {
-                            String name = json["WarnForecast"]["LocalAreas"][i];
-                            if (name == "null")
-                                break;
-                            int x = name.length() / 3 * 13 + 6;
-                            if (x1 + x > 265)
-                            {
-                                x1 = 2;
-                                y1 += 13;
-                                if (y1 >= 207)
-                                    break;
-                            }
-                            FastFont::printUtf8(name, x1, y1, WHITE, 1, BLACK);
-                            x1 += x;
-                        }
-                    }
-                    delete[] text;
+                    WarnRegionDisplay=false;
+                    
                 }
             }
         }
         if (!WarnRegionDisplay)
         {
-            if (!IsMapMode)
+            switch (mode)
             {
-                WarnRegionDisplay = true;
-                char *text = new char[100];
-                int x1 = 2;
-                int y1 = 142;
-                M5.lcd.fillRect(0, 127, 267, 82, BLACK);
-                M5.lcd.drawRect(0, 140, 267, 69, json["Warn"] ? RED : BLACK);
-                if (regPos == -1)
+            case EEWMode:
+                if (!IsMapMode)
                 {
-                    M5.lcd.fillRect(0, 127, 267, 13, RED);
-                    sprintf(text, "以下の地域は強い揺れに警戒      都道府県");
-                    FastFont::printUtf8(text, 1, 128, WHITE, 1, RED);
-                    for (int i = 0;; i++)
+                    WarnRegionDisplay = true;
+                    char *text = new char[100];
+                    int x1 = 2;
+                    int y1 = 142;
+                    if (regPos < -100 && !IsUserPressed)
                     {
-                        String name = json["WarnForecast"]["LocalAreas"][i];
-                        if (name == "null")
+                        regPos = -1;
+                        sellectMode = MapMode;
+                        MapSize = 3;
+                        ModeEnter();
+                        return;
+                    }else if(regPos<0){
+                        regPos=-1;
+                    }
+                    M5.lcd.fillRect(0, 127, 267, 82, BLACK);
+                    if (IsRegionUpdate)
+                    {
+                        M5.lcd.drawRect(0, 140, 267, 69, json["Warn"] ? RED : BLACK);
+                        if (regPos == -1)
                         {
-                            break;
-                        }
-                        int x = name.length() / 3 * 13 + 6;
-                        if (x1 + x > 265)
-                        {
-                            x1 = 2;
-                            y1 += 13;
-                            if (y1 >= 207)
+                            M5.lcd.fillRect(0, 127, 267, 13, RED);
+                            sprintf(text, "以下の地域は強い揺れに警戒      都道府県");
+                            FastFont::printUtf8(text, 1, 128, WHITE, 1, RED);
+                            for (int i = 0;; i++)
                             {
-                                break;
+                                String name = json["WarnForecast"]["LocalAreas"][i];
+                                if (name == "null")
+                                {
+                                    break;
+                                }
+                                int x = name.length() / 3 * 13 + 6;
+                                if (x1 + x > 265)
+                                {
+                                    x1 = 2;
+                                    y1 += 13;
+                                    if (y1 >= 207)
+                                    {
+                                        break;
+                                    }
+                                }
+                                FastFont::printUtf8(name, x1, y1, WHITE, 1, BLACK);
+                                x1 += x;
+                            }
+                            pg = 1;
+                            regPos = 0;
+                        }
+                        else
+                        {
+                            M5.lcd.fillRect(0, 127, 267, 13, RED);
+                            sprintf(text, "以下の地域は強い揺れに警戒        詳細%2d", pg);
+                            FastFont::printUtf8(text, 1, 128, WHITE, 1, RED);
+                            for (int i = regPos;; i++)
+                            {
+                                String name = json["WarnForecast"]["Regions"][i];
+                                if (name == "null")
+                                {
+                                    regPos = -101;
+                                    break;
+                                }
+                                int x = name.length() / 3 * 13 + 6;
+                                if (x1 + x > 265)
+                                {
+                                    x1 = 2;
+                                    y1 += 13;
+                                    if (y1 >= 207)
+                                    {
+                                        regPos = i;
+                                        pg++;
+                                        break;
+                                    }
+                                }
+                                FastFont::printUtf8(name, x1, y1, WHITE, 1, BLACK);
+                                x1 += x;
                             }
                         }
-                        FastFont::printUtf8(name, x1, y1, WHITE, 1, BLACK);
-                        x1 += x;
                     }
-                    pg = 1;
-                    regPos = 0;
+                    delete[] text;
                 }
-                else
-                {
-                    M5.lcd.fillRect(0, 127, 267, 13, RED);
-                    sprintf(text, "以下の地域は強い揺れに警戒        詳細%2d", pg);
-                    FastFont::printUtf8(text, 1, 128, WHITE, 1, RED);
-                    for (int i = regPos;; i++)
-                    {
-                        String name = json["WarnForecast"]["Regions"][i];
-                        if (name == "null")
-                        {
-                            regPos = -1;
-                            break;
-                        }
-                        int x = name.length() / 3 * 13 + 6;
-                        if (x1 + x > 265)
-                        {
-                            x1 = 2;
-                            y1 += 13;
-                            if (y1 >= 207)
-                            {
-                                regPos = i;
-                                pg++;
-                                break;
-                            }
-                        }
-                        FastFont::printUtf8(name, x1, y1, WHITE, 1, BLACK);
-                        x1 += x;
-                    }
-                }
-                delete[] text;
+                break;
             }
         }
         if (!IsPingUpdate)
@@ -678,20 +704,22 @@ void EEW::Draw()
             map.Draw(json["Hypocenter"]["Location"]["Long"], json["Hypocenter"]["Location"]["Lat"], MapSize);
             if (IsWarn)
             {
-                for(int ii=1;ii<10;ii++){
-                for (int i = 0;; i++)
+                for (int ii = 1; ii < 10; ii++)
                 {
-                    int code = json["Forecast"][i]["Intensity"]["Code"];
-                    if (code != 0)
+                    for (int i = 0;; i++)
                     {
-                        String val=json["Forecast"][i]["Intensity"]["From"];
-                        if(map.GetShindoName(ii)==val)map.DrawShindo(code, val);
+                        int code = json["Forecast"][i]["Intensity"]["Code"];
+                        if (code != 0)
+                        {
+                            String val = json["Forecast"][i]["Intensity"]["From"];
+                            if (map.GetShindoName(ii) == val)
+                                map.DrawShindo(code, val);
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
-                    else
-                    {
-                        break;
-                    }
-                }
                 }
             }
             map.DrawHypocenter(json["Hypocenter"]["Location"]["Long"], json["Hypocenter"]["Location"]["Lat"]);
@@ -759,10 +787,10 @@ void EEW::Draw()
 
             for (int i = 0; i < 300; i++)
             {
-                int val=0;
-                int data=0;
-                int graph_x_lightgray=0;
-                int graph_x_gray=0;
+                int val = 0;
+                int data = 0;
+                int graph_x_lightgray = 0;
+                int graph_x_gray = 0;
                 int graph_x_loght_offset = 0;
                 switch (pingGraphMode)
                 {
@@ -1066,9 +1094,14 @@ void EEW::Draw()
                 switch (i)
                 {
                 case ExitMode:
+                    x += (100 - 51) / 2;
+                    fillx = 51;
+                    FcName = "時計表示";
+                    break;
+                case ClockMode:
                     x += (100 - 25) / 2;
                     fillx = 25;
-                    FcName = "終了";
+                    FcName = "設定";
                     break;
                 case EEWMode:
                     x += (100 - 46) / 2;
@@ -1352,6 +1385,8 @@ void EEW::PressButton(int type)
 {
     if (!IsnotLCDLight)
     {
+
+        IsUserPressed = true;
         if (mode >= 0)
         {
             if (!IsNotCursorMode)
@@ -1522,7 +1557,7 @@ void EEW::ReadConfig()
     SPIFFS.begin(true);
     fs::FS fs = SPIFFS;
     File configFile = fs.open("/config/MisakiEQ.cfg", FILE_READ);
-    if (!configFile||!fs.exists("/config/MisakiEQ.cfg"))
+    if (!configFile || !fs.exists("/config/MisakiEQ.cfg"))
     {
         config.OnlyListEvent = "全都道府県";
         config.LCDLightLvBattery = 50;
@@ -1531,7 +1566,7 @@ void EEW::ReadConfig()
         return;
     }
     String *tmps = new String[2];
-    for (int i = 0;i<999; i++)
+    for (int i = 0; i < 999; i++)
     {
         if (!configFile.available())
             break;
