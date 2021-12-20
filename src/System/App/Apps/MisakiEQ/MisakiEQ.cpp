@@ -26,8 +26,8 @@ void EEW::Begin()
     FirstCheck = false;
     IsFirstEEWForecast = false;
     IsFirstEEWWarn = false;
-    mode = EEWMode;
-    sellectMode = EEWMode;
+    mode = ClockMode;
+    sellectMode = ClockMode;
     JsonOldState = 0;
     IsFirstDrawed = 0;
     IsUpdated = 0;
@@ -144,6 +144,8 @@ void EEW::Loop()
         if (LatestEarthquake + 180000 < millis())
         {
             IsUserPressed = true;
+            sellectMode=ClockMode;
+            ModeEnter();
         }
     }
     if (mode != EEWMode)
@@ -238,6 +240,9 @@ void EEW::Loop()
     }
     switch (mode)
     {
+        case ClockMode:
+        IsUpdated=0;
+        break;
     case EEWMode:
         if (!IsCheck)
         {
@@ -413,6 +418,79 @@ void EEW::Draw()
 {
     switch (mode)
     {
+    case ClockMode:
+    if(!IsFirstDrawed){
+        IsFirstDrawed=1;
+        M5.Lcd.fillRect(0, 14, 320, 210, BLACK);
+        clockString.day=0;
+        clockString.month=0;
+        clockString.year=0;
+        clockString.time=0;
+        clockString.time_str="";
+        clockString.milli="";
+
+        FastFont::printUtf8("現在時刻", 0, 15, WHITE, 1, BLACK);
+
+        FastFont::printUtf8("年", 72+41, 47, WHITE, 1, BLACK);
+        FastFont::printUtf8("月", 122+41, 47, WHITE, 1, BLACK);
+        FastFont::printUtf8("日", 172+41, 47, WHITE, 1, BLACK);
+        
+        FastFont::printUtf8("(　)",186+41,36,WHITE,2,BLACK);
+
+
+    }
+    if(!IsUpdated){
+        IsUpdated=1;
+        char* text;
+        if(clockString.year!=Core::SystemAPI::Time_year){
+            clockString.year=Core::SystemAPI::Time_year;
+            text=new char[7];
+            sprintf(text,"%4d",clockString.year);
+            FastFont::printRom(text,0+41,38,WHITE,3,BLACK);
+            delete[] text;
+        }
+        if(clockString.month!=Core::SystemAPI::Time_month){
+            clockString.month=Core::SystemAPI::Time_month;
+            text=new char[4];
+            sprintf(text,"%2d",clockString.month);
+            FastFont::printRom(text,87+41,38,WHITE,3,BLACK);
+            delete[] text;
+        }
+        if(clockString.day!=Core::SystemAPI::Time_day){
+            clockString.day=Core::SystemAPI::Time_day;
+            text=new char[30];
+            sprintf(text,"%2d",clockString.day);
+            FastFont::printRom(text,137+41,38,WHITE,3,BLACK);
+            
+            switch(Core::SystemAPI::Time_day_of_week){
+                case 0: sprintf(text,"日"); break;
+                case 1: sprintf(text,"月"); break;
+                case 2: sprintf(text,"火"); break;
+                case 3: sprintf(text,"水"); break;
+                case 4: sprintf(text,"木"); break;
+                case 5: sprintf(text,"金"); break;
+                case 6: sprintf(text,"土"); break;
+            }
+            if(Core::SystemAPI::Time_day_of_week==0){
+                FastFont::printUtf8(text,200+41,36,RED,2,BLACK);
+            }else if(Core::SystemAPI::Time_day_of_week==6){
+                FastFont::printUtf8(text,200+41,36,BLUE,2,BLACK);
+            }else{
+                FastFont::printUtf8(text,200+41,36,WHITE,2,BLACK);
+            }
+            delete[] text;
+        }
+        if(clockString.time!=Core::SystemAPI::Time_currentTime/1000){
+            clockString.time=Core::SystemAPI::Time_currentTime/1000;
+            text=new char[20];
+            sprintf(text,"%2d:%02d:%02d",clockString.time/3600,clockString.time/60%60,clockString.time%60);
+            FastFont::printFastRom(clockString.time_str,text,19,64,WHITE,6,BLACK);
+            clockString.time_str=text;
+            delete[] text;
+        }
+    }
+    break;
+
     case EEWMode:
         if (!IsFirstDrawed)
         {
@@ -1094,14 +1172,14 @@ void EEW::Draw()
                 switch (i)
                 {
                 case ExitMode:
+                    x += (100 - 25) / 2;
+                    fillx = 25;
+                    FcName = "終了";
+                    break;
+                case ClockMode:
                     x += (100 - 51) / 2;
                     fillx = 51;
                     FcName = "時計表示";
-                    break;
-                case ClockMode:
-                    x += (100 - 25) / 2;
-                    fillx = 25;
-                    FcName = "設定";
                     break;
                 case EEWMode:
                     x += (100 - 46) / 2;

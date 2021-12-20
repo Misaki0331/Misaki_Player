@@ -51,6 +51,7 @@ namespace Core{
         static uint8_t Time_month;
         static uint8_t Time_day;
         static uint32_t Time_currentTime;
+        static uint8_t Time_day_of_week;
         static uint32_t Time_LatestSet;
 
         static int16_t* AccelDatas;

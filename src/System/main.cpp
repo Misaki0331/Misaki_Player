@@ -374,6 +374,8 @@ void Main::AddClock(int t)
         if (SystemAPI::Time_currentTime >= 86400000)
         {
             SystemAPI::Time_currentTime -= 86400000;
+            SystemAPI::Time_day_of_week++;
+            SystemAPI::Time_day_of_week%=7;
             SystemAPI::Time_day++;
             switch (SystemAPI::Time_month)
             {
@@ -448,6 +450,7 @@ void Main::GetClock()
         SystemAPI::Time_day = time.substring(8, 10).toInt();
         SystemAPI::Time_currentTime = time.substring(11, 13).toInt() * 3600000 + time.substring(14, 16).toInt() * 60000 + time.substring(17, 19).toInt() * 1000 + time.substring(20, 23).toInt();
         SystemAPI::Time_LatestSet = millis();
+        SystemAPI::Time_day_of_week=json["day_of_week"];
     }
     json.clear();
     time.clear();

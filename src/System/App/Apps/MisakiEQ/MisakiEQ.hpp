@@ -104,10 +104,11 @@ namespace App
             enum ModeType
             {
                 ExitMode = -1,
-                EEWMode = 0,
-                MapMode =1,
-                PingMode = 2,
-                SettingMode = 3,
+                ClockMode = 0,
+                EEWMode = 1,
+                MapMode =2,
+                PingMode = 3,
+                SettingMode = 4,
                 SettingNum = -999,
                 SettingList = -998,
                 SettingPath = -997
@@ -183,7 +184,16 @@ namespace App
             int MapSize;
 
             bool IsUserPressed;
+            bool IsAutoRotateStop;
             int LatestEarthquake;
+            struct ClockString{
+                uint16_t year;
+                uint8_t month;
+                uint8_t day;
+                uint32_t time;
+                String time_str;
+                String milli;
+            }clockString;
         };
         
     }

@@ -44,4 +44,5 @@ uint8_t SystemAPI::Time_month=0;
 uint8_t SystemAPI::Time_day=0;
 uint32_t SystemAPI::Time_currentTime=0;
 uint32_t SystemAPI::Time_LatestSet=0;
+uint8_t SystemAPI::Time_day_of_week=0;
 int16_t* SystemAPI::AccelDatas=nullptr;
