@@ -192,7 +192,11 @@ namespace App
                 uint8_t day;
                 uint32_t time;
                 String time_str;
-                String milli;
+                String AccelMax;
+                String AccelAvg;
+                uint8_t AccelMax_1;
+                uint8_t AccelAvg_1;
+                int UpdateAccel;
             }clockString;
         };
         

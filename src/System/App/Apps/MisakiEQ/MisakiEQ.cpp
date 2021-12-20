@@ -41,6 +41,8 @@ void EEW::Begin()
     LCDTimer = millis();
     IsnotLCDLight = false;
     Reboottimer = 0;
+    IsAutoRotateStop = true;
+    IsUserPressed = true;
     TempIsBatterySupply = Core::SystemAPI::BatteryIsSupply;
     pg = 1;
     http = new HTTPClient();
@@ -139,12 +141,13 @@ void EEW::Loop()
             int *overflow = new int[655360];
         }
     }
-    if (!IsUserPressed)
+    if (!IsUserPressed || !IsAutoRotateStop)
     {
         if (LatestEarthquake + 180000 < millis())
         {
             IsUserPressed = true;
-            sellectMode=ClockMode;
+            IsAutoRotateStop = true;
+            sellectMode = ClockMode;
             ModeEnter();
         }
     }
@@ -159,45 +162,49 @@ void EEW::Loop()
 
             if (JsonState != JsonOldState && json["ParseStatus"] == "Success")
             {
-                IsNotCursorMode = false;
-                switch (mode)
-                {
-                case SettingNum:
-                    cNum.Cancel();
-                    cNum.Release();
-                    break;
-                case SettingPath:
-                    cPath.Cancel();
-                    cPath.Release();
-                    break;
-                case SettingList:
-                    cList.Cancel();
-                    cList.Release();
-                }
-                JsonOldState = JsonState;
-
-                IsUpdated = 0;
-                LCDTimer = millis();
-                if (mode != MapMode)
-                {
-                    sellectMode = EEWMode;
-                    ModeEnter();
-                }
-                else
-                {
-                    IsUpdated = false;
-                }
-                if (json["Warn"])
-                {
-                    LatestEarthquake = millis();
-                    IsUserPressed = false;
-                }
                 if (!FirstCheck)
                 {
                     FirstCheck = true;
+                    JsonOldState = JsonState;
+                    IsUpdated = 0;
                 }
                 else
                 {
+                    LatestEarthquake = millis();
+                    IsNotCursorMode = false;
+                    IsUserPressed = false;
+                    switch (mode)
+                    {
+                    case SettingNum:
+                        cNum.Cancel();
+                        cNum.Release();
+                        break;
+                    case SettingPath:
+                        cPath.Cancel();
+                        cPath.Release();
+                        break;
+                    case SettingList:
+                        cList.Cancel();
+                        cList.Release();
+                    }
+                    JsonOldState = JsonState;
+
+                    IsUpdated = 0;
+                    LCDTimer = millis();
+                    if (mode != MapMode)
+                    {
+                        sellectMode = EEWMode;
+                        ModeEnter();
+                    }
+                    else
+                    {
+                        IsUpdated = false;
+                    }
+                    if (json["Warn"])
+                    {
+                        IsAutoRotateStop = false;
+                    }
+
                     if (json["Warn"])
                     {
                         if (config.OnlyListEvent == "全都道府県")
@@ -240,12 +247,13 @@ void EEW::Loop()
     }
     switch (mode)
     {
-        case ClockMode:
-        IsUpdated=0;
+    case ClockMode:
+        IsUpdated = 0;
         break;
     case EEWMode:
         if (!IsCheck)
         {
+
             IsCheck = false;
             int a = json["Status"]["Code"];
             int b = json["Serial"];
@@ -254,21 +262,25 @@ void EEW::Loop()
             if (JsonState != JsonOldState && json["ParseStatus"] == "Success")
             {
 
-                JsonOldState = JsonState;
-                IsUpdated = 0;
-                LCDTimer = millis();
-
-                if (json["Warn"])
-                {
-                    LatestEarthquake = millis();
-                    IsUserPressed = false;
-                }
                 if (!FirstCheck)
                 {
                     FirstCheck = true;
+                    JsonOldState = JsonState;
+                    IsUpdated = 0;
                 }
                 else
                 {
+                    IsUserPressed = false;
+
+                    LatestEarthquake = millis();
+                    JsonOldState = JsonState;
+                    IsUpdated = 0;
+                    LCDTimer = millis();
+
+                    if (json["Warn"])
+                    {
+                        IsAutoRotateStop = false;
+                    }
 
                     if (json["Warn"])
                     {
@@ -317,7 +329,7 @@ void EEW::Loop()
         }
         break;
     case MapMode:
-        if (IsRegionUpdate && !IsUserPressed)
+        if (IsRegionUpdate && !IsAutoRotateStop)
         {
             if (millis() >= regionUpdate + 5000)
             {
@@ -419,77 +431,144 @@ void EEW::Draw()
     switch (mode)
     {
     case ClockMode:
-    if(!IsFirstDrawed){
-        IsFirstDrawed=1;
-        M5.Lcd.fillRect(0, 14, 320, 210, BLACK);
-        clockString.day=0;
-        clockString.month=0;
-        clockString.year=0;
-        clockString.time=0;
-        clockString.time_str="";
-        clockString.milli="";
+        if (!IsFirstDrawed)
+        {
+            IsFirstDrawed = 1;
+            M5.Lcd.fillRect(0, 14, 320, 210, BLACK);
+            clockString.day = 0;
+            clockString.month = 0;
+            clockString.year = 0;
+            clockString.time = 0;
+            clockString.time_str = "            ";
+            clockString.AccelMax = "      ";
+            clockString.AccelAvg = "      ";
+            clockString.AccelMax_1 = 255;
+            clockString.AccelAvg_1 = 255;
+            clockString.UpdateAccel=-1;
 
-        FastFont::printUtf8("現在時刻", 0, 15, WHITE, 1, BLACK);
+            FastFont::printUtf8("現在時刻", 0, 15, WHITE, 1, BLACK);
 
-        FastFont::printUtf8("年", 72+41, 47, WHITE, 1, BLACK);
-        FastFont::printUtf8("月", 122+41, 47, WHITE, 1, BLACK);
-        FastFont::printUtf8("日", 172+41, 47, WHITE, 1, BLACK);
-        
-        FastFont::printUtf8("(　)",186+41,36,WHITE,2,BLACK);
+            FastFont::printUtf8("年", 72 + 41, 47, WHITE, 1, BLACK);
+            FastFont::printUtf8("月", 122 + 41, 47, WHITE, 1, BLACK);
+            FastFont::printUtf8("日", 172 + 41, 47, WHITE, 1, BLACK);
 
-
-    }
-    if(!IsUpdated){
-        IsUpdated=1;
-        char* text;
-        if(clockString.year!=Core::SystemAPI::Time_year){
-            clockString.year=Core::SystemAPI::Time_year;
-            text=new char[7];
-            sprintf(text,"%4d",clockString.year);
-            FastFont::printRom(text,0+41,38,WHITE,3,BLACK);
-            delete[] text;
-        }
-        if(clockString.month!=Core::SystemAPI::Time_month){
-            clockString.month=Core::SystemAPI::Time_month;
-            text=new char[4];
-            sprintf(text,"%2d",clockString.month);
-            FastFont::printRom(text,87+41,38,WHITE,3,BLACK);
-            delete[] text;
-        }
-        if(clockString.day!=Core::SystemAPI::Time_day){
-            clockString.day=Core::SystemAPI::Time_day;
-            text=new char[30];
-            sprintf(text,"%2d",clockString.day);
-            FastFont::printRom(text,137+41,38,WHITE,3,BLACK);
+            FastFont::printUtf8("(　)", 186 + 41, 36, WHITE, 2, BLACK);
             
-            switch(Core::SystemAPI::Time_day_of_week){
-                case 0: sprintf(text,"日"); break;
-                case 1: sprintf(text,"月"); break;
-                case 2: sprintf(text,"火"); break;
-                case 3: sprintf(text,"水"); break;
-                case 4: sprintf(text,"木"); break;
-                case 5: sprintf(text,"金"); break;
-                case 6: sprintf(text,"土"); break;
-            }
-            if(Core::SystemAPI::Time_day_of_week==0){
-                FastFont::printUtf8(text,200+41,36,RED,2,BLACK);
-            }else if(Core::SystemAPI::Time_day_of_week==6){
-                FastFont::printUtf8(text,200+41,36,BLUE,2,BLACK);
-            }else{
-                FastFont::printUtf8(text,200+41,36,WHITE,2,BLACK);
-            }
-            delete[] text;
+            FastFont::printUtf8("最大加速度(gal)",30,130,WHITE,1,BLACK);
+            FastFont::printUtf8("平均加速度(gal/s)",183,130,WHITE,1,BLACK);
+            M5.Lcd.drawRect(0,128,160,60,WHITE);
+            M5.Lcd.drawRect(160,128,160,60,WHITE);
         }
-        if(clockString.time!=Core::SystemAPI::Time_currentTime/1000){
-            clockString.time=Core::SystemAPI::Time_currentTime/1000;
-            text=new char[20];
-            sprintf(text,"%2d:%02d:%02d",clockString.time/3600,clockString.time/60%60,clockString.time%60);
-            FastFont::printFastRom(clockString.time_str,text,19,64,WHITE,6,BLACK);
-            clockString.time_str=text;
-            delete[] text;
+        if (!IsUpdated)
+        {
+            IsUpdated = 1;
+            char *text;
+            if (clockString.year != Core::SystemAPI::Time_year)
+            {
+                clockString.year = Core::SystemAPI::Time_year;
+                text = new char[7];
+                sprintf(text, "%4d", clockString.year);
+                FastFont::printRom(text, 0 + 41, 38, WHITE, 3, BLACK);
+                delete[] text;
+            }
+            if (clockString.month != Core::SystemAPI::Time_month)
+            {
+                clockString.month = Core::SystemAPI::Time_month;
+                text = new char[4];
+                sprintf(text, "%2d", clockString.month);
+                FastFont::printRom(text, 87 + 41, 38, WHITE, 3, BLACK);
+                delete[] text;
+            }
+            if (clockString.day != Core::SystemAPI::Time_day)
+            {
+                clockString.day = Core::SystemAPI::Time_day;
+                text = new char[30];
+                sprintf(text, "%2d", clockString.day);
+                FastFont::printRom(text, 137 + 41, 38, WHITE, 3, BLACK);
+
+                switch (Core::SystemAPI::Time_day_of_week)
+                {
+                case 0:
+                    sprintf(text, "日");
+                    break;
+                case 1:
+                    sprintf(text, "月");
+                    break;
+                case 2:
+                    sprintf(text, "火");
+                    break;
+                case 3:
+                    sprintf(text, "水");
+                    break;
+                case 4:
+                    sprintf(text, "木");
+                    break;
+                case 5:
+                    sprintf(text, "金");
+                    break;
+                case 6:
+                    sprintf(text, "土");
+                    break;
+                }
+                if (Core::SystemAPI::Time_day_of_week == 0)
+                {
+                    FastFont::printUtf8(text, 200 + 41, 36, RED, 2, BLACK);
+                }
+                else if (Core::SystemAPI::Time_day_of_week == 6)
+                {
+                    FastFont::printUtf8(text, 200 + 41, 36, BLUE, 2, BLACK);
+                }
+                else
+                {
+                    FastFont::printUtf8(text, 200 + 41, 36, WHITE, 2, BLACK);
+                }
+                delete[] text;
+            }
+            if (clockString.time != Core::SystemAPI::Time_currentTime / 1000)
+            {
+                clockString.time = Core::SystemAPI::Time_currentTime / 1000;
+                text = new char[20];
+                sprintf(text, "%2d:%02d:%02d", clockString.time / 3600, clockString.time / 60 % 60, clockString.time % 60);
+                FastFont::printFastRom(clockString.time_str, text, 19, 70, WHITE, 6, BLACK);
+                clockString.time_str = text;
+                delete[] text;
+            }
+            if(clockString.UpdateAccel!=Core::SystemAPI::Time_currentTime/250){
+                clockString.UpdateAccel=Core::SystemAPI::Time_currentTime/250;
+                int max=0;
+                int avg=0;
+                for(int i=0;i<ACCELDATA_SIZE;i++){
+                    int value=abs(Core::SystemAPI::AccelDatas[i]);
+                    if(value>max)max=value;
+                    if(i<50){
+                        avg+=value;
+                    }
+                }
+                avg/=50;
+                text = new char[20];
+                sprintf(text,"%4d",max/10);
+                FastFont::printFastRom(clockString.AccelMax,text,20,145,WHITE,5,BLACK);
+                clockString.AccelMax=text;
+                if(clockString.AccelMax_1!=max%10){
+                    clockString.AccelMax_1=max%10;
+                    sprintf(text,"%d",max%10);
+                    FastFont::printRom(text,140,160,WHITE,3,BLACK);
+                }
+                sprintf(text,"%4d",avg/10);
+                FastFont::printFastRom(clockString.AccelAvg,text,180,145,WHITE,5,BLACK);
+                clockString.AccelAvg=text;
+                if(clockString.AccelAvg_1!=avg%10){
+                    clockString.AccelAvg_1=avg%10;
+                    sprintf(text,"%d",avg%10);
+                    FastFont::printRom(text,300,160,WHITE,3,BLACK);
+                }
+                delete[] text;
+                //188
+                
+
+            }
         }
-    }
-    break;
+        break;
 
     case EEWMode:
         if (!IsFirstDrawed)
@@ -650,8 +729,7 @@ void EEW::Draw()
                     int x1 = 2;
                     int y1 = 142;
                     M5.lcd.fillRect(0, 127, 267, 82, BLACK);
-                    WarnRegionDisplay=false;
-                    
+                    WarnRegionDisplay = false;
                 }
             }
         }
@@ -666,15 +744,17 @@ void EEW::Draw()
                     char *text = new char[100];
                     int x1 = 2;
                     int y1 = 142;
-                    if (regPos < -100 && !IsUserPressed)
+                    if (regPos < -100 && !IsAutoRotateStop)
                     {
                         regPos = -1;
                         sellectMode = MapMode;
                         MapSize = 3;
                         ModeEnter();
                         return;
-                    }else if(regPos<0){
-                        regPos=-1;
+                    }
+                    else if (regPos < 0)
+                    {
+                        regPos = -1;
                     }
                     M5.lcd.fillRect(0, 127, 267, 82, BLACK);
                     if (IsRegionUpdate)
@@ -1465,6 +1545,7 @@ void EEW::PressButton(int type)
     {
 
         IsUserPressed = true;
+        IsAutoRotateStop = true;
         if (mode >= 0)
         {
             if (!IsNotCursorMode)
@@ -1481,7 +1562,7 @@ void EEW::PressButton(int type)
                     ModeEnter();
                     break;
                 case 3:
-                    if (sellectMode < 3)
+                    if (sellectMode < 4)
                         sellectMode++;
                     IsButtonUIUpdate = 0;
                     break;
