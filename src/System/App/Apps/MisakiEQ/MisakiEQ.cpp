@@ -455,9 +455,16 @@ void EEW::Draw()
             FastFont::printUtf8("(　)", 186 + 41, 36, WHITE, 2, BLACK);
             
             FastFont::printUtf8("最大加速度(gal)",30,130,WHITE,1,BLACK);
-            FastFont::printUtf8("平均加速度(gal/s)",183,130,WHITE,1,BLACK);
+            FastFont::printUtf8("平均加速度(gal)",190,130,WHITE,1,BLACK);
             M5.Lcd.drawRect(0,128,160,60,WHITE);
             M5.Lcd.drawRect(160,128,160,60,WHITE);
+            FastFont::printRom("0",0,207,WHITE,1,BLACK);
+            FastFont::printRom("6",48,207,WHITE,1,BLACK);
+            FastFont::printRom("20",95,207,WHITE,1,BLACK);
+            FastFont::printRom("60",145,207,WHITE,1,BLACK);
+            FastFont::printRom("200",191,207,WHITE,1,BLACK);
+            FastFont::printRom("600",241,207,WHITE,1,BLACK);
+            FastFont::printRom("1500",297,207,WHITE,1,BLACK);
         }
         if (!IsUpdated)
         {
@@ -533,8 +540,8 @@ void EEW::Draw()
                 clockString.time_str = text;
                 delete[] text;
             }
-            if(clockString.UpdateAccel!=Core::SystemAPI::Time_currentTime/250){
-                clockString.UpdateAccel=Core::SystemAPI::Time_currentTime/250;
+            if(clockString.UpdateAccel!=Core::SystemAPI::Time_currentTime/100){
+                clockString.UpdateAccel=Core::SystemAPI::Time_currentTime/100;
                 int max=0;
                 int avg=0;
                 for(int i=0;i<ACCELDATA_SIZE;i++){
@@ -564,8 +571,101 @@ void EEW::Draw()
                 }
                 delete[] text;
                 //188
-                
+                int height=18;
+                float point=0;
+                if(avg<60){
+                    point = 50*avg/60.0;
+                    point=(int)point;
+                    M5.Lcd.fillRect(0,188,point,height,CYAN);
+                    M5.Lcd.fillRect(point,188,50-point,height,GetColor(0x003F3F));
+                    //FD20
+                }else{
+                    M5.Lcd.fillRect(0,188,50,height,CYAN);
+                }
+                if(avg>=60&&avg<200){
+                    point = 50*(avg-60)/140.0;
+                    point=(int)point;
+                    M5.Lcd.fillRect(50,188,point,height,GREEN);
+                    M5.Lcd.fillRect(50+point,188,50-point,height,GetColor(0x003F00));
 
+                }else{
+                    if(avg<60){
+                        M5.Lcd.fillRect(50,188,50,height,GetColor(0x003F00));
+                    }else{
+                        M5.Lcd.fillRect(50,188,50,height,GREEN);
+                    }
+                }
+                if(avg>=200&&avg<600){
+                    point = 50*(avg-200)/400.0;
+                    point=(int)point;
+                    M5.Lcd.fillRect(100,188,point,height,YELLOW);
+                    M5.Lcd.fillRect(100+point,188,50-point,height,GetColor(0x3F3F00));
+                }else{
+                    if(avg<200){
+                        M5.Lcd.fillRect(100,188,50,height,GetColor(0x3F3F00));
+                    }else{
+                        M5.Lcd.fillRect(100,188,50,height,YELLOW);
+                    }
+                }
+                if(avg>=600&&avg<2000){
+                    point = 50*(avg-600)/1400.0;
+                    point=(int)point;
+                    M5.Lcd.fillRect(150,188,point,height,ORANGE);
+                    M5.Lcd.fillRect(150+point,188,50-point,height,0x3940);
+                }else{
+                    if(avg<600){
+                        M5.Lcd.fillRect(150,188,50,height,0x3940);
+                    }else{
+                        M5.Lcd.fillRect(150,188,50,height,ORANGE);
+                    }
+                }
+                if(avg>=2000&&avg<6000){
+                    point = 50*(avg-2000)/4000.0;
+                    point=(int)point;
+                    M5.Lcd.fillRect(200,188,point,height,RED);
+                    M5.Lcd.fillRect(200+point,188,50-point,height,GetColor(0x3F0000));
+                }else{
+                    if(avg<2000){
+                        M5.Lcd.fillRect(200,188,50,height,GetColor(0x3F0000));
+                    }else{
+                        M5.Lcd.fillRect(200,188,50,height,RED);
+                    }
+                }
+                if(avg>=6000){
+                    point = 50*(avg-6000)/9000.0;
+                    point=(int)point;
+                    M5.Lcd.fillRect(250,188,point,height,GetColor(0xFF00FF));
+                    M5.Lcd.fillRect(250+point,188,50-point,height,GetColor(0x3F003F));
+                }else{
+                    M5.Lcd.fillRect(250,188,70,height,GetColor(0x3F003F));
+                }
+                if(max<60){
+                    point = 50*max/60.0;
+                    point=(int)point;
+                    M5.Lcd.drawFastVLine(point,188,height,CYAN);
+                }else if(max<200){
+                    point = 50*(max-60)/140.0;
+                    point=(int)point;
+                    M5.Lcd.drawFastVLine(50+point,188,height,GREEN);
+                }else if(max<600){
+                    point = 50*(max-200)/400.0;
+                    point=(int)point;
+                    M5.Lcd.drawFastVLine(100+point,188,height,YELLOW);
+                }else if(max<2000){
+                    point = 50*(max-600)/1400.0;
+                    point=(int)point;
+                    M5.Lcd.drawFastVLine(150+point,188,height,ORANGE);
+                }else if(max<6000){
+                    point = 50*(max-2000)/4000.0;
+                    point=(int)point;
+                    M5.Lcd.drawFastVLine(200+point,188,height,RED);
+                }else if(max<15000){
+                    point = 50*(max-6000)/9000.0;
+                    point=(int)point;
+                    M5.Lcd.drawFastVLine(250+point,188,height,GetColor(0xFF00FF));
+                }else{
+                    M5.Lcd.drawFastVLine(319,188,height,GetColor(0xFF00FF));
+                }   
             }
         }
         break;
