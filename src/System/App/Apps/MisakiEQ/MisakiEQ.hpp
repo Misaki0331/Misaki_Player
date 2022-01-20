@@ -133,6 +133,9 @@ namespace App
                 int RebootTimer;
                 int LCDLightLvSupply;
                 int LCDLightLvBattery;
+                bool AutoChangeEEW;
+                bool AutoModeRotate;
+                bool AutoChangeMode;
             } config;
 
             enum SettingVar
@@ -147,6 +150,10 @@ namespace App
                 LCDoffTimerBattery,
                 LCDLightLvBattery,
                 RebootTimer,
+                
+                AutoChangeEEW,
+                AutoModeRotate,
+                AutoChangeMode,
                 
                 ExitSetting,
                 TestMode

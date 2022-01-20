@@ -143,7 +143,7 @@ void EEW::Loop()
             int *overflow = new int[655360];
         }
     }
-    if (!IsUserPressed || !IsAutoRotateStop)
+    if (config.AutoChangeEEW&&!IsUserPressed || !IsAutoRotateStop)
     {
         if (LatestEarthquake + 180000 < millis())
         {
@@ -193,9 +193,14 @@ void EEW::Loop()
 
                     IsUpdated = 0;
                     LCDTimer = millis();
-                    if (mode != MapMode)
+                    if (config.AutoChangeEEW&&mode != MapMode)
                     {
-                        sellectMode = EEWMode;
+                        if(config.AutoChangeMode)
+                            sellectMode = MapMode;
+                        else
+                            sellectMode = EEWMode;
+                        
+                        
                         ModeEnter();
                     }
                     else
@@ -331,7 +336,7 @@ void EEW::Loop()
         }
         break;
     case MapMode:
-        if (IsRegionUpdate && !IsAutoRotateStop)
+        if (config.AutoModeRotate&&IsRegionUpdate && !IsAutoRotateStop)
         {
             if (millis() >= regionUpdate + 5000)
             {
@@ -888,7 +893,7 @@ void EEW::Draw()
                     text = new char[100];
                     int x1 = 2;
                     int y1 = 142;
-                    if (regPos < -100 && !IsAutoRotateStop)
+                    if (config.AutoModeRotate&&regPos < -100 && !IsAutoRotateStop)
                     {
                         regPos = -1;
                         sellectMode = MapMode;
@@ -1366,6 +1371,24 @@ void EEW::Draw()
                 case LCDLightLvSupply:
                     sprintf(t, "電源接続時のLCDの明るさ : %3d", config.LCDLightLvSupply);
                     break;
+                case AutoChangeEEW:
+                    if (config.AutoChangeEEW)
+                        sprintf(t, "EEW受信時モード自動切換 : 有効");
+                    else
+                        sprintf(t, "EEW受信時モード自動切換 : 無効");
+                    break;
+                case AutoModeRotate:
+                    if (config.AutoModeRotate)
+                        sprintf(t, "EEW警報受信時に交互に表示 : 有効");
+                    else
+                        sprintf(t, "EEW警報受信時に交互に表示 : 無効");
+                    break;
+                case AutoChangeMode:
+                    if (config.AutoChangeMode)
+                        sprintf(t, "EEW受信時で優先表示するモード : 詳細情報");
+                    else
+                        sprintf(t, "EEW受信時で優先表示するモード : 地図表示");
+                    break;
                 case ExitSetting:
                     sprintf(t, "設定を保存して終了");
                     break;
@@ -1837,7 +1860,7 @@ void EEW::SettingEnter()
         cNum.SetMin(1);
         cNum.SetMax(255);
         sellectMode = SettingNum;
-        cNum.SetTitle("電源接続時LCDの明るさ", "電源接続時のLCDの明るさを設定します。\n(10～255の範囲で設定可能です。");
+        cNum.SetTitle("電源接続時LCDの明るさ", "電源接続時のLCDの明るさを設定します。\n(1～255の範囲で設定可能です。");
         ModeEnter();
         break;
     case LCDLightLvBattery:
@@ -1845,8 +1868,20 @@ void EEW::SettingEnter()
         cNum.SetMin(1);
         cNum.SetMax(255);
         sellectMode = SettingNum;
-        cNum.SetTitle("電池駆動時LCDの明るさ", "電池駆動時のLCDの明るさを設定します。\n(10～255の範囲で設定可能です。");
+        cNum.SetTitle("電池駆動時LCDの明るさ", "電池駆動時のLCDの明るさを設定します。\n(1～255の範囲で設定可能です。");
         ModeEnter();
+        break;
+    case AutoChangeEEW:
+        config.AutoChangeEEW=!config.AutoChangeEEW;
+        IsUpdated = false;
+        break;
+    case AutoModeRotate:
+        config.AutoModeRotate=!config.AutoModeRotate;
+        IsUpdated = false;
+        break;
+    case AutoChangeMode:
+        config.AutoChangeMode=!config.AutoChangeMode;
+        IsUpdated = false;
         break;
     case ExitSetting:
         SaveConfig();
@@ -1879,6 +1914,9 @@ void EEW::SaveConfig()
     configFile.printf("RebootTimer=%d\n", config.RebootTimer);
     configFile.printf("LCDLightLvSupply=%d\n", config.LCDLightLvSupply);
     configFile.printf("LCDLightLvBattery=%d\n", config.LCDLightLvBattery);
+    configFile.printf("AutoChangeEEW=%s\n",BoolToStr(config.AutoChangeEEW).c_str());
+    configFile.printf("AutoModeRotate=%s\n",BoolToStr(config.AutoModeRotate).c_str());
+    configFile.printf("AutoChangeMode=%s\n",BoolToStr(config.AutoChangeMode).c_str());
     configFile.close();
     SPIFFS.end();
 }
@@ -1950,6 +1988,15 @@ void EEW::ReadConfig()
             case LCDLightLvBattery:
                 config.LCDLightLvBattery = tmp.toInt();
                 break;
+            case AutoChangeEEW:
+                tmp == "true" ? config.AutoChangeEEW = 1 : config.AutoChangeEEW = 0;
+                break;
+            case AutoModeRotate:
+                tmp == "true" ? config.AutoModeRotate = 1 : config.AutoModeRotate = 0;
+                break;
+            case AutoChangeMode:
+                tmp == "true" ? config.AutoChangeMode = 1 : config.AutoChangeMode = 0;
+                break;
             }
         }
     }
@@ -1987,6 +2034,12 @@ int EEW::GetConfigName(String str)
         return LCDLightLvSupply;
     if (str == "LCDLightLvBattery")
         return LCDLightLvBattery;
+    if (str == "AutoChangeEEW")
+        return AutoChangeEEW;
+    if (str == "AutoModeRotate")
+        return AutoModeRotate;
+    if (str == "AutoChangeMode")
+        return AutoChangeMode;
     return -1;
 }
 void EEW::CallSoundForecast()
