@@ -48,6 +48,7 @@ namespace Core{
         static bool GotTime;
         static bool AutoAdj;
         static MPU9250 IMU;
+        const static uint16_t Bootlogo_Misaki_bmp[];
     };
     
     
