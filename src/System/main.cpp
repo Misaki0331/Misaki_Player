@@ -23,12 +23,17 @@ Main::Main()
 void Main::Begin()
 {               // M5Stackのバッテリ初期化
     M5.begin(); // M5Stackを初期化
+    displayBMP(104,20,Bootlogo_Misaki_bmp,2099);
+    FastFont::printRom("Misaki Player",82,165,CYAN,2,INVISIBLE_COLOR);
+    FastFont::printRom("https://github.com/Misaki0331/Misaki_Player",31,185,WHITE,1,INVISIBLE_COLOR);
+    FastFont::printUtf8("Misaki Playerは簡易的な防災端末です。",36,195,YELLOW,1,INVISIBLE_COLOR);
+    FastFont::printUtf8("詳細な災害情報は各自治体のHPをご覧ください。",17,208,YELLOW,1,INVISIBLE_COLOR);
+
     SPIFFS.begin(1);
     SPIFFS.end();
     M5.Power.begin();
     M5.Power.setPowerVin(true); // USBが抜かれても動作し続けるように
     setCpuFrequencyMhz(240);
-    M5.Lcd.clear(BLACK); //表示リセット
     wavePlayer.Begin();
     Serial.begin(115200);
     xTaskCreatePinnedToCore(SoundThread, "SoundThread", 8192, NULL, 1, NULL, 1);
@@ -47,11 +52,11 @@ void Main::Begin()
 
     SystemAPI::AccelDatas = new int16_t[ACCELDATA_SIZE];
     for (int i = 0; i < ACCELDATA_SIZE; i++)
-    {
         SystemAPI::AccelDatas[i] = 0;
-    }
     IMU.initMPU9250();
     xTaskCreatePinnedToCore(ControlThread, "ControlThread", 2048, NULL, 3, NULL, 1);
+    while(millis()<3000)delay(1);
+    M5.Lcd.clear(BLACK); //表示リセット
 }
 bool Main::FirstWiFiConnect()
 {
@@ -304,7 +309,7 @@ void Main::ControlThread(void *arg)
     drawUI.Battery(297, 0, BatteryPercent, true);
     int UpdateTime = 0;
     int UpdateAc = 0;
-    int tmpGal=0;
+    int tmpGal = 0;
     while (1)
     {
         if (UpdateTime != millis() / 1000)
@@ -355,21 +360,24 @@ void Main::ControlThread(void *arg)
                 x = (double)IMU.accelCount[0] * IMU.aRes;
                 y = (double)IMU.accelCount[1] * IMU.aRes;
                 z = (double)IMU.accelCount[2] * IMU.aRes;
-                int max=0;
-                int avg=0;
-                for(int i=ACCELDATA_SIZE-1;i>0;i--){
-                    SystemAPI::AccelDatas[i]=SystemAPI::AccelDatas[i-1];
-                    if(i<50)avg+=abs(SystemAPI::AccelDatas[i]);
-                    if(max<abs(SystemAPI::AccelDatas[i]))max=abs(SystemAPI::AccelDatas[i]);
+                int max = 0;
+                int avg = 0;
+                for (int i = ACCELDATA_SIZE - 1; i > 0; i--)
+                {
+                    SystemAPI::AccelDatas[i] = SystemAPI::AccelDatas[i - 1];
+                    if (i < 50)
+                        avg += abs(SystemAPI::AccelDatas[i]);
+                    if (max < abs(SystemAPI::AccelDatas[i]))
+                        max = abs(SystemAPI::AccelDatas[i]);
                 }
 
-                double value=sqrt(x*x+y*y+z*z)*0.980665*10000.0;
-                SystemAPI::AccelDatas[0]=value-tmpGal;
-                avg+=abs(SystemAPI::AccelDatas[0]);
-                SystemAPI::AccelMax=max;
-                avg/=50;
-                SystemAPI::AccelAvg=avg;
-                tmpGal=value;
+                double value = sqrt(x * x + y * y + z * z) * 0.980665 * 10000.0;
+                SystemAPI::AccelDatas[0] = value - tmpGal;
+                avg += abs(SystemAPI::AccelDatas[0]);
+                SystemAPI::AccelMax = max;
+                avg /= 50;
+                SystemAPI::AccelAvg = avg;
+                tmpGal = value;
             }
         }
         vTaskDelay(1);
@@ -377,13 +385,17 @@ void Main::ControlThread(void *arg)
 }
 void Main::AddClock(int t)
 {
-    if(SystemAPI::Time_currentTime/1000==18000){
-        if(!AutoAdj){
-            AutoAdj=true;
+    if (SystemAPI::Time_currentTime / 1000 == 18000)
+    {
+        if (!AutoAdj)
+        {
+            AutoAdj = true;
             GetClock();
         }
-    }else{
-        AutoAdj=false;
+    }
+    else
+    {
+        AutoAdj = false;
     }
     if (SystemAPI::Time_month != 0)
     {
@@ -392,7 +404,7 @@ void Main::AddClock(int t)
         {
             SystemAPI::Time_currentTime -= 86400000;
             SystemAPI::Time_day_of_week++;
-            SystemAPI::Time_day_of_week%=7;
+            SystemAPI::Time_day_of_week %= 7;
             SystemAPI::Time_day++;
             switch (SystemAPI::Time_month)
             {
@@ -467,7 +479,7 @@ void Main::GetClock()
         SystemAPI::Time_day = time.substring(8, 10).toInt();
         SystemAPI::Time_currentTime = time.substring(11, 13).toInt() * 3600000 + time.substring(14, 16).toInt() * 60000 + time.substring(17, 19).toInt() * 1000 + time.substring(20, 23).toInt();
         SystemAPI::Time_LatestSet = millis();
-        SystemAPI::Time_day_of_week=json["day_of_week"];
+        SystemAPI::Time_day_of_week = json["day_of_week"];
     }
     json.clear();
     time.clear();
@@ -499,4 +511,60 @@ int Main::FreeHeapMemory = 0;
 int Main::TempMillis = 0;
 bool Main::GotTime = 0;
 MPU9250 Main::IMU;
-bool Main::AutoAdj=false;
+bool Main::AutoAdj = false;
+
+void Main::displayBMP(int x, int y,const uint16_t *address, uint16_t size)
+{
+    int sizeX = address[0];
+    int sizeY = address[1];
+    int shift = 0;
+    uint8_t graph = 0;
+    uint16_t CurrentColor=0;
+    for (int i = 2; i < size; i++)
+    {
+        uint16_t value = address[i];
+        if (value == 0xFD00)
+        {
+            i++;
+            CurrentColor=address[i];
+        }
+        else if (value == 0xFE00)
+        {
+            i++;
+            for (; address[i] < 0xF000 && i + 2 < size; i += 2)
+            {
+                int pos = address[i];
+                int sy = address[i+1];
+                M5.lcd.fillRect(x + (pos % (sizeX / 8)) * 8, y + (pos / (sizeX / 8)), 8,  sy ,CurrentColor);
+            }
+            i--;
+        }
+        else if (value >= 0xFF00)
+        {
+            graph = value % 256;
+            i++;
+            for (; address[i] < 0xF000 && i < size; i++)
+            {
+                int POS = address[i];
+                int ta = 0, tc = 0;
+                for (int j = 0; j < 8; j++)
+                {
+                    if (graph & (1 << 7 - j))
+                        tc++;
+                    if ((graph & (1 << 7 - j)) != ta)
+                    {
+                        ta = graph & (1 << 7 - j);
+                        if (!ta)
+                        {
+                            M5.lcd.drawFastHLine(x + (POS % (sizeX / 8)) * 8 + j - tc, y + POS / (sizeX / 8), tc,CurrentColor);
+                            tc = 0;
+                        }
+                    }
+                }
+                if (tc > 0)
+                    M5.lcd.drawFastHLine(x + (POS % (sizeX / 8)) * 8 + 8 - tc, y + POS / (sizeX / 8), tc,CurrentColor);
+            }
+            i--;
+        }
+    }
+}

@@ -49,6 +49,7 @@ namespace Core{
         static bool AutoAdj;
         static MPU9250 IMU;
         const static uint16_t Bootlogo_Misaki_bmp[];
+        static void displayBMP(int x, int y, const uint16_t* address, uint16_t size);
     };
     
     
