@@ -3,9 +3,9 @@
 
 #define SD_WAV  "/sample.wav" // SDCard上のWaveFile定義．44.1kHz 16bit Stereo専用
 #define SRC_FS  48000         // Source Sampling Rate [Hz]
-#define OSR     3             // Over Sampling Rate (1~8) 
+#define OSR     2             // Over Sampling Rate (1~8) 
 #define DAC_FS  (OSR *SRC_FS) // DAC Sampling Rate [Hz]
-#define SPF     480           // Sample per Frame (Buffer処理単位)
+#define SPF     300           // Sample per Frame (Buffer処理単位)
 #define DSOMAX  6              // Max. of DeltaSigma Order
 #define SIN_FRQ 1000.0        // 1kHz
 #define SINTBLMAX (SRC_FS /4) // 44100/100*25 = 11025 (.25s分。半減単位)
