@@ -1392,6 +1392,10 @@ void EEW::Draw()
                 case ExitSetting:
                     sprintf(t, "設定を保存して終了");
                     break;
+                case ExitAndCancel:
+                    sprintf(t, "保存せず元の設定に戻して終了");
+
+                    break;
                 case TestMode:
                     sprintf(t, "訓練モード(60秒後に警報が鳴動します。) : %s", TestTime == 0 ? "無効" : "有効");
                     break;
@@ -1476,6 +1480,7 @@ void EEW::Draw()
                     fillx = 25;
                     FcName = "設定";
                     break;
+                
                 }
                 if (i == mode)
                 {
@@ -1885,6 +1890,10 @@ void EEW::SettingEnter()
         break;
     case ExitSetting:
         SaveConfig();
+        IsNotCursorMode = false;
+        break;
+    case ExitAndCancel:
+        ReadConfig();
         IsNotCursorMode = false;
         break;
     case TestMode:

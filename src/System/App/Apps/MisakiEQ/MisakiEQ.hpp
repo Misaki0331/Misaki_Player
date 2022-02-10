@@ -155,6 +155,7 @@ namespace App
                 AutoModeRotate,
                 AutoChangeMode,
                 
+                ExitAndCancel,
                 ExitSetting,
                 TestMode
             };
